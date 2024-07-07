@@ -1,0 +1,3 @@
+database_url = "postgres://myuser:mypassword@localhost:5432/mydatabase"
+server_port = 4000
+jwt_secret = "secret"
