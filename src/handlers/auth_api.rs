@@ -34,8 +34,9 @@ pub async fn request_token(
         exp: exputc,
     };
 
-    let token = encode(&Header::default(), &claims, &state.jwt_keys.encoding)
-    .map_err(|_|AuthError::TokenCreation)?;
+    // let token = encode(&Header::default(), &claims, &state.jwt_keys.encoding)
+    // .map_err(|_|AuthError::TokenCreation)?;
+    let token = "".to_string();
 
     Ok(Json(AuthBody::new(token)))
 }

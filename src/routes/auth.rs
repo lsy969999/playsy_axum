@@ -18,5 +18,5 @@ fn get_auth_page_router() -> Router<Arc<AppState>> {
 fn get_auth_api_router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/request_token", post(request_token))
-        .route("/protected_url", get(protected_url))
+        // .route("/protected_url", get(protected_url))
 }

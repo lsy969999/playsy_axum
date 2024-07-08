@@ -1,6 +1,7 @@
 use askama::Template;
 use axum::response::IntoResponse;
-use crate::myconfig::into_response::HtmlTemplate;
+
+use crate::into_responses::html_template::HtmlTemplate;
 
 #[derive(Template)]
 #[template(path="pages/home.html")]

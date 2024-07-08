@@ -7,7 +7,7 @@ use serde::Deserialize;
 use time::{Duration, OffsetDateTime};
 use jsonwebtoken::{encode, Header};
 use tracing::info;
-use crate::{models::auth::Claims, myconfig::into_response::HtmlTemplate, AppState};
+use crate::{into_responses::html_template::HtmlTemplate, models::auth::Claims, AppState};
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]

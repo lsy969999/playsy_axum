@@ -2,7 +2,6 @@ use askama::Template;
 use axum::response::{Html, IntoResponse};
 use hyper::StatusCode;
 
-
 pub struct HtmlTemplate<T>(pub T);
 impl <T> IntoResponse for HtmlTemplate<T> where T: Template{
     fn into_response(self) -> axum::response::Response {

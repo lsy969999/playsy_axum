@@ -4,11 +4,13 @@ use askama::Template;
 use axum::{extract::{Query, State}, response::{Html, IntoResponse}, Form};
 use hyper::StatusCode;
 use serde::Deserialize;
-use sqlx::types::chrono::Utc;
+use sqlx::{types::chrono::Utc, Acquire};
 use tracing::{error, info};
 use validator::Validate;
 
-use crate::{models::db::{code::DB_CODE, user::User}, AppState};
+use crate::{extractors::{database_connection::DatabaseConnection, repository::Repository}, into_responses::html_template::HtmlTemplate, repositories::user::UserRepo};
+
+
 
 #[derive(Template)]
 #[template(path="pages/join.html")]
@@ -54,19 +56,18 @@ pub struct JoinForm {
 }
 
 pub async fn join_request(
-    State(state): State<Arc<AppState>>,
-    Form(form): Form<JoinForm>
+    DatabaseConnection(mut conn): DatabaseConnection,
+    Repository(user_repo): Repository<UserRepo>,
+    Form(form): Form<JoinForm>,
 ) -> impl IntoResponse {
     if let Err(error) = form.validate() {
-        
         for (field, error) in error.field_errors() {
             error!("validate error, field: {:?}, error: {:?}", field, error);
         }
-        
         return (StatusCode::INTERNAL_SERVER_ERROR, format!("")).into_response();
     }
 
-    let mut tx = match (&state.db_pool).begin().await {
+    let mut tx = match conn.begin().await {
         Ok(tx) => tx,
         Err(error) => {
             error!("error: {:?}", error);
@@ -74,71 +75,23 @@ pub async fn join_request(
         }
     };
 
-    // 닉네임 중복 체크
-    let user = sqlx::query_as!(
-        User,
-        r#"
-            SELECT *
-            FROM tb_user
-            WHERE nick_name = $1
-        "#, 
-        form.nick_name
-    )
-    .fetch_optional(&mut *tx)
-    .await;
-
-    // 쿼리 오류
-    if let Err(error) = user {
-        error!("error: {:?}", error);
-        return (StatusCode::INTERNAL_SERVER_ERROR, format!("")).into_response();
-    }
-
-    // 이미 존재
-    if let Some(_data) = user.unwrap() {
-        let template = JoinFormFragment {
-            nick_name_validate_txt: Some("이미 존재합니다.")
-        };
-        match template.render() {
-            Ok(html) => {
-                return Html(html).into_response();
-            }
-            Err(error) => {
-                // 렌더 에러
-                error!("error: {:?}", error);
-                return (StatusCode::INTERNAL_SERVER_ERROR, format!("")).into_response();
-            }
+    
+    match &user_repo.select_user_by_nick_name(&mut *tx, form.nick_name.clone()).await {
+        Ok(None) => { }
+        Ok(Some(_user)) => {
+            return HtmlTemplate(
+                JoinFormFragment {
+                    nick_name_validate_txt: Some("이미 존재합니다.")
+                }
+            ).into_response();
         }
-    }
+        Err(error) => {
+            error!("error: {:?}", error);
+            return (StatusCode::INTERNAL_SERVER_ERROR, format!("")).into_response();
+        }
+    };
 
-    let now = Utc::now();
-    let join = sqlx::query!(
-        r#"
-            INSERT INTO tb_user
-            (
-                nick_name, login_ty_cd, email, password, user_stt_cd, 
-                user_ty_cd, created_at, created_by, updated_at, updated_by
-            )
-            VALUES
-            (
-                $1, $2, $3, $4, $5,
-                $6, $7, $8, $9, $10
-            )
-        "#,
-        form.nick_name,
-        DB_CODE.login_ty_cd.email,
-        form.email,
-        form.password,
-        DB_CODE.user_stt_cd.ok,
-        DB_CODE.user_ty_cd.user,
-        now,
-        1,
-        now,
-        1
-    )
-    .execute(&mut *tx)
-    .await;
-
-    match join {
+    match &user_repo.insert_user(&mut *tx, form.nick_name, form.email, form.password).await {
         Ok(result) => {
             info!("insert rows: {:?}", result.rows_affected());
         }
@@ -154,17 +107,7 @@ pub async fn join_request(
     }
 
     // 가입 성공
-    let template = JoinSuccessFragment;
-    match template.render() {
-        Ok(html) => {
-            return Html(html).into_response();
-        }
-        Err(error) => {
-            // 렌더 에러
-            error!("error: {:?}", error);
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("")).into_response();
-        }
-    }
+    HtmlTemplate(JoinSuccessFragment).into_response()
 }
 
 #[derive(Deserialize, Debug)]

@@ -1,4 +1,4 @@
-use crate::{models::test::NameInput, myconfig::{error::AppError, extractors::{DatabaseConnection, ValidatedForm}, }};
+use crate::{extractors::{database_connection::DatabaseConnection, validated_form::ValidatedForm}, models::test::NameInput, myconfig::error::AppError};
 
 pub async fn test_validate_handler(
     ValidatedForm(input): ValidatedForm<NameInput>
