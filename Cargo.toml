@@ -34,7 +34,7 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing-appender = "0.2.3"
 
 # DB
-sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-rustls"] }
+sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-rustls", "chrono"] }
 
 # open api
 utoipa = { version = "4.2.3", features = ["axum_extras"] }
@@ -44,3 +44,7 @@ validator = { version = "0.18.1", features = ["derive"] }
 
 # 인증
 jsonwebtoken = "9.3.0"
+
+# compile time check perf up
+[profile.dev.package.sqlx-macros]
+opt-level = 3

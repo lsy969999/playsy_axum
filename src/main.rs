@@ -5,7 +5,7 @@ use tower::ServiceBuilder;
 use tracing::{debug, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir, trace::TraceLayer};
-use web::{myconfig::middleward::test_log_and_modify, routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, test::get_test_router}, shutdown_signal, AppState, JwtKeys, Settings};
+use web::{myconfig::middleward::test_log_and_modify, routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, test::get_test_router, user::get_user_router}, shutdown_signal, AppState, JwtAccessKeys, JwtKeys, JwtRefreshKeys, Settings};
 
 static SETTINGS: OnceCell<Arc<Settings>> = OnceCell::new();
 
@@ -45,7 +45,11 @@ async fn main() {
         .expect("can't connect to database");
     let jwt_secret = (&settings.jwt_secret).to_string();
     let jwt_keys = JwtKeys::new(&jwt_secret);
-    let app_state = Arc::new(AppState {db_pool, jwt_keys });
+    let jwt_access_secret = (&settings.jwt_access_secret).to_string();
+    let jwt_access_keys = JwtAccessKeys::new(&jwt_access_secret);
+    let jwt_refresh_secret = (&settings.jwt_refresh_secret).to_string();
+    let jwt_refresh_keys = JwtRefreshKeys::new(&jwt_refresh_secret);
+    let app_state = Arc::new(AppState {db_pool, jwt_keys, jwt_access_keys, jwt_refresh_keys });
     debug!("app_state: {:?}", app_state);
 
     let logging_middleware = ServiceBuilder::new()
@@ -61,6 +65,7 @@ async fn main() {
         .nest("/", get_openapi_route())
         .nest("/", get_home_router())
         .nest("/", get_auth_router())
+        .nest("/", get_user_router())
         .layer(logging_middleware)
         .with_state(Arc::clone(&app_state));
 

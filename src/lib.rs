@@ -6,12 +6,15 @@ pub mod myconfig;
 pub mod handlers;
 pub mod routes;
 pub mod models;
+pub mod services;
 
 /// 공유상태
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub db_pool: PgPool,
     pub jwt_keys: JwtKeys,
+    pub jwt_access_keys: JwtAccessKeys,
+    pub jwt_refresh_keys: JwtRefreshKeys,
 }
 
 #[derive(Clone)]
@@ -30,6 +33,56 @@ impl fmt::Debug for JwtKeys {
 }
 
 impl JwtKeys {
+    pub fn new(secret: &str) -> Self {
+        let bsecret = secret.as_bytes();
+        Self {
+            encoding: EncodingKey::from_secret(bsecret),
+            decoding: DecodingKey::from_secret(bsecret),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct JwtAccessKeys {
+    encoding: EncodingKey,
+    decoding: DecodingKey,
+}
+
+impl fmt::Debug for JwtAccessKeys {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("JwtAccessKeys")
+            .field("encoding", &"EncodingKey(...)")
+            .field("decoding", &"DecodingKey(...)")
+            .finish()
+    }
+}
+
+impl JwtAccessKeys {
+    pub fn new(secret: &str) -> Self {
+        let bsecret = secret.as_bytes();
+        Self {
+            encoding: EncodingKey::from_secret(bsecret),
+            decoding: DecodingKey::from_secret(bsecret),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct JwtRefreshKeys {
+    encoding: EncodingKey,
+    decoding: DecodingKey,
+}
+
+impl fmt::Debug for JwtRefreshKeys {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("JwtRefreshKeys")
+            .field("encoding", &"EncodingKey(...)")
+            .field("decoding", &"DecodingKey(...)")
+            .finish()
+    }
+}
+
+impl JwtRefreshKeys {
     pub fn new(secret: &str) -> Self {
         let bsecret = secret.as_bytes();
         Self {
@@ -82,6 +135,8 @@ pub struct Settings {
     pub database_url: String,
     pub server_port: String,
     pub jwt_secret: String,
+    pub jwt_access_secret: String,
+    pub jwt_refresh_secret: String,
 }
 
 impl Settings {
@@ -93,10 +148,14 @@ impl Settings {
         let dburl = hm.get("database_url").unwrap();
         let server_port = hm.get("server_port").unwrap();
         let jwt_secret = hm.get("jwt_secret").unwrap();
+        let jwt_access_secret = hm.get("jwt_access_secret").unwrap();
+        let jwt_refresh_secret = hm.get("jwt_refresh_secret").unwrap();
         Ok(Settings {
             database_url: dburl.to_string(),
             server_port: server_port.to_string(),
             jwt_secret: jwt_secret.to_string(),
+            jwt_access_secret: jwt_access_secret.to_string(),
+            jwt_refresh_secret: jwt_refresh_secret.to_string(),
         })
     }
 }

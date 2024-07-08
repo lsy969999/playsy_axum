@@ -1,0 +1,26 @@
+<form hx-post="/user/join" hx-swap="outerHTML">
+    <div>
+        <label for="id">ID:</label>
+        <input id="id" name="email" type="text">
+    </div>
+    <div>
+        <label for="password">PW:</label>
+        <input id="password" name="password" type="password"
+    </div>
+    <div>
+        <label for="nick_name">NickName:</label>
+        <input id="nick_name" name="nick_name" type="text" />
+
+        {%- if let Some(txt) = nick_name_validate_txt -%}
+            {{ txt }}
+        {%- endif -%}
+
+        {# 
+            {%- match nick_name_validate_txt -%}
+                {%- when None -%}
+                {%- when Some(num) -%}
+                    {{num}}
+            {%- endmatch -%}
+        #}
+    <button type="submit">Join!</button>
+</form>

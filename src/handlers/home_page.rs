@@ -1,6 +1,5 @@
 use askama::Template;
 use axum::response::IntoResponse;
-
 use crate::myconfig::into_response::HtmlTemplate;
 
 #[derive(Template)]

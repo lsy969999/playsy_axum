@@ -1,0 +1,26 @@
+{% extends "layouts/layout.html" %}
+
+{% block title %}
+    Auth
+{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Auth Page</h1>
+        <hr>
+        <div>
+            <form hx-post="/auth" hx-target="#result" >
+                <div>
+                    <label for="id">ID:</label>
+                    <input id="id" name="email" type="text">
+                </div>
+                <div>
+                    <label for="password">PW:</label>
+                    <input id="password" name="password" type="password"
+                </div>
+                <button type="submit" >Login</button>
+            </form>
+            <div id="result"></div>
+        </div>
+    </div>
+{% endblock %}

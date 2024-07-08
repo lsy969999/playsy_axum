@@ -10,12 +10,16 @@ pub async fn using_connection_pool_extractor2(
     DatabaseConnection(mut conn): DatabaseConnection,
 ) -> Result<String, AppError> {
     // return Err(AppError::TestError("asdf".to_string()).into());
+    let aa = sqlx::query!("select 1 as haha")
+    .fetch_all(&mut *conn)
+    .await
+    .map_err(|err|AppError::TestError(format!("testerror: {}", err)));
+
     sqlx::query_scalar("selecdt 'sample'")
         .fetch_one(&mut *conn)
         .await
         .map_err(|err|AppError::TestError(format!("testerror: {}", err)))
 }
-
 
 // async fn using_connection_pool_extractor(
 //     State(s): State<Arc<AppState>>,

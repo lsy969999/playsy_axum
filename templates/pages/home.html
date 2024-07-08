@@ -3,8 +3,18 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <button class="button">Button</button>
-{% endblock %}
+    <div>
+        <a href="/auth">
+            <button class="button">
+                Go Auth Page
+            </button>
+        </a>
 
-{% include "fragments/header.html" %}
-{% include "fragments/footer.html" %}
+        <a href="/user/join">
+            <button class="button">
+                Go Join Page
+            </button>
+        </a>
+        
+    </div>
+{% endblock %}
