@@ -1,7 +1,7 @@
 use std::{collections::HashMap, error::Error, fmt};
 use config::Config;
 use jsonwebtoken::{DecodingKey, EncodingKey};
-use repositories::user::UserRepo;
+
 use sqlx::PgPool;
 pub mod myconfig;
 pub mod handlers;
@@ -21,12 +21,6 @@ pub struct AppState {
     // pub jwt_keys: JwtKeys,
     pub jwt_access_keys: JwtAccessKeys,
     pub jwt_refresh_keys: JwtRefreshKeys,
-    pub repositories: Repositories,
-}
-
-#[derive(Debug, Clone)]
-pub struct Repositories {
-    pub user_repo: UserRepo
 }
 
 // #[derive(Clone)]

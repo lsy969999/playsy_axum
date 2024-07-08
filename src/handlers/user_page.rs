@@ -8,7 +8,7 @@ use sqlx::{types::chrono::Utc, Acquire};
 use tracing::{error, info};
 use validator::Validate;
 
-use crate::{extractors::{database_connection::DatabaseConnection, repository::Repository}, into_responses::html_template::HtmlTemplate, repositories::user::UserRepo};
+use crate::{extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, repositories::user::{insert_user, select_user_by_nick_name }};
 
 
 
@@ -57,7 +57,7 @@ pub struct JoinForm {
 
 pub async fn join_request(
     DatabaseConnection(mut conn): DatabaseConnection,
-    Repository(user_repo): Repository<UserRepo>,
+
     Form(form): Form<JoinForm>,
 ) -> impl IntoResponse {
     if let Err(error) = form.validate() {
@@ -76,7 +76,7 @@ pub async fn join_request(
     };
 
     
-    match &user_repo.select_user_by_nick_name(&mut *tx, form.nick_name.clone()).await {
+    match select_user_by_nick_name(&mut *tx, form.nick_name.clone()).await {
         Ok(None) => { }
         Ok(Some(_user)) => {
             return HtmlTemplate(
@@ -91,7 +91,7 @@ pub async fn join_request(
         }
     };
 
-    match &user_repo.insert_user(&mut *tx, form.nick_name, form.email, form.password).await {
+    match insert_user(&mut *tx, form.nick_name, form.email, form.password).await {
         Ok(result) => {
             info!("insert rows: {:?}", result.rows_affected());
         }
