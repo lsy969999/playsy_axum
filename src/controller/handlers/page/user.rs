@@ -35,7 +35,7 @@ pub async fn join_request(
     DatabaseConnection(conn): DatabaseConnection,
     Form(form): Form<JoinReqDto>,
 ) -> impl IntoResponse {
-    // 폼 검증
+    // 파라미터 검증
     if let Err(error) = form.validate() {
         for (field, error) in error.field_errors() {
             error!("validate error, field: {:?}, error: {:?}", field, error);
@@ -43,7 +43,7 @@ pub async fn join_request(
         return (StatusCode::BAD_REQUEST, format!("파라미터 부정확")).into_response();
     }
 
-    // 사용자 가입
+    // 사용자 가입 서비스 호출
     match services::user::user_join_service(conn, form.nick_name, form.email, form.password).await {
         // 성공
         Ok(_) => {
