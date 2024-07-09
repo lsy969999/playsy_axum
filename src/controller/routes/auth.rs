@@ -13,7 +13,7 @@ fn get_auth_page_router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/",
             get(page::auth::auth_page)
-            .post(page::auth::auth_request)
+            .post(page::auth::auth_email_request)
         )
 }
 

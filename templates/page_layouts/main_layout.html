@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}My Application{% endblock %}</title>
+    </head>
+    <body>
+        <header>
+            {% block header %}{% endblock %}
+            {% include "page_layouts/blocks/default_css.html" %}
+        </header>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        <footer>
+            {% block footer %} <p>&copy; 2024 playsy</p> {% endblock %}
+        </footer>
+        {% include "page_layouts/blocks/default_script.html" %}
+    </body>
+</html>

@@ -21,7 +21,7 @@ pub async fn auth_email_request(
 
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
-            &mut *tx,
+            &mut tx,
             email,
             DB_CODE.login_ty_cd.email.to_string()
         )
@@ -90,7 +90,7 @@ pub async fn auth_email_request(
     };
     
     // 리프래시 토큰 정보 저장
-    repositories::refresh_token::insert_refresh_token(&mut *tx, user.sn, refresh_token_hash, refresh_token.clone(), db_refr_exp_timestap)
+    repositories::refresh_token::insert_refresh_token(&mut tx, user.sn, refresh_token_hash, refresh_token.clone(), db_refr_exp_timestap)
         .await
         .map_err(|error| {
             error!("error {}", error);

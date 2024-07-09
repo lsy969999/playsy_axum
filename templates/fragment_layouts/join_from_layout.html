@@ -1,0 +1,39 @@
+<form
+    hx-post="/user/join"
+    hx-swap="outerHTML"
+    x-data="{ loading: false }"
+    @htmx:before-request="loading = true"
+    @htmx:after-request="loading = false"
+>
+    {% block aa %}{% endblock %}
+    <div>
+        <label for="id">ID:</label>
+        <input id="id" name="email" type="text">
+    </div>
+    <div>
+        <label for="password">PW:</label>
+        <input id="password" name="password" type="password"
+    </div>
+    <div>
+        <label for="nick_name">NickName:</label>
+        <input id="nick_name" name="nick_name" type="text" />
+
+        {%- if let Some(txt) = nick_name_validate_txt -%}
+            {{ txt }}
+        {%- endif -%}
+
+        {# 주석
+            {%- match nick_name_validate_txt -%}
+                {%- when None -%}
+                {%- when Some(num) -%}
+                    {{num}}
+            {%- endmatch -%}
+        #}
+    <button
+        type="submit"
+        class="button"
+        :class="loading ? 'is-loading' : ''"
+        >
+        Join!
+    </button>
+</form>

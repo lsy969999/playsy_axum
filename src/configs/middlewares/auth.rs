@@ -1,8 +1,7 @@
-use std::sync::Arc;
-use axum::{extract::{Request, State}, middleware::Next, response::Response};
+use axum::{extract::Request, middleware::Next, response::Response};
 use axum_extra::extract::CookieJar;
 use jsonwebtoken::{decode, Validation};
-use crate::configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, models::{app_state::AppState, auth::Claims}};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, models::auth::Claims}, utils};
 
 /**
  *  access_token 검증
@@ -17,7 +16,6 @@ use crate::configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, models::{app_state::
  * refresh_token
  */
 pub async fn auth_cookie_middleware(
-    State(state): State<Arc<AppState>>,
     jar: CookieJar,
     req: Request,
     next: Next
@@ -33,9 +31,9 @@ pub async fn auth_cookie_middleware(
             todo!();
         }
     };
-
+    let acc = utils::settings::get_settings_jwt_access_keys();
     // access decode 해보기
-    let acc_decode = decode::<Claims>(acc_cookie.value(), &state.jwt_access_keys.decoding, &Validation::default());
+    let acc_decode = decode::<Claims>(acc_cookie.value(), &acc.decoding, &Validation::default());
 
     match acc_decode {
         Ok(_) => {
@@ -55,7 +53,9 @@ pub async fn auth_cookie_middleware(
                     todo!();
                 }
             };
-            let refr_decode = decode::<Claims>(refr_cookie.value(), &state.jwt_refresh_keys.decoding, &Validation::default());
+
+            let refr = utils::settings::get_settings_jwt_refresh_keys();
+            let refr_decode = decode::<Claims>(refr_cookie.value(), &refr.decoding, &Validation::default());
             
             match refr_decode {
                 Ok(_) => {

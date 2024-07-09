@@ -8,7 +8,7 @@ use crate::{configs::{errors::user_join::UserJoinError, extractors::database_con
 #[derive(Template)]
 #[template(path="pages/join.html")]
 struct JoinTemplate<'a> {
-    nick_name_validate_txt: Option<&'a str>
+    join_form: JoinFormFragment<'a>
 }
 
 #[derive(Template)]
@@ -25,7 +25,9 @@ struct JoinSuccessFragment;
 pub async fn join_page() -> impl IntoResponse {
     HtmlTemplate(
         JoinTemplate {
-            nick_name_validate_txt: None
+            join_form: JoinFormFragment {
+                nick_name_validate_txt: None
+            }
         }
     )
 }

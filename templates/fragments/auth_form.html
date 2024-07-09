@@ -1,0 +1,33 @@
+<form
+    hx-post="/auth"
+    hx-swap="none"
+    x-data="{ loading: false }"
+    x-on:htmx:before-request="loading = true"
+    x-on:htmx:after-request="loading = false"
+>
+    <div class="field">
+        <label class="label">Email</label>
+        <div class="control">
+            <input name="email" class="input" type="text" placeholder="abc@def.com">
+        </div>
+        <p class="help is-success">This username is available</p>
+    </div>
+    <div class="field">
+        <label class="label">Password</label>
+        <div class="control">
+            <input name="password" class="input" type="password">
+        </div>
+        <p class="help is-danger">This username is available</p>
+    </div>
+    <div class="field">
+        <div class="control">
+            <button
+                type="submit"
+                class="button"
+                x-bind:class="loading ? 'is-loading' : ''"
+            >
+                Login
+            </button>
+        </div>
+    </div>
+</form>

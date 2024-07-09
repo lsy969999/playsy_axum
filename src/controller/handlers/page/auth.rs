@@ -5,11 +5,17 @@ use hyper::StatusCode;
 use time::Duration;
 use tracing::error;
 use validator::Validate;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, extractors::{database_connection::DatabaseConnection, jwt_keys::JwtKeys}, into_responses::html_template::HtmlTemplate, models::{app_state::{AppState, JwtAccessKeys, JwtRefreshKeys}, auth::Claims}}, controller::handlers::dto::auth::LoginAuthReqDto, services};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]
-struct AuthTemplate;
+struct AuthTemplate {
+    form: AuthFormFragment
+}
+
+#[derive(Template)]
+#[template(path="fragments/auth_form.html")]
+struct AuthFormFragment;
 
 #[derive(Template)]
 #[template(path="fragments/auth_fail.html")]
@@ -17,13 +23,13 @@ struct AuthFailTemplate;
 
 pub async fn auth_page() -> impl IntoResponse {
     HtmlTemplate(
-        AuthTemplate
+        AuthTemplate {
+            form: AuthFormFragment
+        }
     )
 }
 
-pub async fn auth_request(
-    JwtKeys(acc): JwtKeys<JwtAccessKeys>,
-    JwtKeys(refr): JwtKeys<JwtRefreshKeys>,
+pub async fn auth_email_request(
     DatabaseConnection(conn): DatabaseConnection,
     jar: CookieJar, 
     Form(form): Form<LoginAuthReqDto>,
@@ -35,7 +41,8 @@ pub async fn auth_request(
         }
         return (StatusCode::BAD_REQUEST, format!("파라미터 부정확")).into_response();
     }
-
+    let acc = utils::settings::get_settings_jwt_access_keys();
+    let refr = utils::settings::get_settings_jwt_refresh_keys();
     // 이메일 로그인 서비스 호출
     match services::auth::auth_email_request(conn, form.email, form.password, &acc.encoding, &refr.encoding).await {
         // 성공
@@ -48,7 +55,7 @@ pub async fn auth_request(
                 .http_only(true)
                 .max_age(Duration::seconds(1 * 60 * 60));
             let jar: CookieJar = jar.add(ref_token_cookie);
-            (jar, [("HX-Redirect", "/")]).into_response()
+            (jar, [("HX-Redirectxxxxx", "/")]).into_response()
         }
         // 실패
         Err(_) => {

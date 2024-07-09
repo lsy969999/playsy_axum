@@ -1,26 +1,3 @@
-<form hx-post="/user/join" hx-swap="outerHTML">
-    <div>
-        <label for="id">ID:</label>
-        <input id="id" name="email" type="text">
-    </div>
-    <div>
-        <label for="password">PW:</label>
-        <input id="password" name="password" type="password"
-    </div>
-    <div>
-        <label for="nick_name">NickName:</label>
-        <input id="nick_name" name="nick_name" type="text" />
+{% extends "fragment_layouts/join_from_layout.html" %}
 
-        {%- if let Some(txt) = nick_name_validate_txt -%}
-            {{ txt }}
-        {%- endif -%}
-
-        {# 
-            {%- match nick_name_validate_txt -%}
-                {%- when None -%}
-                {%- when Some(num) -%}
-                    {{num}}
-            {%- endmatch -%}
-        #}
-    <button type="submit">Join!</button>
-</form>
+{% block aa %} asdfasdf {% endblock %}

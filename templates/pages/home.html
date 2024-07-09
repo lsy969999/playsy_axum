@@ -1,20 +1,20 @@
-{% extends "layouts/layout.html" %}
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/macros.html" as scope -%}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
+    {% call scope::heading1("Heading") %}
     <div>
         <a href="/auth">
             <button class="button">
                 Go Auth Page
             </button>
         </a>
-
         <a href="/user/join">
             <button class="button">
                 Go Join Page
             </button>
         </a>
-        
     </div>
 {% endblock %}

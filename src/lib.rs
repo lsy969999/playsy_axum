@@ -33,9 +33,7 @@ pub async fn play_sy_main() {
     let db_pool = configs::db_config::init_db_pool(&settings.database_url).await;
     let app_state = Arc::new(
         AppState::new(
-            db_pool,
-            &settings.jwt_access_secret,
-            &settings.jwt_refresh_secret
+            db_pool
         )
     );
     debug!("app_state: {:?}", app_state);

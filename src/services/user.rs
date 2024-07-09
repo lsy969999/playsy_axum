@@ -1,6 +1,5 @@
 use sqlx::{pool::PoolConnection, Acquire, Postgres};
 use tracing::error;
-
 use crate::{configs::errors::user_join::UserJoinError, repositories, utils};
 
 /// 회원 가입 서비스
@@ -19,7 +18,7 @@ pub async fn user_join_service(
     
     // nickname check
     let user = repositories::user::select_user_by_nick_name(
-            &mut *tx,
+            &mut tx,
             nick_name.clone()
         )
         .await
@@ -42,7 +41,7 @@ pub async fn user_join_service(
 
     // add user
     let insert = repositories::user::insert_user(
-            &mut *tx,
+            &mut tx,
             nick_name,
             email,
             password
