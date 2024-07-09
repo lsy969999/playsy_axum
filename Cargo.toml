@@ -4,9 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# error trait
-thiserror = "1.0.61"
-
 axum = "0.7.5"
 axum-extra = { version = "0.9.3", features = ["cookie", "typed-header"] } # 쿠키, 헤더추출
 time = "0.3.36" # extra Duration 시 사용
@@ -21,8 +18,6 @@ serde_json = "1.0.117"
 
 # 템플릿 엔진
 askama = "0.12.1" 
-
-base64 = "0.22.1"
 
 # config 초기화
 once_cell = "1.19.0"
@@ -44,6 +39,9 @@ validator = { version = "0.18.1", features = ["derive"] }
 
 # 인증
 jsonwebtoken = "9.3.0"
+argon2 = "0.5.3"
+sha2 = "0.10.8"
+hex = "0.4.3"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]

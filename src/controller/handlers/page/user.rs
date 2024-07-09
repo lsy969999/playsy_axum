@@ -1,36 +1,14 @@
-
 use askama::Template;
-use axum::{extract::Query, response::{Html, IntoResponse}, Form};
+use axum::{response::IntoResponse, Form};
 use hyper::StatusCode;
-use serde::Deserialize;
-use tracing::{error, info};
+use tracing::error;
 use validator::Validate;
-
-use crate::{configs::{errors::user_join::UserJoinError, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, services};
-
-
+use crate::{configs::{errors::user_join::UserJoinError, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::JoinReqDto, services};
 
 #[derive(Template)]
 #[template(path="pages/join.html")]
 struct JoinTemplate<'a> {
     nick_name_validate_txt: Option<&'a str>
-}
-
-
-
-pub async fn join_page() -> impl IntoResponse {
-    let template = JoinTemplate {
-        nick_name_validate_txt: None
-    };
-    match template.render() {
-        Ok(html) => {
-            Html(html).into_response()
-        }
-        Err(error) => {
-            error!("error: {}", error);
-            (StatusCode::INTERNAL_SERVER_ERROR, format!("page render error")).into_response()
-        }
-    }
 }
 
 #[derive(Template)]
@@ -39,23 +17,23 @@ struct JoinFormFragment<'a> {
     nick_name_validate_txt: Option<&'a str>
 }
 
-
 #[derive(Template)]
 #[template(path="fragments/join_success.html")]
 struct JoinSuccessFragment;
 
-#[derive(Deserialize, Debug, Validate)]
-pub struct JoinForm {
-    #[validate(length(min = 1, message = "email len min 1"))]
-    pub email: String,
-    #[validate(length(min = 1, message = "pass len min 1"))]
-    pub password: String,
-    pub nick_name: String,
+/// 가입 페이지
+pub async fn join_page() -> impl IntoResponse {
+    HtmlTemplate(
+        JoinTemplate {
+            nick_name_validate_txt: None
+        }
+    )
 }
 
+/// 가입 요청
 pub async fn join_request(
     DatabaseConnection(conn): DatabaseConnection,
-    Form(form): Form<JoinForm>,
+    Form(form): Form<JoinReqDto>,
 ) -> impl IntoResponse {
     // 폼 검증
     if let Err(error) = form.validate() {
@@ -79,21 +57,11 @@ pub async fn join_request(
                 }
             ).into_response()
         }
-        // 실패 디비 에러
+        // 실패 
         Err(UserJoinError::Db)
-            | Err(UserJoinError::InsertFail) => {
+            | Err(UserJoinError::InsertFail)
+            | Err(UserJoinError::PassGenFail) => {
             (StatusCode::INTERNAL_SERVER_ERROR, format!("서버에 문제가 생겼습니다.")).into_response()
         }
     }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ValidateNickname{
-    pub nick_name: String
-}
-pub async fn validate_nickname(
-    Query(form): Query<ValidateNickname>
-) -> impl IntoResponse {
-    info!("query: {:?}", form);
-    Html("OK").into_response()
 }

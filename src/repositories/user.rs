@@ -1,5 +1,4 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
-
 use super::entities::user::User;
 use crate::configs::consts::DB_CODE;
 
@@ -12,10 +11,31 @@ pub async fn select_user_by_nick_name(
             User,
             r#"
                 SELECT *
-                FROM tb_user
-                WHERE nick_name = $1
+                FROM tb_user tu
+                WHERE tu.nick_name = $1
             "#, 
             nick_name
+        )
+        .fetch_optional(conn)
+        .await?
+    )
+}
+
+pub async fn select_user_by_email_and_login_ty_cd(
+    conn: &mut PgConnection,
+    email: String,
+    login_ty_cd: String,
+) -> Result<Option<User>, sqlx::Error> {
+    Ok(
+        sqlx::query_as!(
+            User,
+            r#"
+                SELECT *
+                FROM tb_user tu
+                WHERE tu.email = $1 AND tu.login_ty_cd = $2
+            "#,
+            email,
+            login_ty_cd
         )
         .fetch_optional(conn)
         .await?

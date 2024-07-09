@@ -6,6 +6,7 @@ use tracing::{debug, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir, trace::TraceLayer};
 
+pub mod utils;
 pub mod configs;
 pub mod services;
 pub mod repositories;
