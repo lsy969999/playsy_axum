@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection};
 
-use crate::models::db::refresh_token::RefreshToken;
+use super::entities::refresh_token::RefreshToken;
 
 /**
  * refresh_token 인서트

@@ -1,12 +1,12 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
-use crate::models::db::user::User;
-use crate::models::db::code::DB_CODE;
+
+use super::entities::user::User;
+use crate::configs::consts::DB_CODE;
 
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
     nick_name: String,
 ) -> Result<Option<User>, sqlx::Error> {
-
     Ok(
         sqlx::query_as!(
             User,
