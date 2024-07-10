@@ -43,6 +43,9 @@ argon2 = "0.5.3"
 sha2 = "0.10.8"
 hex = "0.4.3"
 
+# error utill
+thiserror = "1.0.61"
+
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
 opt-level = 3

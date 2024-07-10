@@ -1,11 +1,11 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
 use super::entities::user::User;
-use crate::configs::consts::DB_CODE;
+use crate::configs::{consts::DB_CODE, errors::app_error::RepositoryLayerError};
 
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
     nick_name: String,
-) -> Result<Option<User>, sqlx::Error> {
+) -> Result<Option<User>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
             User,
@@ -25,7 +25,7 @@ pub async fn select_user_by_email_and_login_ty_cd(
     conn: &mut PgConnection,
     email: String,
     login_ty_cd: String,
-) -> Result<Option<User>, sqlx::Error> {
+) -> Result<Option<User>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
             User,
@@ -47,7 +47,7 @@ pub async fn insert_user(
     nick_name: String,
     email: String,
     password: String,
-) -> Result<PgQueryResult, sqlx::Error> {
+) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
     Ok(
         sqlx::query!(

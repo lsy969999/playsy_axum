@@ -1,5 +1,7 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection};
 
+use crate::configs::errors::app_error::RepositoryLayerError;
+
 use super::entities::refresh_token::RefreshToken;
 
 /**
@@ -11,7 +13,7 @@ pub async fn insert_refresh_token(
     hash: String,
     refresh_token: String,
     expires_at: DateTime<Utc>
-) -> Result<PgQueryResult, sqlx::Error> {
+) -> Result<PgQueryResult, RepositoryLayerError> {
     Ok(
         sqlx::query!(
             r#"
@@ -41,7 +43,7 @@ pub async fn select_refresh_token_by_user_sn_and_hash(
     conn: &mut PgConnection,
     user_sn: i32,
     hash: String
-) -> Result<Option<RefreshToken>, sqlx::Error> {
+) -> Result<Option<RefreshToken>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
             RefreshToken,
