@@ -29,7 +29,7 @@ impl IntoResponse for PageHandlerLayerError {
             Self::Service(ServiceLayerError::Repository(_))=> {
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
-            Self::Service(ServiceLayerError::DbTx(_)) => {
+            Self::Service(ServiceLayerError::Jwt(_)) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
             Self::Service(ServiceLayerError::CustomUser(_)) => {

@@ -1,4 +1,4 @@
-use sqlx::{pool::PoolConnection, Acquire, Postgres};
+use sqlx::{pool::PoolConnection, Postgres};
 use tracing::{error, warn};
 use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories, utils};
 
@@ -9,8 +9,7 @@ pub async fn user_join_service(
     email: String,
     password: String,
 ) -> Result<(), ServiceLayerError> {
-    let mut tx = conn.begin().await
-        .map_err(|e| ServiceLayerError::DbTx(e))?;
+    let mut tx = repositories::tx::begin(&mut conn).await?;
 
     // nickname check
     let user = repositories::user::select_user_by_nick_name(
@@ -23,7 +22,7 @@ pub async fn user_join_service(
         return Err(UserError::NickNameExists)?;
     }
 
-    // pass hash
+    // password hash
     let password = utils::hash::hash_argon2(password)
         .map_err(|error| {
             error!("passwod: {}", error);
@@ -43,8 +42,6 @@ pub async fn user_join_service(
         warn!("inser user affeced 0");
     }
 
-    tx.commit().await
-        .map_err(|e| ServiceLayerError::DbTx(e))?;
-
+    repositories::tx::commit(tx).await?;
     Ok(())
 }

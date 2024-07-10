@@ -41,22 +41,19 @@ pub async fn auth_email_request(
         }
         return Ok((StatusCode::BAD_REQUEST, format!("파라미터 부정확")).into_response());
     }
-    let acc = utils::settings::get_settings_jwt_access_keys();
-    let refr = utils::settings::get_settings_jwt_refresh_keys();
+
     // 이메일 로그인 서비스 호출
     Ok(
-        match services::auth::auth_email_request(conn, form.email, form.password, &acc.encoding, &refr.encoding).await {
+        match services::auth::auth_email_request(conn, form.email, form.password).await {
             // 성공
             Ok((access_token, refresh_token)) => {
                 let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
                     .http_only(true)
                     .max_age(Duration::seconds(1 * 60));
-                let jar: CookieJar = jar.add(acc_token_cookie);
                 let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
                     .http_only(true)
                     .max_age(Duration::seconds(1 * 60 * 60));
-                let jar: CookieJar = jar.add(ref_token_cookie);
-                (jar, [("HX-Redirectxxxxx", "/")]).into_response()
+                (jar.add(ref_token_cookie).add(acc_token_cookie), [("HX-Redirectxxxxx", "/")]).into_response()
             }
             // 실패
             Err(err) => Err(err)?

@@ -16,8 +16,8 @@ pub enum PageHandlerLayerError {
 pub enum ServiceLayerError {
     #[error("Repository Layer")]
     Repository(#[from] RepositoryLayerError),
-    #[error("Db Transaction Error")]
-    DbTx(#[from] sqlx::error::Error),
+    #[error("Jwt error")]
+    Jwt(#[from] jsonwebtoken::errors::Error),
     #[error("User Error")]
     CustomUser(#[from] UserError),
     #[error("Crypto Error")]

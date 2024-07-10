@@ -79,3 +79,10 @@ pub async fn auth_cookie_middleware(
         }
     }
 }
+
+pub async fn auth_api_middleware(
+    _req: Request,
+    _next: Next
+) -> Response {
+    todo!()
+}

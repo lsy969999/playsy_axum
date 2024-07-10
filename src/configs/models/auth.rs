@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate)]
@@ -27,6 +30,17 @@ pub struct Claims {
     pub exp: usize, // Mandatory expiry time as UTC timestamp
     pub iat: usize,
     pub scope: Option<String>,
+}
+
+impl Claims {
+    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>) -> Self {
+        Self {
+            sub,
+            exp: exp.unix_timestamp() as usize,
+            iat: iat.unix_timestamp() as usize,
+            scope,
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]

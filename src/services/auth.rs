@@ -1,27 +1,22 @@
-use jsonwebtoken::EncodingKey;
-use sqlx::{pool::PoolConnection, types::chrono::DateTime, Acquire, Postgres};
+use sqlx::{pool::PoolConnection, types::chrono::DateTime, Postgres};
 use time::{Duration, OffsetDateTime};
 use tracing::error;
-use crate::{configs::{consts::DB_CODE, errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::auth::Claims}, repositories, utils::{self, hash::verify_argon2}};
+use crate::{configs::{consts::DB_CODE, errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::auth::Claims}, repositories, utils::{self}};
 
 // 로그인 요청 처리
 pub async fn auth_email_request(
     mut conn: PoolConnection<Postgres>,
     email: String,
     password: String,
-    jwt_acc_encoding_key: &EncodingKey,
-    jwt_refr_encoding_key: &EncodingKey,
 ) -> Result<(String, String), ServiceLayerError> {
-    let mut tx: sqlx::Transaction<Postgres> = conn.begin().await
-        .map_err(|e| ServiceLayerError::DbTx(e))?;
+    let mut tx = repositories::tx::begin(&mut conn).await?;
 
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
             &mut tx,
             email,
             DB_CODE.login_ty_cd.email.to_string()
-        )
-        .await?;
+        ).await?;
 
     // 유저 존재 체크
     let user = match user_select {
@@ -36,7 +31,7 @@ pub async fn auth_email_request(
     };
 
     // 해시 매치 검증
-    let result = verify_argon2(password, password_hash)
+    let result = utils::hash::verify_argon2(password, password_hash)
         .map_err(|error| {
             error!("error {}", error);
             CryptoError::Argon2VerfyFail
@@ -49,30 +44,16 @@ pub async fn auth_email_request(
 
     // 토큰클레임 생성
     let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let access_claims = Claims {
-        sub: user.sn.to_string(),
-        exp: (now + Duration::seconds(1 * 60)).unix_timestamp() as usize,
-        iat: now.unix_timestamp() as usize,
-        scope: None,
-    };
-    let refresh_claims = Claims {
-        sub: user.sn.to_string(),
-        exp: (now + Duration::seconds(1 * 60 * 60)).unix_timestamp() as usize,
-        iat: now.unix_timestamp() as usize,
-        scope: None,
-    };
+    let acc_exp = 1* 60;
+    let refr_exp = 1* 60 * 60;
+    let access_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None);
+    let refresh_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None);
 
-    // 토큰스트링 생성
-    let access_token = utils::jwt::generate_jwt(&access_claims, jwt_acc_encoding_key)
-        .map_err(|error| {
-            error!("error {}", error);
-            AuthError::TokenCreation
-        })?;
-    let refresh_token = utils::jwt::generate_jwt(&refresh_claims, jwt_refr_encoding_key)
-        .map_err(|error| {
-            error!("error {}", error);
-            AuthError::TokenCreation
-        })?;
+    // 토큰 생성
+    let acc = utils::settings::get_settings_jwt_access_keys();
+    let access_token = utils::jwt::generate_jwt(&access_claims, &acc.encoding)?;
+    let refr = utils::settings::get_settings_jwt_refresh_keys();
+    let refresh_token = utils::jwt::generate_jwt(&refresh_claims, &refr.encoding)?;
 
     // 리프래시토큰 디비 저장값 생성
     let refresh_token_hash = utils::hash::hash_sha_256(&refresh_token);
@@ -82,12 +63,14 @@ pub async fn auth_email_request(
     };
     
     // 리프래시 토큰 정보 저장
-    repositories::refresh_token::insert_refresh_token(&mut tx, user.sn, refresh_token_hash, refresh_token.clone(), db_refr_exp_timestap)
-        .await?;
+    repositories::refresh_token::insert_refresh_token(
+            &mut tx,
+            user.sn,
+            refresh_token_hash,
+            refresh_token.clone(),
+            db_refr_exp_timestap
+        ).await?;
 
-    tx.commit().await
-        .map_err(|e| ServiceLayerError::DbTx(e))?;
-    
+    repositories::tx::commit(tx).await?;
     Ok((access_token, refresh_token))
 }
-
