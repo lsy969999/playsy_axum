@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 디테일</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <!-- Navbar -->
+    <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
+        <div class="text-xl font-bold">Playsy</div>
+        <nav class="hidden sm:flex space-x-4">
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">공지사항</a>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow p-6">
+        <h2 class="text-2xl font-bold mb-6 text-center">공지사항</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Notice List -->
+            <div class="bg-white p-6 rounded-lg shadow-lg col-span-1 md:col-span-1">
+                <div class="mb-4">
+                    <h3 class="text-xl font-semibold">공지사항 목록</h3>
+                    <ul>
+                        <li class="mt-2">
+                            <a href="#" class="text-indigo-500 hover:underline">공지사항 1</a>
+                        </li>
+                        <li class="mt-2">
+                            <a href="#" class="text-indigo-500 hover:underline">공지사항 2</a>
+                        </li>
+                        <li class="mt-2">
+                            <a href="#" class="text-indigo-500 hover:underline">공지사항 3</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Notice Detail -->
+            <div class="bg-white p-6 rounded-lg shadow-lg col-span-1 md:col-span-2">
+                <h3 class="text-xl font-semibold">공지사항 1</h3>
+                <p class="text-sm text-gray-600">2024-07-09</p>
+                <p class="mt-4 text-gray-700">여기에는 공지사항 1의 상세 내용이 들어갑니다. 중요한 공지사항의 세부 내용을 여기에 작성합니다. 추가적인 정보와 세부 사항을 포함할 수 있습니다.</p>
+                <p class="mt-2 text-gray-700">공지사항 내용은 여러 문단으로 나눌 수 있으며, 각 문단은 Tailwind CSS 클래스를 사용하여 스타일링할 수 있습니다. 예를 들어, 글씨 색상이나 여백을 조정할 수 있습니다.</p>
+                <p class="mt-2 text-gray-700">또한, 링크를 포함할 수도 있습니다. <a href="#" class="text-indigo-500 hover:underline">자세한 정보</a>.</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        &copy; 2024 Playsy. All rights reserved.
+    </footer>
+</body>
+</html>

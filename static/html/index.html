@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인화면</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <!-- Navbar -->
+    <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
+        <div class="text-xl font-bold">Playsy</div>
+        <button id="menu-button" class="block sm:hidden text-white focus:outline-none">
+            ☰
+        </button>
+        <nav class="hidden sm:flex space-x-4">
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+            <div id="auth-buttons" class="flex space-x-4">
+                <!-- 로그인 상태에 따라 이 부분이 동적으로 변경됩니다. -->
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
+                <!-- 예: <p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button> -->
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 bg-gray-800 text-white p-4 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out sm:relative sm:translate-x-0">
+        <nav class="flex flex-col space-y-4">
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+            <div id="sidebar-auth-buttons" class="flex flex-col space-y-4">
+                <!-- 로그인 상태에 따라 이 부분이 동적으로 변경됩니다. -->
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
+                <!-- 예: <p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button> -->
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main content -->
+    <main class="flex-grow p-4 bg-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-bold mb-2">상품 1</h3>
+                <p class="text-gray-700">상품 설명</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-bold mb-2">상품 2</h3>
+                <p class="text-gray-700">상품 설명</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-bold mb-2">상품 3</h3>
+                <p class="text-gray-700">상품 설명</p>
+            </div>
+            <!-- 추가적인 상품 카드들... -->
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        &copy; 2024 Playsy. All rights reserved.
+    </footer>
+
+    <script>
+        document.getElementById('menu-button').addEventListener('click', function() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // 로그인 상태에 따라 UI를 변경하는 예제 스크립트
+        const isLoggedIn = false;  // 로그인 상태를 나타내는 변수 (false는 로그아웃 상태)
+        const authButtons = document.getElementById('auth-buttons');
+        const sidebarAuthButtons = document.getElementById('sidebar-auth-buttons');
+
+        if (isLoggedIn) {
+            authButtons.innerHTML = '<p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button>';
+            sidebarAuthButtons.innerHTML = '<p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button>';
+        } else {
+            authButtons.innerHTML = '<a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>';
+            sidebarAuthButtons.innerHTML = '<a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>';
+        }
+    </script>
+</body>
+</html>

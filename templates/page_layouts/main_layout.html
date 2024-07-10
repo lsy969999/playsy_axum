@@ -2,11 +2,11 @@
 <html>
     <head>
         <title>{% block title %}My Application{% endblock %}</title>
+        {% include "page_layouts/blocks/default_css.html" %}
     </head>
     <body>
         <header>
             {% block header %}{% endblock %}
-            {% include "page_layouts/blocks/default_css.html" %}
         </header>
         <main>
             {% block content %}{% endblock %}

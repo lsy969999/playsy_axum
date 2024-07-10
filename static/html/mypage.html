@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 정보</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <!-- Navbar -->
+    <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
+        <div class="text-xl font-bold">Playsy</div>
+        <nav class="hidden sm:flex space-x-4">
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+            <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center">나의 정보</h2>
+            <div class="flex flex-col items-center mb-4">
+                <img src="https://via.placeholder.com/100" alt="Avatar" class="rounded-full mb-4">
+                <button class="bg-gray-500 text-white py-1 px-3 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">아바타 변경</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">현재 닉네임</label>
+                <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">asdf</p>
+            </div>
+            <div class="flex items-center justify-between mb-4">
+                <button class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">닉네임 수정</button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">이메일</label>
+                <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">example@example.com</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">가입일</label>
+                <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">2024-01-01</p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        &copy; 2024 Playsy. All rights reserved.
+    </footer>
+</body>
+</html>
