@@ -1,6 +1,6 @@
 use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::{error, warn};
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories, utils};
+use crate::{configs::{consts::DB_CODE, errors::app_error::{CryptoError, ServiceLayerError, UserError}}, repositories, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -11,12 +11,16 @@ pub async fn user_join_service(
 ) -> Result<(), ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
-    // nickname check
+    // nickname exists check
     let nick_is_some = nick_name_is_some(&mut tx, nick_name).await?;
-
-    // nickname duplicate
     if nick_is_some {
-        return Err(UserError::NickNameExists)?;
+        Err(UserError::NickNameExists)?;
+    }
+
+    // user exists check
+    let user_is_some = user_and_ldtye_email_is_some(&mut tx, email).await?;
+    if user_is_some {
+        Err(UserError::UserExists)?;
     }
 
     // password hash
@@ -43,10 +47,19 @@ pub async fn user_join_service(
     Ok(())
 }
 
-pub async fn nick_name_is_some(conn: &mut PgConnection, nick_name: &str,) -> Result<bool, ServiceLayerError> {
+pub async fn nick_name_is_some(conn: &mut PgConnection, nick_name: &str) -> Result<bool, ServiceLayerError> {
     let user = repositories::user::select_user_by_nick_name(
         conn,
         nick_name
+    ).await?;
+    Ok(user.is_some())
+}
+
+pub async fn user_and_ldtye_email_is_some(conn: &mut PgConnection, email: &str) -> Result<bool, ServiceLayerError> {
+    let user = repositories::user::select_user_by_email_and_login_ty_cd(
+        conn,
+        email,
+        DB_CODE.login_ty_cd.email
     ).await?;
     Ok(user.is_some())
 }

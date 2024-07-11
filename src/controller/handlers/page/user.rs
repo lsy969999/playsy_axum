@@ -1,7 +1,7 @@
 use askama::Template;
 use axum::{extract::Query, response::{Html, IntoResponse}, Form};
 use validator::ValidateArgs;
-use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::{JoinNickNameReqDto, JoinReqDto}, services, utils};
+use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, services, utils};
 use crate::configs::filters;
 
 #[derive(Template)]
@@ -56,8 +56,23 @@ pub async fn nick_validate(
     Query(query): Query<JoinNickNameReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &query.nick_name).await?;
-    if let Err(error) = query.validate_with_args(&nick_name_is_some) {
+    let val_ctx = JoinReqValiContext::new(nick_name_is_some, false); // email_is_some 강제로 넣어준다. 이건 Nick_chk니까
+    if let Err(error) = query.validate_with_args(&val_ctx) {
         let nick_name_err_msg = utils::validator::get_validate_error_messages(&error, "nick_name", "<br/>")
+            .unwrap_or("".to_string());
+        return Ok(Html(nick_name_err_msg).into_response())
+    }
+    Ok(Html("").into_response())
+}
+
+pub async fn email_validate(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    Query(query): Query<JoinEmailReqDto>,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let email_is_some = services::user::user_and_ldtye_email_is_some(&mut conn, &query.email).await?;
+    let val_ctx = JoinReqValiContext::new(false, email_is_some); // nick_is_some 강제로 넣어준다. 이건 Email_Chk니까
+    if let Err(error) = query.validate_with_args(&val_ctx) {
+        let nick_name_err_msg = utils::validator::get_validate_error_messages(&error, "email", "<br/>")
             .unwrap_or("".to_string());
         return Ok(Html(nick_name_err_msg).into_response())
     }
@@ -73,7 +88,9 @@ pub async fn join_request(
     // validator 가 async를 지원하지 않아서
     // 이곳에서 먼저 닉을 조회하고, valdator 로직태운다.
     let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &form.nick_name).await?;
-    if let Err(error) = form.validate_with_args(&nick_name_is_some) {
+    let email_is_some = services::user::user_and_ldtye_email_is_some(&mut conn, &form.email).await?;
+    let val_ctx = JoinReqValiContext::new(nick_name_is_some, email_is_some);
+    if let Err(error) = form.validate_with_args(&val_ctx) {
         let nick_name_value = Some(form.nick_name);
         let email_value = Some(form.email);
         let pass_value = Some(form.password);
@@ -93,13 +110,20 @@ pub async fn join_request(
                 HtmlTemplate(JoinSuccessFragment).into_response()
             }
             // 실패 닉네임 중복
-            Err(ServiceLayerError::CustomUser(UserError::NickNameExists)) => {
+            // 실패 이미 존재하는 유저
+            Err(ServiceLayerError::CustomUser(user_err)) => {
                 let nick_name_value = Some(form.nick_name);
                 let email_value = Some(form.email);
                 let pass_value = Some(form.password);
-                let nick_name_err_msg = Some("이미 존재하는 닉네임 입니다.".to_string());
+                let mut nick_name_err_msg = None;
+                let mut email_err_msg = None;
+                match user_err {
+                    UserError::UserExists => email_err_msg = Some("이미 존재하는 이메일 입니다.".to_string()),
+                    UserError::NickNameExists => nick_name_err_msg = Some("이미 존재하는 닉네임 입니다.".to_string()),
+                    err => Err(ServiceLayerError::CustomUser(err))?
+                };
                 HtmlTemplate(
-                    JoinFormFragment::new(nick_name_value, email_value, pass_value, nick_name_err_msg, None, None)
+                    JoinFormFragment::new(nick_name_value, email_value, pass_value, nick_name_err_msg, email_err_msg, None)
                 ).into_response()
             }
             Err(err) => Err(err)?

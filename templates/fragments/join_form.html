@@ -7,15 +7,16 @@
     x-data="{ loading: false }"
     x-on:htmx:before-request="
         //nick_validate 호출시 아래 버튼 로딩 동작하지 않게
-        $event.detail.pathInfo.requestPath !== '/user/nick_validate'
-            ? loading = true : loading = false
+        $event.detail.pathInfo.requestPath === '/user/nick_validate'
+        || $event.detail.pathInfo.requestPath === '/user/email_validate'
+            ? loading = false : loading = true
     "
     x-on:htmx:after-request="loading = false"
     >
     <div
         hx-get="/user/nick_validate"
         hx-include="find input"
-        hx-trigger="keyup from:(find input) throttle:0.3s"
+        hx-trigger="input from:(find input) throttle:0.5s"
         hx-target="find p"
         hx-swap="innerHTML"
     >
@@ -25,11 +26,19 @@
             err_msg=(nick_name_err_msg|nf|linebreaksbr))
         %}
     </div>
-    {% call inputs::email(
-        input_name="이메일", id="email", name="email", required=true,
-        value=(email_value|nf),
-        err_msg=(email_err_msg|nf))
-    %}
+    <div
+        hx-get="/user/email_validate"
+        hx-include="find input"
+        hx-trigger="input from:(find input) throttle:0.5s"
+        hx-target="find p"
+        hx-swap="innerHTML"
+    >
+        {% call inputs::email(
+            input_name="이메일", id="email", name="email", required=true,
+            value=(email_value|nf),
+            err_msg=(email_err_msg|nf))
+        %}
+    </div>
     {% call inputs::password(
         input_name="비밀번호", id="password", name="password", required=true,
         value="",
