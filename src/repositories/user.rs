@@ -4,7 +4,7 @@ use crate::configs::{consts::DB_CODE, errors::app_error::RepositoryLayerError};
 
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
-    nick_name: String,
+    nick_name: &str,
 ) -> Result<Option<User>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
@@ -23,8 +23,8 @@ pub async fn select_user_by_nick_name(
 
 pub async fn select_user_by_email_and_login_ty_cd(
     conn: &mut PgConnection,
-    email: String,
-    login_ty_cd: String,
+    email: &str,
+    login_ty_cd: &str,
 ) -> Result<Option<User>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
@@ -44,9 +44,9 @@ pub async fn select_user_by_email_and_login_ty_cd(
 
 pub async fn insert_user(
     conn: &mut PgConnection,
-    nick_name: String,
-    email: String,
-    password: String,
+    nick_name: &str,
+    email: &str,
+    password: &str,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
     Ok(

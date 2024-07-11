@@ -44,7 +44,7 @@ pub async fn auth_email_request(
 
     // 이메일 로그인 서비스 호출
     Ok(
-        match services::auth::auth_email_request(conn, form.email, form.password).await {
+        match services::auth::auth_email_request(conn, &form.email, &form.password).await {
             // 성공
             Ok((access_token, refresh_token)) => {
                 let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))

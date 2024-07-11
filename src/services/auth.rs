@@ -6,16 +6,18 @@ use crate::{configs::{consts::DB_CODE, errors::app_error::{AuthError, CryptoErro
 // 로그인 요청 처리
 pub async fn auth_email_request(
     mut conn: PoolConnection<Postgres>,
-    email: String,
-    password: String,
+    email: &str,
+    password: &str,
 ) -> Result<(String, String), ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
+
+    
 
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
             &mut tx,
             email,
-            DB_CODE.login_ty_cd.email.to_string()
+            DB_CODE.login_ty_cd.email
         ).await?;
 
     // 유저 존재 체크
@@ -31,7 +33,7 @@ pub async fn auth_email_request(
     };
 
     // 해시 매치 검증
-    let result = utils::hash::verify_argon2(password, password_hash)
+    let result = utils::hash::verify_argon2(password, &password_hash)
         .map_err(|error| {
             error!("error {}", error);
             CryptoError::Argon2VerfyFail

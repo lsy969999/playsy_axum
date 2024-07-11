@@ -1,24 +1,21 @@
-use sqlx::{pool::PoolConnection, Postgres};
+use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::{error, warn};
 use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
     mut conn: PoolConnection<Postgres>,
-    nick_name: String,
-    email: String,
-    password: String,
+    nick_name: &str,
+    email: &str,
+    password: &str,
 ) -> Result<(), ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
     // nickname check
-    let user = repositories::user::select_user_by_nick_name(
-            &mut tx,
-            nick_name.clone()
-        ).await?;
+    let nick_is_some = nick_name_is_some(&mut tx, nick_name).await?;
 
     // nickname duplicate
-    if user.is_some() {
+    if nick_is_some {
         return Err(UserError::NickNameExists)?;
     }
 
@@ -34,7 +31,7 @@ pub async fn user_join_service(
             &mut tx,
             nick_name,
             email,
-            password
+            &password
         ).await?;
     
     // insert wrong
@@ -44,4 +41,12 @@ pub async fn user_join_service(
 
     repositories::tx::commit(tx).await?;
     Ok(())
+}
+
+pub async fn nick_name_is_some(conn: &mut PgConnection, nick_name: &str,) -> Result<bool, ServiceLayerError> {
+    let user = repositories::user::select_user_by_nick_name(
+        conn,
+        nick_name
+    ).await?;
+    Ok(user.is_some())
 }

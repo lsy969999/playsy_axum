@@ -65,3 +65,14 @@ pub fn pass_vali_special_char(password: &str) -> Result<(), ValidationError>{
     }
     Ok(())
 }
+
+pub fn nick_name_vali_dup_chk(_nick_name: &str, is_some: & bool) -> Result<(), ValidationError> {
+    if *is_some {
+        let code = "nnv1";
+        let m = "이미 존재하는 닉네임 입니다.";
+        return Err(
+            ValidationError::new(code).with_message(Cow::Borrowed(m))
+        );
+    }
+    Ok(())
+}

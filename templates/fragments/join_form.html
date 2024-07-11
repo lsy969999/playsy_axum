@@ -16,7 +16,7 @@
     %}
     {% call inputs::password(
         input_name="비밀번호", id="password", name="password", required=true,
-        value=(pass_value|nf),
+        value="",
         err_msg=(pass_err_msg|nf))
     %}
     {% call scope::button(button_name="회원가입") %}

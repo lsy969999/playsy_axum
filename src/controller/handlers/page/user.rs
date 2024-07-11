@@ -1,6 +1,6 @@
 use askama::Template;
 use axum::{response::IntoResponse, Form};
-use validator::Validate;
+use validator::ValidateArgs;
 use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::JoinReqDto, services, utils};
 use crate::configs::filters;
 
@@ -53,11 +53,14 @@ pub async fn join_page() -> impl IntoResponse {
 
 /// 가입 요청
 pub async fn join_request(
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     Form(form): Form<JoinReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     // 파라미터 검증
-    if let Err(error) = form.validate() {
+    // validator 가 async를 지원하지 않아서
+    // 이곳에서 먼저 닉을 조회하고, valdator 로직태운다.
+    let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &form.nick_name).await?;
+    if let Err(error) = form.validate_with_args(&nick_name_is_some) {
         let nick_name_value = Some(form.nick_name);
         let email_value = Some(form.email);
         let pass_value = Some(form.password);
@@ -71,15 +74,19 @@ pub async fn join_request(
 
     // 사용자 가입 서비스 호출
     Ok(
-        match services::user::user_join_service(conn, form.nick_name, form.email, form.password).await {
+        match services::user::user_join_service(conn, &form.nick_name, &form.email, &form.password).await {
             // 성공
             Ok(()) => {
                 HtmlTemplate(JoinSuccessFragment).into_response()
             }
             // 실패 닉네임 중복
             Err(ServiceLayerError::CustomUser(UserError::NickNameExists)) => {
+                let nick_name_value = Some(form.nick_name);
+                let email_value = Some(form.email);
+                let pass_value = Some(form.password);
+                let nick_name_err_msg = Some("이미 존재하는 닉네임 입니다.".to_string());
                 HtmlTemplate(
-                    JoinFormFragment::default()
+                    JoinFormFragment::new(nick_name_value, email_value, pass_value, nick_name_err_msg, None, None)
                 ).into_response()
             }
             Err(err) => Err(err)?
