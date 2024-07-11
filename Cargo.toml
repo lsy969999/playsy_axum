@@ -34,8 +34,9 @@ sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-rustls", "chr
 # open api
 utoipa = { version = "4.2.3", features = ["axum_extras"] }
 
-# 유효성 체크용
+# 유효성 체크
 validator = { version = "0.18.1", features = ["derive"] }
+regex = "1.10.5"
 
 # 인증
 jsonwebtoken = "9.3.0"
@@ -45,7 +46,6 @@ hex = "0.4.3"
 
 # error utill
 thiserror = "1.0.61"
-regex = "1.10.5"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
