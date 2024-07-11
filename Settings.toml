@@ -3,3 +3,6 @@ server_port = 4000
 jwt_secret = "secret"
 jwt_access_secret = "access_secret"
 jwt_refresh_secret = "refresh_secret"
+smtp_from = ""
+smtp_user_name = ""
+smtp_password = ""

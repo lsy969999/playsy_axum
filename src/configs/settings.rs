@@ -18,6 +18,7 @@ pub struct Settings {
     pub server_port: String,
     pub jwt_access_keys: JwtKeys<Access>,
     pub jwt_refresh_keys: JwtKeys<Refresh>,
+    pub smtp_info: SmtpInfo,
 }
 
 impl Settings {
@@ -32,11 +33,16 @@ impl Settings {
         let jwt_refresh_secret = hm.get("jwt_refresh_secret").unwrap();
         let jwt_access_keys = JwtKeys::new(jwt_access_secret);
         let jwt_refresh_keys = JwtKeys::new(jwt_refresh_secret);
+        let smtp_from = hm.get("smtp_from").unwrap().to_string();
+        let smtp_user_name = hm.get("smtp_user_name").unwrap().to_string();
+        let smtp_password = hm.get("smtp_password").unwrap().to_string();
+        let smtp_info = SmtpInfo::new(smtp_from, smtp_user_name, smtp_password);
         Self {
             database_url,
             server_port,
             jwt_access_keys,
-            jwt_refresh_keys
+            jwt_refresh_keys,
+            smtp_info,
         }
     }
 }
@@ -68,5 +74,18 @@ impl<T> JwtKeys<T> {
             decoding: DecodingKey::from_secret(bsecret),
             _marker: PhantomData,
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct SmtpInfo {
+    pub smtp_from: String,
+    pub smtp_user_name: String,
+    pub smtp_password: String
+}
+
+impl SmtpInfo {
+    pub fn new(smtp_from: String, smtp_user_name: String, smtp_password: String) -> Self {
+        Self { smtp_from, smtp_password,smtp_user_name }
     }
 }

@@ -46,6 +46,10 @@ hex = "0.4.3"
 
 # error utill
 thiserror = "1.0.61"
+anyhow = "1.0.86"
+
+# mail
+lettre = "0.11.7"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
