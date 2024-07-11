@@ -2,7 +2,11 @@
 {%- import "macros/inputs.html" as inputs -%}
 <form 
     hx-post="/user/join"
+    hx-trigger="submit"
     hx-swap="outerHTML"
+    x-data="{ loading: false }"
+    @htmx:before-request="loading = true"
+    @htmx:after-request="loading = false"
     >
     {% call inputs::text(
         input_name="닉네임", id="nick_name", name="nick_name", required=true,

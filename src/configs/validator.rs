@@ -76,3 +76,14 @@ pub fn nick_name_vali_dup_chk(_nick_name: &str, is_some: & bool) -> Result<(), V
     }
     Ok(())
 }
+
+pub fn nick_name_vali_char(nick_name: &str) -> Result<(), ValidationError> {
+    let re = Regex::new(r#"^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣!@#$%^&*(),.?\":{}|]*$"#).unwrap();
+    if re.is_match(nick_name) {
+        Ok(())
+    } else {
+        let code = "nnvc1";
+        let m = "한글숫자영어 일부 특수문자만 입력 가능합니다.";
+        Err(ValidationError::new(code).with_message(Cow::Borrowed(m)))
+    }
+}
