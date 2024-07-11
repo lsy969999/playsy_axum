@@ -14,6 +14,7 @@ fn get_user_page_router() -> Router<Arc<AppState>> {
         .route(
             "/join",
             get(page::user::join_page)
-                .post(page::user::join_request)
+                .post(page::user::join_request),
         )
+        .route("/nick_validate", get(page::user::nick_validate))
 }

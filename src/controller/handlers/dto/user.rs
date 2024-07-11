@@ -4,6 +4,15 @@ use crate::configs::validator::{pass_vali_1_lower, pass_vali_1_num, pass_vali_1_
 
 #[derive(Deserialize, Debug, Validate)]
 #[validate(context = "bool")]
+pub struct JoinNickNameReqDto {
+    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
+    #[validate(custom(function="nick_name_vali_dup_chk", use_context))]
+    #[validate(custom(function="nick_name_vali_char"))]
+    pub nick_name: String,
+}
+
+#[derive(Deserialize, Debug, Validate)]
+#[validate(context = "bool")]
 pub struct JoinReqDto {
     #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
     #[validate(custom(function="nick_name_vali_dup_chk", use_context))]

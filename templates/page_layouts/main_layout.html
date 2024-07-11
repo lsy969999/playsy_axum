@@ -58,5 +58,13 @@
             &copy; 2024 Playsy. All rights reserved.
         </footer>
         {% include "page_layouts/blocks/default_script.html" %}
+
+        <script>
+            document.onload = () => {
+                document.body.addEventListener('htmx:responseError', function (evt) {
+                    alert('server responseError')
+                });
+            }
+        </script>
     </body>
 </html>

@@ -1,7 +1,7 @@
 use askama::Template;
-use axum::{response::IntoResponse, Form};
+use axum::{extract::Query, response::{Html, IntoResponse}, Form};
 use validator::ValidateArgs;
-use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::JoinReqDto, services, utils};
+use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::{JoinNickNameReqDto, JoinReqDto}, services, utils};
 use crate::configs::filters;
 
 #[derive(Template)]
@@ -49,6 +49,19 @@ pub async fn join_page() -> impl IntoResponse {
             join_form: JoinFormFragment::default()
         }
     )
+}
+
+pub async fn nick_validate(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    Query(query): Query<JoinNickNameReqDto>,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &query.nick_name).await?;
+    if let Err(error) = query.validate_with_args(&nick_name_is_some) {
+        let nick_name_err_msg = utils::validator::get_validate_error_messages(&error, "nick_name", "<br/>")
+            .unwrap_or("".to_string());
+        return Ok(Html(nick_name_err_msg).into_response())
+    }
+    Ok(Html("").into_response())
 }
 
 /// 가입 요청

@@ -10,7 +10,7 @@
 
 <!-- 이메일 인풋 -->
 {% macro email(input_name, id, name, required, value, err_msg) %}
-    {% call _input(input_name, id, name, required, "text", value, err_msg) %}
+    {% call _input(input_name, id, name, required, "email", value, err_msg) %}
 {% endmacro %}
 
 
@@ -28,6 +28,6 @@
                 name="{{ name }}"
                 value="{{ value }}"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></input>
-                <p class="mt-1 text-sm text-red-500"> {{ err_msg|safe }} </p>
+                <p id="{{ id }}_err" class="mt-1 text-sm text-red-500"> {{ err_msg|safe }} </p>
     </div>
 {% endmacro %}
