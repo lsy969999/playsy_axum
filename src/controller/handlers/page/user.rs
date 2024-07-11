@@ -1,20 +1,41 @@
 use askama::Template;
 use axum::{response::IntoResponse, Form};
-use hyper::StatusCode;
-use tracing::error;
 use validator::Validate;
-use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::JoinReqDto, services};
+use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::user::JoinReqDto, services, utils};
+use crate::configs::filters;
 
 #[derive(Template)]
 #[template(path="pages/join.html")]
-struct JoinTemplate<'a> {
-    join_form: JoinFormFragment<'a>
+struct JoinTemplate {
+    join_form: JoinFormFragment
 }
 
 #[derive(Template)]
 #[template(path="fragments/join_form.html")]
-struct JoinFormFragment<'a> {
-    nick_name_validate_txt: Option<&'a str>
+struct JoinFormFragment {
+    nick_name_value: Option<String>,
+    email_value: Option<String>,
+    pass_value: Option<String>,
+    nick_name_err_msg: Option<String>,
+    email_err_msg: Option<String>,
+    pass_err_msg: Option<String>,
+}
+impl JoinFormFragment {
+    pub fn new(
+        nick_name_value: Option<String>,
+        email_value: Option<String>,
+        pass_value: Option<String>,
+        nick_name_err_msg: Option<String>,
+        email_err_msg: Option<String>,
+        pass_err_msg: Option<String>,
+    ) -> Self {
+        Self { nick_name_value, email_value, pass_value, nick_name_err_msg, email_err_msg, pass_err_msg }
+    }
+}
+impl Default for JoinFormFragment {
+    fn default() -> Self {
+        Self { nick_name_value: None, email_value: None, pass_value: None, nick_name_err_msg: None, email_err_msg: None, pass_err_msg: None }
+    }
 }
 
 #[derive(Template)]
@@ -25,9 +46,7 @@ struct JoinSuccessFragment;
 pub async fn join_page() -> impl IntoResponse {
     HtmlTemplate(
         JoinTemplate {
-            join_form: JoinFormFragment {
-                nick_name_validate_txt: None
-            }
+            join_form: JoinFormFragment::default()
         }
     )
 }
@@ -39,10 +58,15 @@ pub async fn join_request(
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     // 파라미터 검증
     if let Err(error) = form.validate() {
-        for (field, error) in error.field_errors() {
-            error!("validate error, field: {:?}, error: {:?}", field, error);
-        }
-        return Ok((StatusCode::BAD_REQUEST, format!("파라미터 부정확")).into_response());
+        let nick_name_value = Some(form.nick_name);
+        let email_value = Some(form.email);
+        let pass_value = Some(form.password);
+        let nick_name_err_msg = utils::validator::get_validate_error_messages(&error, "nick_name", "<br/>");
+        let email_err_msg = utils::validator::get_validate_error_messages(&error, "email", "<br/>");
+        let pass_err_msg = utils::validator::get_validate_error_messages(&error, "password", "<br/>");
+        return Ok(HtmlTemplate(
+                JoinFormFragment::new(nick_name_value, email_value, pass_value, nick_name_err_msg, email_err_msg, pass_err_msg)
+            ).into_response())
     }
 
     // 사용자 가입 서비스 호출
@@ -55,9 +79,7 @@ pub async fn join_request(
             // 실패 닉네임 중복
             Err(ServiceLayerError::CustomUser(UserError::NickNameExists)) => {
                 HtmlTemplate(
-                    JoinFormFragment {
-                        nick_name_validate_txt: Some("사용자 닉네임이 이미 존재합니다.")
-                    }
+                    JoinFormFragment::default()
                 ).into_response()
             }
             Err(err) => Err(err)?

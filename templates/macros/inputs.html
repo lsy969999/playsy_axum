@@ -1,0 +1,33 @@
+<!-- 텍스트 인풋 -->
+{% macro text(input_name, id, name, required, value, err_msg) %}
+    {% call _input(input_name, id, name, required, "text", value, err_msg) %}
+{% endmacro %}
+
+<!-- 패스워드 인풋 -->
+{% macro password(input_name, id, name, required, value, err_msg) %}
+    {% call _input(input_name, id, name, required, "password", value, err_msg) %}
+{% endmacro %}
+
+<!-- 이메일 인풋 -->
+{% macro email(input_name, id, name, required, value, err_msg) %}
+    {% call _input(input_name, id, name, required, "email", value, err_msg) %}
+{% endmacro %}
+
+
+<!-- 베이스인풋 -->
+{% macro _input(button_name, id, name, required, itype, value, err_msg) %}
+    <div class="mb-6">
+        <label  for="{{ id }}"
+                class="block text-sm font-medium text-gray-700">
+                {{ button_name }}
+        </label>
+        <input  id="{{ id }}"
+                autoComplete="off" 
+                {% if required %} required  {% endif %}
+                type="{{ itype }}"
+                name="{{ name }}"
+                value="{{ value }}"
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></input>
+                <p class="mt-1 text-sm text-red-500"> {{ err_msg|safe }} </p>
+    </div>
+{% endmacro %}

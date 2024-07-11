@@ -4,15 +4,58 @@
         <title>{% block title %}My Application{% endblock %}</title>
         {% include "page_layouts/blocks/default_css.html" %}
     </head>
-    <body>
-        <header>
-            {% block header %}{% endblock %}
+    <body
+        x-data="{ menu_toggle: false }"
+        class="flex flex-col min-h-screen bg-gray-100">
+        <!-- Navbar -->
+        <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
+            <a href="/" >
+                <div class="text-xl font-bold">Playsy</div>
+            </a>
+            
+            <button
+                x-on:click="menu_toggle = !menu_toggle" 
+                id="menu-button" class="block sm:hidden text-white focus:outline-none">
+                ☰
+            </button>
+            <nav class="hidden sm:flex space-x-4">
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+                <div id="auth-buttons" class="flex space-x-4">
+                    <!-- 로그인 상태에 따라 이 부분이 동적으로 변경됩니다. -->
+                    <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
+                    <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a>
+                    <!-- 예: <p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button> -->
+                </div>
+            </nav>
         </header>
-        <main>
-            {% block content %}{% endblock %}
-        </main>
-        <footer>
-            {% block footer %} <p>&copy; 2024 playsy</p> {% endblock %}
+        <!-- Sidebar -->
+        <div
+            x-bind:class="menu_toggle ? '' : '-translate-x-full'"
+            id="sidebar" class="fixed inset-y-0 left-0 bg-gray-800 text-white p-4 w-64 transform transition-transform duration-300 ease-in-out sm:hidden">
+            <nav class="flex flex-col space-y-4">
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
+                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
+                <div id="sidebar-auth-buttons" class="flex flex-col space-y-4">
+                    <!-- 로그인 상태에 따라 이 부분이 동적으로 변경됩니다. -->
+                    <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
+                    <!-- 예: <p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button> -->
+                </div>
+            </nav>
+        </div>
+
+        <!-- Content -->
+        {% block content %}
+            <main class="flex-grow flex items-center justify-center">
+                hi
+            </main>
+        {% endblock %}
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white p-4 text-center">
+            &copy; 2024 Playsy. All rights reserved.
         </footer>
         {% include "page_layouts/blocks/default_script.html" %}
     </body>

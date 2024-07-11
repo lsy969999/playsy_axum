@@ -1,12 +1,19 @@
 use serde::Deserialize;
 use validator::Validate;
+use crate::configs::validator::{pass_vali_1_lower, pass_vali_1_num, pass_vali_1_upper, pass_vali_len_8, pass_vali_special_char};
 
 #[derive(Deserialize, Debug, Validate)]
 pub struct JoinReqDto {
-    #[validate(length(min = 1, message = "email len min 1"))]
-    pub email: String,
-    #[validate(length(min = 1, message = "password len min 1"))]
-    pub password: String,
-    #[validate(length(min = 1, message = "nick_name len min 1"))]
+    #[validate(length(min = 3, message = "닉네임은 3글자 이상 이어야 합니다."))]
     pub nick_name: String,
+    
+    #[validate(email(message="이메일 형식 이어야 합니다."))]
+    pub email: String,
+    
+    #[validate(custom(function="pass_vali_len_8"))]
+    #[validate(custom(function="pass_vali_1_upper"))]
+    #[validate(custom(function="pass_vali_1_lower"))]
+    #[validate(custom(function="pass_vali_1_num"))]
+    #[validate(custom(function="pass_vali_special_char"))]
+    pub password: String,
 }

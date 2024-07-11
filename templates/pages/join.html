@@ -5,11 +5,10 @@
 {% endblock %}
 
 {% block content %}
-    <div>
-        <h1>회원가입 페이지</h1>
-        <hr>
-        <div>
+    <main class="flex-grow flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-6 text-center">회원가입</h2>
             {{ join_form|safe }}
         </div>
-    </div>
+    </main>
 {% endblock %}

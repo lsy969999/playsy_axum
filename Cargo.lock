@@ -2861,6 +2861,7 @@ dependencies = [
  "hyper",
  "jsonwebtoken",
  "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "sha2",

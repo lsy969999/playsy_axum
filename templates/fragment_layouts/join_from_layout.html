@@ -1,39 +1,54 @@
-<form
+{%- import "macros/buttons.html" as scope -%}
+{%- import "macros/inputs.html" as inputs -%}
+<form 
     hx-post="/user/join"
     hx-swap="outerHTML"
-    x-data="{ loading: false }"
-    @htmx:before-request="loading = true"
-    @htmx:after-request="loading = false"
 >
-    {% block aa %}{% endblock %}
-    <div>
-        <label for="id">ID:</label>
-        <input id="id" name="email" type="text">
-    </div>
-    <div>
-        <label for="password">PW:</label>
-        <input id="password" name="password" type="password"
-    </div>
-    <div>
-        <label for="nick_name">NickName:</label>
-        <input id="nick_name" name="nick_name" type="text" />
-
-        {%- if let Some(txt) = nick_name_validate_txt -%}
-            {{ txt }}
-        {%- endif -%}
-
-        {# 주석
-            {%- match nick_name_validate_txt -%}
-                {%- when None -%}
-                {%- when Some(num) -%}
-                    {{num}}
-            {%- endmatch -%}
-        #}
-    <button
-        type="submit"
-        class="button"
-        :class="loading ? 'is-loading' : ''"
-        >
-        Join!
-    </button>
+    {% call inputs::text(input_name="닉네임", id="nick_name", name="nick_name", required=false, err_msg="") %}
+    {% call inputs::email(input_name="이메일", id="email", name="email", required=false, err_msg="") %}
+    {% call inputs::password(input_name="비밀번호", id="password", name="password", required=false, err_msg="") %}
+    {% call scope::button(button_name="회원가입") %}
 </form>
+
+
+{# 주석
+    <form
+        hx-post="/user/join"
+        hx-swap="outerHTML"
+        x-data="{ loading: false }"
+        @htmx:before-request="loading = true"
+        @htmx:after-request="loading = false"
+    >
+        {% block aa %}{% endblock %}
+        <div>
+            <label for="id">ID:</label>
+            <input id="id" name="email" type="text">
+        </div>
+        <div>
+            <label for="password">PW:</label>
+            <input id="password" name="password" type="password"
+        </div>
+        <div>
+            <label for="nick_name">NickName:</label>
+            <input id="nick_name" name="nick_name" type="text" />
+
+            {%- if let Some(txt) = nick_name_validate_txt -%}
+                {{ txt }}
+            {%- endif -%}
+
+            
+                {%- match nick_name_validate_txt -%}
+                    {%- when None -%}
+                    {%- when Some(num) -%}
+                        {{num}}
+                {%- endmatch -%}
+            
+        <button
+            type="submit"
+            class="button"
+            :class="loading ? 'is-loading' : ''"
+            >
+            Join!
+        </button>
+    </form>
+#}
