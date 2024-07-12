@@ -1,13 +1,20 @@
 use askama::Template;
 use axum::response::IntoResponse;
-
-use crate::configs::into_responses::html_template::HtmlTemplate;
-
+use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate};
+use super::fragment::user_info::UserInfo;
 
 #[derive(Template)]
 #[template(path="pages/home.html")]
-struct HomeTemplate;
+struct HomeTemplate {
+    user_info: Option<UserInfo>
+}
 
-pub async fn home_page() -> impl IntoResponse{
-    HtmlTemplate(HomeTemplate)
+pub async fn home_page(
+    ExtUserInfo(user_info): ExtUserInfo
+) -> impl IntoResponse{
+    HtmlTemplate(
+        HomeTemplate{
+            user_info
+        }
+    )
 }

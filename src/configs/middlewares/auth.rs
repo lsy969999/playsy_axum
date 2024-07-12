@@ -1,7 +1,7 @@
 use axum::{extract::Request, middleware::Next, response::Response};
 use axum_extra::extract::CookieJar;
 use jsonwebtoken::{decode, Validation};
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, models::auth::Claims}, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, models::claims::Claims}, utils};
 
 /**
  *  access_token 검증

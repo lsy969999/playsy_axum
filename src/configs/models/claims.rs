@@ -1,14 +1,5 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
-use validator::Validate;
-
-#[derive(Debug, Deserialize, Validate)]
-pub struct AuthPayload {
-    #[validate(email(message="must email"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "password min length is 8"))]
-    pub password: String,
-}
 
 /**
  * sub (Subject): 토큰의 주체, 일반적으로 사용자 ID
@@ -21,6 +12,15 @@ pub struct AuthPayload {
  * scope: 권한 또는 역할 정보
  * email: 사용자 이메일 (선택적)
  * name: 사용자 이름 (선택적)
+ * 
+ * struct Claims {
+    aud: String,         // Optional. Audience
+    exp: usize,          // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
+    iat: usize,          // Optional. Issued at (as UTC timestamp)
+    iss: String,         // Optional. Issuer
+    nbf: usize,          // Optional. Not Before (as UTC timestamp)
+    sub: String,         // Optional. Subject (whom token refers to)
+}
  */
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -37,21 +37,6 @@ impl Claims {
             exp: exp.unix_timestamp() as usize,
             iat: iat.unix_timestamp() as usize,
             scope,
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct AuthBody {
-    pub access_token: String,
-    pub token_type: String,
-}
-
-impl AuthBody {
-    pub fn new(access_token: String) -> Self {
-        Self {
-            access_token,
-            token_type: "Bearer".to_string(),
         }
     }
 }

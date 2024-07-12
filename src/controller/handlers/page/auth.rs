@@ -4,9 +4,12 @@ use axum_extra::extract::{cookie::Cookie, CookieJar};
 use time::Duration;
 use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 use crate::configs::filters;
+
+use super::fragment::user_info::UserInfo;
 #[derive(Template)]
 #[template(path="pages/auth.html")]
 struct AuthTemplate {
+    user_info: Option<UserInfo>,
     auth_form: AuthFormFragment
 }
 
@@ -38,9 +41,24 @@ struct AuthFailTemplate;
 pub async fn auth_page() -> impl IntoResponse {
     HtmlTemplate(
         AuthTemplate {
-            auth_form: AuthFormFragment::default()
+            auth_form: AuthFormFragment::default(),
+            user_info: None,
         }
     )
+}
+
+pub async fn logout(jar: CookieJar) -> impl IntoResponse {
+    let acc_token_cookie = Cookie::build((ACCESS_TOKEN, ""))
+        .path("/")
+        .http_only(true)
+        .max_age(Duration::seconds(0));
+    let ref_token_cookie = Cookie::build((REFRESH_TOKEN, ""))
+        .path("/")
+        .http_only(true)
+        .max_age(Duration::seconds(0));
+    let jar = jar.remove(acc_token_cookie);
+    let jar = jar.remove(ref_token_cookie);
+    (jar, [("HX-Redirect", "/")])
 }
 
 pub async fn auth_email_request(
@@ -55,10 +73,12 @@ pub async fn auth_email_request(
             Ok((access_token, refresh_token)) => {
                 let acc_time = utils::settings::get_jwt_access_time();
                 let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
+                    .path("/")
                     .http_only(true)
                     .max_age(Duration::seconds(*acc_time));
                 let refr_time = utils::settings::get_jwt_refresh_time();
                 let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
+                    .path("/")
                     .http_only(true)
                     .max_age(Duration::seconds(*refr_time));
                 (jar.add(ref_token_cookie).add(acc_token_cookie), [("HX-Redirect", "/")]).into_response()

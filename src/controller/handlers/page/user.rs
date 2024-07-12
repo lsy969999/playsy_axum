@@ -4,10 +4,13 @@ use validator::ValidateArgs;
 use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, services, utils};
 use crate::configs::filters;
 
+use super::fragment::user_info::UserInfo;
+
 #[derive(Template)]
 #[template(path="pages/join.html")]
 struct JoinTemplate {
-    join_form: JoinFormFragment
+    user_info: Option<UserInfo>,
+    join_form: JoinFormFragment,
 }
 
 #[derive(Template)]
@@ -46,6 +49,7 @@ struct JoinSuccessFragment;
 pub async fn join_page() -> impl IntoResponse {
     HtmlTemplate(
         JoinTemplate {
+            user_info: None,
             join_form: JoinFormFragment::default()
         }
     )
