@@ -1,7 +1,7 @@
 use sqlx::{pool::PoolConnection, types::chrono::DateTime, Postgres};
 use time::{Duration, OffsetDateTime};
 use tracing::error;
-use crate::{configs::{consts::DB_CODE, errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::Claims}, repositories, utils::{self}};
+use crate::{configs::{errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::Claims}, repositories::{self, enums::user::ProviderTyEnum}, utils::{self}};
 
 // 로그인 요청 처리
 pub async fn auth_email_request(
@@ -15,7 +15,7 @@ pub async fn auth_email_request(
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
             &mut tx,
             email,
-            DB_CODE.login_ty_cd.email
+            ProviderTyEnum::Email
         ).await?;
 
     // 유저 존재 체크

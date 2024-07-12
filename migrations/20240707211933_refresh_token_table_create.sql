@@ -18,9 +18,9 @@ CREATE TABLE tb_refresh_token(
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by int NOT NULL,
+    created_by INT NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_by int NOT NULL,
+    updated_by INT NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 COMMENT ON TABLE tb_refresh_token IS '새로고침토큰 테이블';

@@ -1,13 +1,13 @@
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
 use serde_json::json;
-use crate::configs::errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, ServiceLayerError};
+use crate::configs::errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, RepositoryLayerError, ServiceLayerError};
 
 impl IntoResponse for PageHandlerLayerError {
     fn into_response(self) -> axum::response::Response {
         const TAG: &str = "[PageHandlerLayerError] ServiceLayerError::Repository";
         let (statue, error_message) = match self {
-            Self::Service(ServiceLayerError::Repository(err))=> {
+            Self::Service(ServiceLayerError::Repository(RepositoryLayerError::Db(err)))=> {
                 tracing::error!("{TAG} {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }

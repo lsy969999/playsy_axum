@@ -1,6 +1,6 @@
 use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::{error, warn};
-use crate::{configs::{consts::DB_CODE, errors::app_error::{CryptoError, ServiceLayerError, UserError}}, repositories, utils};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories::{self, enums::{user::ProviderTyEnum, user::UserSttEnum}}, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -35,7 +35,9 @@ pub async fn user_join_service(
             &mut tx,
             nick_name,
             email,
-            &password
+            &password,
+            ProviderTyEnum::Email,
+            UserSttEnum::WaitEmailVeri,
         ).await?;
     
     // insert wrong
@@ -59,7 +61,7 @@ pub async fn user_and_ldtye_email_is_some(conn: &mut PgConnection, email: &str) 
     let user = repositories::user::select_user_by_email_and_login_ty_cd(
         conn,
         email,
-        DB_CODE.login_ty_cd.email
+        ProviderTyEnum::Email,
     ).await?;
     Ok(user.is_some())
 }

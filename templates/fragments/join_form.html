@@ -17,7 +17,7 @@
     <div
         hx-get="/user/nick_validate"
         hx-include="find input"
-        hx-trigger="input from:(find input) throttle:0.5s"
+        hx-trigger="input from:(find input) delay:0.3s"
         hx-target="find p"
         hx-swap="innerHTML"
     >
@@ -30,7 +30,7 @@
     <div
         hx-get="/user/email_validate"
         hx-include="find input"
-        hx-trigger="input from:(find input) throttle:0.5s"
+        hx-trigger="input from:(find input) delay:0.3s"
         hx-target="find p"
         hx-swap="innerHTML"
     >

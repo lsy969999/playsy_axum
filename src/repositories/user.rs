@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
-use super::entities::user::User;
-use crate::configs::{consts::DB_CODE, errors::app_error::RepositoryLayerError};
+use super::{entities::user::User, enums::{user::ProviderTyEnum, user::UserSttEnum, user::UserTyEnum}};
+use crate::configs::errors::app_error::RepositoryLayerError;
 
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
@@ -10,7 +10,22 @@ pub async fn select_user_by_nick_name(
         sqlx::query_as!(
             User,
             r#"
-                SELECT *
+                SELECT 
+                    sn,
+                    avatar_url,
+                    nick_name,
+                    email,
+                    password,
+                    provider_id,
+                    provider_secret,
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    is_deleted
                 FROM tb_user tu
                 WHERE tu.nick_name = $1
             "#, 
@@ -24,18 +39,33 @@ pub async fn select_user_by_nick_name(
 pub async fn select_user_by_email_and_login_ty_cd(
     conn: &mut PgConnection,
     email: &str,
-    login_ty_cd: &str,
+    provider_ty_enum: ProviderTyEnum,
 ) -> Result<Option<User>, RepositoryLayerError> {
     Ok(
         sqlx::query_as!(
             User,
             r#"
-                SELECT *
+                SELECT 
+                    sn,
+                    avatar_url,
+                    nick_name,
+                    email,
+                    password,
+                    provider_id,
+                    provider_secret,
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    is_deleted
                 FROM tb_user tu
-                WHERE tu.email = $1 AND tu.login_ty_cd = $2
+                WHERE tu.email = $1 AND tu.provider_ty_enum = $2
             "#,
             email,
-            login_ty_cd
+            provider_ty_enum as ProviderTyEnum
         )
         .fetch_optional(conn)
         .await?
@@ -47,6 +77,8 @@ pub async fn insert_user(
     nick_name: &str,
     email: &str,
     password: &str,
+    provider_ty_enum: ProviderTyEnum,
+    user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
     Ok(
@@ -54,25 +86,22 @@ pub async fn insert_user(
             r#"
                 INSERT INTO tb_user
                 (
-                    nick_name, login_ty_cd, email, password, user_stt_cd, 
-                    user_ty_cd, created_at, created_by, updated_at, updated_by
+                    nick_name, email, password,
+                    provider_ty_enum , user_stt_enum, user_ty_enum,
+                    created_at, created_by, updated_at, updated_by
                 )
                 VALUES
                 (
-                    $1, $2, $3, $4, $5,
-                    $6, $7, $8, $9, $10
+                    $1, $2, $3,
+                    $4, $5, $6,
+                    $7, $8, $9, $10
                 )
             "#,
-            nick_name,
-            DB_CODE.login_ty_cd.email,
-            email,
-            password,
-            DB_CODE.user_stt_cd.ok,
-            DB_CODE.user_ty_cd.user,
-            now,
-            1,
-            now,
-            1
+            nick_name, email, password,
+            provider_ty_enum as ProviderTyEnum,
+                user_stt_enum as UserSttEnum,
+                    UserTyEnum::User as UserTyEnum,
+            now, 1, now, 1
         )
         .execute(conn)
         .await?

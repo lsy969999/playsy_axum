@@ -7,9 +7,9 @@ CREATE TABLE tb_code (
     code_desc VARCHAR(100),
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by int NOT NULL,
+    created_by INT NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_by int NOT NULL,
+    updated_by INT NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(code_id, code_value)
 );
