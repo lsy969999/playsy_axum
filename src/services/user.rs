@@ -30,9 +30,12 @@ pub async fn user_join_service(
             CryptoError::Argon2GenFail
         })?;
 
+    let sequence = repositories::user::select_next_user_seq(&mut tx).await?;
+    
     // add user
     let insert = repositories::user::insert_user(
             &mut tx,
+            sequence.nextval as i32,
             nick_name,
             email,
             &password,

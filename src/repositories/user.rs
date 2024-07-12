@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
 use super::{entities::user::User, enums::{user::ProviderTyEnum, user::UserSttEnum, user::UserTyEnum}};
-use crate::configs::errors::app_error::RepositoryLayerError;
+use crate::{configs::errors::app_error::RepositoryLayerError, repositories::entities::sequence::Sequence};
 
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
@@ -62,7 +62,10 @@ pub async fn select_user_by_email_and_login_ty_cd(
                     updated_by,
                     is_deleted
                 FROM tb_user tu
-                WHERE tu.email = $1 AND tu.provider_ty_enum = $2
+                WHERE 1 = 1
+                    AND tu.email = $1
+                    AND tu.provider_ty_enum = $2
+                    AND tu.is_deleted = FALSE
             "#,
             email,
             provider_ty_enum as ProviderTyEnum
@@ -72,36 +75,50 @@ pub async fn select_user_by_email_and_login_ty_cd(
     )
 }
 
+pub async fn select_next_user_seq(conn: &mut PgConnection) -> Result<Sequence, RepositoryLayerError> {
+    let sequence = sqlx::query_as!(
+        Sequence,
+        r#"
+            SELECT nextval('tb_user_seq') AS "nextval!: i64"
+        "#
+    )
+    .fetch_one(conn)
+    .await?;
+    Ok(sequence)
+}
+
 pub async fn insert_user(
     conn: &mut PgConnection,
+    user_sn: i32,
     nick_name: &str,
     email: &str,
     password: &str,
     provider_ty_enum: ProviderTyEnum,
     user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
+    
     let now = Utc::now();
     Ok(
         sqlx::query!(
             r#"
                 INSERT INTO tb_user
                 (
-                    nick_name, email, password,
+                    sn, nick_name, email, password,
                     provider_ty_enum , user_stt_enum, user_ty_enum,
                     created_at, created_by, updated_at, updated_by
                 )
                 VALUES
                 (
-                    $1, $2, $3,
-                    $4, $5, $6,
-                    $7, $8, $9, $10
+                    $1, $2, $3, $4,
+                    $5, $6, $7,
+                    $8, $9, $10, $11
                 )
             "#,
-            nick_name, email, password,
+            user_sn, nick_name, email, password,
             provider_ty_enum as ProviderTyEnum,
                 user_stt_enum as UserSttEnum,
                     UserTyEnum::User as UserTyEnum,
-            now, 1, now, 1
+            now, user_sn, now, user_sn
         )
         .execute(conn)
         .await?
