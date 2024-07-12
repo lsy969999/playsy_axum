@@ -12,11 +12,11 @@
             err_modal_body: '',
         }"
         x-on:htmx:response-error="
-            # 첫진입 깜빡임 제거
-            document.getElementById('error_modal').classList.remove('hidden')
+            // 첫진입 깜빡임 제거
+            document.getElementById('error_modal').classList.remove('hidden');
             console.error('htmx error!!', $event);
             const responseJSON = JSON.parse($event.detail.xhr.responseText);
-            err_modal_head = '서버처리중 에러가 발생하였습니다.'
+            err_modal_head = '서버처리중 에러가 발생하였습니다.';
             err_modal_body = responseJSON.error_message;
             err_modal_open = true;
         "
