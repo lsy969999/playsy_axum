@@ -19,6 +19,8 @@ pub struct Settings {
     pub jwt_access_keys: JwtKeys<Access>,
     pub jwt_refresh_keys: JwtKeys<Refresh>,
     pub smtp_info: SmtpInfo,
+    pub jwt_access_time: i64,
+    pub jwt_refresh_time: i64,
 }
 
 impl Settings {
@@ -37,12 +39,16 @@ impl Settings {
         let smtp_user_name = hm.get("smtp_user_name").unwrap().to_string();
         let smtp_password = hm.get("smtp_password").unwrap().to_string();
         let smtp_info = SmtpInfo::new(smtp_from, smtp_user_name, smtp_password);
+        let jwt_access_time: i64 = hm.get("jwt_access_time").unwrap().parse().unwrap();
+        let jwt_refresh_time: i64 = hm.get("jwt_refresh_time").unwrap().parse().unwrap();
         Self {
             database_url,
             server_port,
             jwt_access_keys,
             jwt_refresh_keys,
             smtp_info,
+            jwt_access_time,
+            jwt_refresh_time,
         }
     }
 }

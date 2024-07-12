@@ -11,3 +11,11 @@ pub fn get_settings_jwt_refresh_keys() -> &'static JwtKeys<Refresh> {
 pub fn get_settings_smtp_info() -> &'static SmtpInfo {
     &SETTINGS.get().unwrap().smtp_info
 }
+
+pub fn get_jwt_access_time() -> &'static i64 {
+    &SETTINGS.get().unwrap().jwt_access_time
+}
+
+pub fn get_jwt_refresh_time() -> &'static i64 {
+    &SETTINGS.get().unwrap().jwt_refresh_time
+}

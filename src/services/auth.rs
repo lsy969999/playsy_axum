@@ -44,8 +44,8 @@ pub async fn auth_email_request(
 
     // 토큰클레임 생성
     let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let acc_exp = 1* 60;
-    let refr_exp = 1* 60 * 60;
+    let acc_exp = *utils::settings::get_jwt_access_time();
+    let refr_exp = *utils::settings::get_jwt_refresh_time();
     let access_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None);
     let refresh_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None);
 

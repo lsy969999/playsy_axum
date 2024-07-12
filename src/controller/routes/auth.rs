@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{routing::get, Router};
+use axum::{routing::{get, post}, Router};
 
 use crate::{configs::models::app_state::AppState, controller::handlers::page};
 
@@ -11,10 +11,8 @@ pub fn get_auth_router() -> Router<Arc<AppState>> {
 
 fn get_auth_page_router() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/",
-            get(page::auth::auth_page)
-            .post(page::auth::auth_email_request)
-        )
+        .route("/", get(page::auth::auth_page))
+        .route("/email", post(page::auth::auth_email_request))
 }
 
 fn get_auth_api_router() -> Router<Arc<AppState>> {

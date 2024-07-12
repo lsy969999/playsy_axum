@@ -48,24 +48,19 @@ pub async fn auth_email_request(
     jar: CookieJar, 
     Form(form): Form<LoginAuthReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    // 파라미터 검증
-    // if let Err(error) = form.validate() {
-    //     for (field, error) in error.field_errors() {
-    //         error!("validate error, field: {:?}, error: {:?}", field, error);
-    //     }
-    //     return Ok((StatusCode::BAD_REQUEST, format!("파라미터 부정확")).into_response());
-    // }
     // 이메일 로그인 서비스 호출
     Ok(
         match services::auth::auth_email_request(conn, &form.email, &form.password).await {
             // 성공
             Ok((access_token, refresh_token)) => {
+                let acc_time = utils::settings::get_jwt_access_time();
                 let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
                     .http_only(true)
-                    .max_age(Duration::seconds(1 * 60));
+                    .max_age(Duration::seconds(*acc_time));
+                let refr_time = utils::settings::get_jwt_refresh_time();
                 let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
                     .http_only(true)
-                    .max_age(Duration::seconds(1 * 60 * 60));
+                    .max_age(Duration::seconds(*refr_time));
                 (jar.add(ref_token_cookie).add(acc_token_cookie), [("HX-Redirect", "/")]).into_response()
             }
             // 실패
