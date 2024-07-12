@@ -51,6 +51,9 @@ anyhow = "1.0.86"
 # mail
 lettre = "0.11.7"
 
+# auto reload
+listenfd = "1.0.1"
+
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
 opt-level = 3

@@ -1,33 +1,23 @@
+{%- import "macros/buttons.html" as scope -%}
+{%- import "macros/inputs.html" as inputs -%}
+
 <form
     hx-post="/auth"
-    hx-swap="none"
+    hx-swap="outerHTML"
     x-data="{ loading: false }"
     x-on:htmx:before-request="loading = true"
     x-on:htmx:after-request="loading = false"
 >
-    <div class="field">
-        <label class="label">Email</label>
-        <div class="control">
-            <input name="email" class="input" type="text" placeholder="abc@def.com">
-        </div>
-        <p class="help is-success">This username is available</p>
-    </div>
-    <div class="field">
-        <label class="label">Password</label>
-        <div class="control">
-            <input name="password" class="input" type="password">
-        </div>
-        <p class="help is-danger">This username is available</p>
-    </div>
-    <div class="field">
-        <div class="control">
-            <button
-                type="submit"
-                class="button"
-                x-bind:class="loading ? 'is-loading' : ''"
-            >
-                Login
-            </button>
-        </div>
-    </div>
+    {% call inputs::email(
+        input_name="이메일", id="email", name="email", required=true,
+        value=(email_value|nf),
+        err_msg=(email_err_msg|nf))
+    %}
+    {% call inputs::password(
+        input_name="비밀번호", id="password", name="password", required=true,
+        value="",
+        err_msg=(pass_err_msg|nf))
+    %}
+    {% call scope::button(button_name="로그인") %}
+</form>
 </form>

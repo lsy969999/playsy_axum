@@ -12,6 +12,7 @@
             ? loading = false : loading = true
     "
     x-on:htmx:after-request="loading = false"
+    autocomplete="off"
     >
     <div
         hx-get="/user/nick_validate"

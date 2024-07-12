@@ -11,8 +11,6 @@ pub async fn auth_email_request(
 ) -> Result<(String, String), ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
-    
-
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
             &mut tx,

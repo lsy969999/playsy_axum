@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use configs::{middlewares::test::test_log_and_modify, models::app_state::AppState, settings::SETTINGS};
 use controller::routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router};
+use listenfd::ListenFd;
+use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tracing::{debug, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -54,12 +56,21 @@ pub async fn play_sy_main() {
         .layer(logging_middleware)
         .with_state(Arc::clone(&app_state));
 
-    let bind_ip = format!("0.0.0.0:{}", settings.server_port);
-    let listener = tokio::net::TcpListener::bind(bind_ip)
-        .await
-        .unwrap();
-    let addr = listener.local_addr().unwrap();
-    info!("bind_ip: {}", addr);
+    // reload
+    // https://github.com/tokio-rs/axum/tree/main/examples/auto-reload
+    let mut listenfd = ListenFd::from_env();
+    let listener = match listenfd.take_tcp_listener(0).unwrap() {
+        Some(listener) => {
+            listener.set_nonblocking(true).unwrap();
+            info!("reload bind_ip: {:?}", listener.local_addr());
+            TcpListener::from_std(listener).unwrap()
+        }
+        None => {
+            let bind_ip = format!("0.0.0.0:{}", settings.server_port);
+            info!("bind_ip: {}", bind_ip);
+            tokio::net::TcpListener::bind(bind_ip).await.unwrap()
+        },
+    };
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
