@@ -13,6 +13,6 @@ pub const DB_CODE: DbCode = DbCode {
     },
     user_ty_cd: UserTyCd {
         admin: "ADMIN",
-        user: "EMAIL",
+        user: "USER",
     },
 };
