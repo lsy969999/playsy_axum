@@ -58,6 +58,11 @@ listenfd = "1.0.1"
 # 랜덤
 rand = "0.8.5"
 
+# redis
+bb8 = "0.8.5"
+bb8-redis = "0.15.0"
+redis = "0.25.4"
+
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
 opt-level = 3

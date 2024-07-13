@@ -1,12 +1,14 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
+use bb8_redis::RedisConnectionManager;
 use configs::{middlewares::test::test_log_and_modify, models::app_state::AppState, settings::SETTINGS};
 use controller::routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router};
 use listenfd::ListenFd;
+use redis::AsyncCommands;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tracing::{debug, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir, trace::TraceLayer};
+use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir, timeout::TimeoutLayer, trace::TraceLayer};
 
 pub mod utils;
 pub mod configs;
@@ -27,7 +29,7 @@ pub async fn play_sy_main() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                "web=debug,sqlx=debug,tower_http=debug,axum=debug,axum::rejection=trace".into()
+                "web=debug,sqlx=debug,tower_http=debug,axum=debug,axum::rejection=trace,bb8=debug,bb8-redis=debug,redis=debug".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())
@@ -36,9 +38,19 @@ pub async fn play_sy_main() {
     debug!("settings: {:?}", settings);
 
     let db_pool = configs::db_config::init_db_pool(&settings.database_url).await;
+    let manager = RedisConnectionManager::new("redis://localhost").unwrap();
+    let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
+    {
+        // ping the database before starting
+        let mut conn = redis_pool.get().await.unwrap();
+        conn.set::<&str, &str, ()>("foo", "bar").await.unwrap();
+        let result: String = conn.get("foo").await.unwrap();
+        tracing::info!("result:{result}");
+        assert_eq!(result, "bar");
+    }
     let app_state = Arc::new(
         AppState::new(
-            db_pool
+            db_pool, redis_pool,
         )
     );
     debug!("app_state: {:?}", app_state);
@@ -48,7 +60,8 @@ pub async fn play_sy_main() {
         .layer(TraceLayer::new_for_http())
         .layer(axum::middleware::from_fn(test_log_and_modify))
         // 요청 바디 크기 제한 (1MB)
-        .layer(RequestBodyLimitLayer::new(1024 * 1024));
+        .layer(RequestBodyLimitLayer::new(1024 * 1024))
+        .layer(TimeoutLayer::new(Duration::from_secs(3)));
 
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))

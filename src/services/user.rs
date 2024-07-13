@@ -62,6 +62,7 @@ pub async fn user_join_service(
         }
         tracing::warn!("oh... email veri code is dup! user_sn: {user_sn} code: {email_code}, retry {i}");
         if i == 4 {
+            // TODO replace other type
             Err(ServiceLayerError::CustomUser(UserError::UserExists))?
         }
     }
