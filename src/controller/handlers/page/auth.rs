@@ -2,7 +2,7 @@ use askama::Template;
 use axum::{ response::IntoResponse, Form};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 use crate::configs::filters;
 
 use super::fragment::user_info::UserInfo;

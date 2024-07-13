@@ -3,7 +3,6 @@ use bb8_redis::RedisConnectionManager;
 use configs::{middlewares::test::test_log_and_modify, models::app_state::AppState, settings::SETTINGS};
 use controller::routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router};
 use listenfd::ListenFd;
-use redis::AsyncCommands;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tracing::{debug, info};
@@ -40,14 +39,7 @@ pub async fn play_sy_main() {
     let db_pool = configs::db_config::init_db_pool(&settings.database_url).await;
     let manager = RedisConnectionManager::new("redis://localhost").unwrap();
     let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
-    {
-        // ping the database before starting
-        let mut conn = redis_pool.get().await.unwrap();
-        conn.set::<&str, &str, ()>("foo", "bar").await.unwrap();
-        let result: String = conn.get("foo").await.unwrap();
-        tracing::info!("result:{result}");
-        assert_eq!(result, "bar");
-    }
+
     let app_state = Arc::new(
         AppState::new(
             db_pool, redis_pool,
@@ -61,7 +53,7 @@ pub async fn play_sy_main() {
         .layer(axum::middleware::from_fn(test_log_and_modify))
         // 요청 바디 크기 제한 (1MB)
         .layer(RequestBodyLimitLayer::new(1024 * 1024))
-        .layer(TimeoutLayer::new(Duration::from_secs(3)));
+        .layer(TimeoutLayer::new(Duration::from_secs(5)));
 
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))
