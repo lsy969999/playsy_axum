@@ -14,6 +14,9 @@ pub mod services;
 pub mod repositories;
 pub mod controller;
 
+// #[cfg(test)]
+pub mod tests;
+
 pub async fn play_sy_main() {
     configs::settings::load_settings().await;
     let settings = SETTINGS.get().unwrap();

@@ -96,7 +96,6 @@ pub async fn insert_user(
     provider_ty_enum: ProviderTyEnum,
     user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
-    
     let now = Utc::now();
     Ok(
         sqlx::query!(
@@ -119,6 +118,29 @@ pub async fn insert_user(
                 user_stt_enum as UserSttEnum,
                     UserTyEnum::User as UserTyEnum,
             now, user_sn, now, user_sn
+        )
+        .execute(conn)
+        .await?
+    )
+}
+
+pub async fn update_user_stt_enum(
+    conn: &mut PgConnection,
+    user_sn: i32,
+    user_stt_enum: UserSttEnum,
+) -> Result<PgQueryResult, RepositoryLayerError> {
+    Ok(
+        sqlx::query!(
+            r#"
+                UPDATE tb_user
+                SET
+                    user_stt_enum = $1,
+                    updated_at = now(),
+                    updated_by = $2
+                WHERE sn = $2
+            "#,
+            user_stt_enum as UserSttEnum,
+            user_sn,
         )
         .execute(conn)
         .await?

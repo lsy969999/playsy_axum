@@ -6,13 +6,13 @@ use crate::configs::errors::app_error::{ApiHandlerLayerError, PageHandlerLayerEr
 impl IntoResponse for PageHandlerLayerError {
     fn into_response(self) -> axum::response::Response {
         const TAG: &str = "[PageHandlerLayerError] ServiceLayerError::Repository";
-        let (statue, error_message) = match self {
+        let (statue, error_message) = match &self {
             Self::Service(ServiceLayerError::Repository(RepositoryLayerError::Db(err)))=> {
-                tracing::error!("{TAG} {}", err);
+                tracing::error!("{TAG} db {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
             Self::Service(ServiceLayerError::Jwt(err)) => {
-                tracing::error!("{TAG} {}", err);
+                tracing::error!("{TAG} jwt {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
             Self::Service(ServiceLayerError::CustomUser(err)) => {
@@ -40,3 +40,4 @@ impl IntoResponse for ApiHandlerLayerError {
         todo!()
     }
 }
+

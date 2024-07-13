@@ -94,3 +94,6 @@ COMMENT ON COLUMN tb_email_join_verifications.created_by IS '생성자';
 COMMENT ON COLUMN tb_email_join_verifications.updated_at IS '수정일시';
 COMMENT ON COLUMN tb_email_join_verifications.updated_by IS '수정자';
 COMMENT ON COLUMN tb_email_join_verifications.is_deleted IS '삭제여부';
+
+CREATE INDEX tb_email_join_verifications_idx__code__is_deleted ON tb_email_join_verifications (code, is_deleted);
+COMMENT ON INDEX tb_email_join_verifications_idx__code__is_deleted IS '이메일가입 인증 테이블 코드 중복체크용 인덱스';

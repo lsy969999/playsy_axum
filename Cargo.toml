@@ -29,7 +29,8 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing-appender = "0.2.3"
 
 # DB
-sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-rustls", "chrono"] }
+sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-rustls", "chrono", "time"] }
+chrono = { version = "0.4", features = ["serde"] }
 
 # open api
 utoipa = { version = "4.2.3", features = ["axum_extras"] }
@@ -53,6 +54,9 @@ lettre = "0.11.7"
 
 # auto reload
 listenfd = "1.0.1"
+
+# 랜덤
+rand = "0.8.5"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]
