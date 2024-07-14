@@ -39,7 +39,6 @@ pub async fn play_sy_main() {
     let db_pool = configs::db_config::init_db_pool(&settings.database_url).await;
     let manager = RedisConnectionManager::new("redis://localhost").unwrap();
     let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
-
     let app_state = Arc::new(
         AppState::new(
             db_pool, redis_pool,
