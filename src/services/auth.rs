@@ -1,7 +1,7 @@
 use sqlx::{pool::PoolConnection, types::chrono::DateTime, Postgres};
 use time::{Duration, OffsetDateTime};
 use tracing::error;
-use crate::{configs::{errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::Claims}, repositories::{self, enums::user::ProviderTyEnum}, utils::{self}};
+use crate::{configs::{errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::{AccessClaims, RefreshClaims}}, repositories::{self, enums::user::ProviderTyEnum}, utils::{self}};
 
 // 로그인 요청 처리
 pub async fn auth_email_request(
@@ -42,12 +42,15 @@ pub async fn auth_email_request(
         return Err(UserError::UserPasswordNotMatch)?;
     }
 
+    let sequence = repositories::refresh_token::select_next_refresh_token_seq(&mut tx).await?;
+    let chk = sequence.nextval;
+
     // 토큰클레임 생성
     let now: OffsetDateTime = OffsetDateTime::now_utc();
     let acc_exp = *utils::settings::get_jwt_access_time();
     let refr_exp = *utils::settings::get_jwt_refresh_time();
-    let access_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None);
-    let refresh_claims = Claims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None);
+    let access_claims = AccessClaims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None, user.nick_name);
+    let refresh_claims = RefreshClaims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None, chk as usize);
 
     // 토큰 생성
     let acc = utils::settings::get_settings_jwt_access_keys();
@@ -65,6 +68,7 @@ pub async fn auth_email_request(
     // 리프래시 토큰 정보 저장
     repositories::refresh_token::insert_refresh_token(
             &mut tx,
+            chk as i32,
             user.sn,
             refresh_token_hash,
             refresh_token.clone(),

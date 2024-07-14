@@ -2,13 +2,26 @@ use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection
 
 use crate::configs::errors::app_error::RepositoryLayerError;
 
-use super::entities::refresh_token::RefreshToken;
+use super::entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence};
+
+pub async fn select_next_refresh_token_seq(conn: &mut PgConnection) -> Result<Sequence, RepositoryLayerError> {
+    let sequence = sqlx::query_as!(
+        Sequence,
+        r#"
+            SELECT nextval('tb_refresh_token_seq')  AS "nextval!: i64"
+        "#
+    )
+    .fetch_one(conn)
+    .await?;
+    Ok(sequence)
+}
 
 /**
  * refresh_token 인서트
  */
 pub async fn insert_refresh_token(
     conn: &mut PgConnection,
+    sn: i32,
     user_sn: i32,
     hash: String,
     refresh_token: String,
@@ -18,10 +31,11 @@ pub async fn insert_refresh_token(
         sqlx::query!(
             r#"
                 INSERT INTO tb_refresh_token 
-                    ( user_sn, hash, refresh_token, expires_at, created_by, updated_at, updated_by )
+                    ( sn, user_sn, hash, refresh_token, expires_at, created_by, updated_at, updated_by )
                 VALUES
-                    ( $1, $2, $3, $4, $5, $6, $7 )
+                    ( $1, $2, $3, $4, $5, $6, $7, $8 )
             "#,
+            sn,
             user_sn,
             hash,
             refresh_token,
@@ -31,6 +45,31 @@ pub async fn insert_refresh_token(
             user_sn,
         )
         .execute(conn)
+        .await?
+    )
+}
+
+pub async fn select_refresh_token_user_by_sn(
+    conn: &mut PgConnection,
+    sn: i32,
+) -> Result<Option<RefreshTokenUser>, RepositoryLayerError> {
+    Ok(
+        sqlx::query_as!(
+            RefreshTokenUser,
+            r#"
+                SELECT 
+                    trt.sn AS refresh_token_sn,
+                    tu.sn AS user_sn,
+                    tu.nick_name 
+                FROM tb_refresh_token trt 
+                    INNER JOIN tb_user tu ON tu.sn = trt.user_sn
+                WHERE 1=1
+                    AND	trt.sn = $1
+                    AND trt.is_deleted = FALSE 
+            "#,
+            sn
+        )
+        .fetch_optional(conn)
         .await?
     )
 }

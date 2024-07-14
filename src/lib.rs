@@ -47,22 +47,21 @@ pub async fn play_sy_main() {
     );
     debug!("app_state: {:?}", app_state);
 
-    let logging_middleware = ServiceBuilder::new()
-        // 요청 로깅
-        .layer(TraceLayer::new_for_http())
-        .layer(axum::middleware::from_fn(test_log_and_modify))
-        // 요청 바디 크기 제한 (1MB)
-        .layer(RequestBodyLimitLayer::new(1024 * 1024))
-        .layer(TimeoutLayer::new(Duration::from_secs(5)));
-
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))
         .nest("/", get_openapi_route())
-        .nest("/", get_home_router())
+        .nest("/", get_home_router(Arc::clone(&app_state)))
         .nest("/", get_auth_router())
         .nest("/", get_user_router())
-        .layer(logging_middleware)
-        .with_state(Arc::clone(&app_state));
+        .with_state(Arc::clone(&app_state))
+        .layer(
+            ServiceBuilder::new()
+            // 요청 로깅
+            .layer(TraceLayer::new_for_http())
+            // 요청 바디 크기 제한 (1MB)
+            .layer(RequestBodyLimitLayer::new(1024 * 1024))
+            .layer(TimeoutLayer::new(Duration::from_secs(5)))
+        );
 
     // reload
     // https://github.com/tokio-rs/axum/tree/main/examples/auto-reload

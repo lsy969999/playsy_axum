@@ -13,3 +13,10 @@ pub struct RefreshToken {
     pub updated_by: i32,
     pub is_deleted: bool,
 }
+
+#[derive(Debug)]
+pub struct RefreshTokenUser {
+    pub refresh_token_sn: i32,
+    pub user_sn: i32,
+    pub nick_name: String,
+}

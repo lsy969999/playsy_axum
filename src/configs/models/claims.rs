@@ -22,21 +22,63 @@ use time::OffsetDateTime;
     sub: String,         // Optional. Subject (whom token refers to)
 }
  */
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct Claims {
+//     pub sub: String,
+//     pub exp: usize, // Mandatory expiry time as UTC timestamp
+//     pub iat: usize,
+//     pub scope: Option<String>,
+// }
+
+// impl Claims {
+//     pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>) -> Self {
+//         Self {
+//             sub,
+//             exp: exp.unix_timestamp() as usize,
+//             iat: iat.unix_timestamp() as usize,
+//             scope,
+//         }
+//     }
+// }
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
+pub struct AccessClaims {
     pub sub: String,
-    pub exp: usize, // Mandatory expiry time as UTC timestamp
+    pub exp: usize, 
     pub iat: usize,
     pub scope: Option<String>,
+    pub nick_name: String,
 }
 
-impl Claims {
-    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>) -> Self {
+impl AccessClaims {
+    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>,  nick_name: String) -> Self {
         Self {
             sub,
             exp: exp.unix_timestamp() as usize,
             iat: iat.unix_timestamp() as usize,
             scope,
+            nick_name
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefreshClaims {
+    pub sub: String,
+    pub exp: usize, 
+    pub iat: usize,
+    pub scope: Option<String>,
+    pub chk: usize,
+}
+
+impl RefreshClaims {
+    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>, chk: usize) -> Self {
+        Self {
+            sub,
+            exp: exp.unix_timestamp() as usize,
+            iat: iat.unix_timestamp() as usize,
+            scope,
+            chk
         }
     }
 }
