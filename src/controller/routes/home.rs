@@ -6,7 +6,6 @@ use tower::ServiceBuilder;
 use crate::{configs::{middlewares::auth::{set_user_info_from_cookie_to_header, validate_user_info_from_header}, models::app_state::AppState}, controller::handlers::page};
 
 pub fn get_home_router(state: Arc<AppState>) -> Router<Arc<AppState>>{
-
     Router::new()
         .route("/", get(page::home::home_page))
         .layer(

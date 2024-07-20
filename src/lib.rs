@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 use bb8_redis::RedisConnectionManager;
 use configs::{models::app_state::AppState, settings::SETTINGS};
-use controller::routes::{auth::get_auth_router, chat::get_chat_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router, };
+use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
@@ -53,6 +53,7 @@ pub async fn play_sy_main() {
         .nest("/", get_home_router(Arc::clone(&app_state)))
         .nest("/", get_auth_router())
         .nest("/", get_user_router())
+        .nest("/", get_game_router())
         .nest("/", get_chat_router(Arc::clone(&app_state)))
         .with_state(Arc::clone(&app_state))
         // 

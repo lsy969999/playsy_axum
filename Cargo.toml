@@ -3,6 +3,11 @@ name = "web"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+exclude = [
+    "oh_my_bevy/bevy_wasm_test"
+]
+
 [dependencies]
 axum = { version = "0.7.5", features = ["ws"] }
 axum-extra = { version = "0.9.3", features = ["cookie", "typed-header"] } # 쿠키, 헤더추출

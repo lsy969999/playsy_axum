@@ -27,3 +27,18 @@ WHERE datname = 'mydatabase';
 # 디비 연결 커넥션 제거
 SELECT pg_terminate_backend(388);
 ```
+
+
+
+### /.vscode/settings.json
+### vscode 서브 프로젝트 인텔리센스 워크스페이스에는 포함시키지않음 이유는 빌드결과물이 합쳐지길 바라진 않으니
+```
+{
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml",
+        "./oh_my_bevy/bevy_wasm_test/Cargo.toml"
+    ],
+    "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+    "rust-analyzer.procMacro.enable": true
+}
+```
