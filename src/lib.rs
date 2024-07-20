@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 use bb8_redis::RedisConnectionManager;
-use configs::{middlewares::test::test_log_and_modify, models::app_state::AppState, settings::SETTINGS};
-use controller::routes::{auth::get_auth_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router};
+use configs::{models::app_state::AppState, settings::SETTINGS};
+use controller::routes::{auth::get_auth_router, chat::get_chat_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router, };
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
@@ -46,20 +46,23 @@ pub async fn play_sy_main() {
     );
     debug!("app_state: {:?}", app_state);
 
+
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))
         .nest("/", get_openapi_route())
         .nest("/", get_home_router(Arc::clone(&app_state)))
         .nest("/", get_auth_router())
         .nest("/", get_user_router())
+        .nest("/", get_chat_router(Arc::clone(&app_state)))
         .with_state(Arc::clone(&app_state))
+        // 
         .layer(
             ServiceBuilder::new()
-            // 요청 로깅
-            .layer(TraceLayer::new_for_http())
-            // 요청 바디 크기 제한 (1MB)
-            .layer(RequestBodyLimitLayer::new(1024 * 1024))
-            .layer(TimeoutLayer::new(Duration::from_secs(5)))
+                // 요청 로깅
+                .layer(TraceLayer::new_for_http())
+                // 요청 바디 크기 제한 (1MB)
+                .layer(RequestBodyLimitLayer::new(1024 * 1024))
+                .layer(TimeoutLayer::new(Duration::from_secs(5)))
         );
 
     // reload

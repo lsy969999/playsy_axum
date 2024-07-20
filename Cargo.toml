@@ -4,13 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["ws"] }
 axum-extra = { version = "0.9.3", features = ["cookie", "typed-header"] } # 쿠키, 헤더추출
 time = "0.3.36" # extra Duration 시 사용
-tower = "0.4.13"
+tower = { version = "0.4.13", features = ["full"] }
 tower-http = { version = "0.5.2", features = ["full"] }
 hyper = { version = "1.3.1", features = ["full"] }
 tokio = { version = "1.38.0", features = ["full"] }
+
+futures = "0.3.30"
 
 # 파서
 serde = { version = "1.0.203", features = ["derive"] }
@@ -62,6 +64,9 @@ rand = "0.8.5"
 bb8 = "0.8.5"
 bb8-redis = "0.15.0"
 redis = "0.25.4"
+
+# uuid
+uuid = "1.10.0"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]

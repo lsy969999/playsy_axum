@@ -1,0 +1,375 @@
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/macros.html" as scope -%}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+    <main class="flex-grow flex flex-row p-4 bg-gray-100">
+
+        <!-- Chat Rooms List -->
+        <div class="w-1/4 bg-white p-4 rounded-lg shadow-md mr-4">
+            <h3 class="text-lg font-bold mb-4">채팅방 목록</h3>
+            <ul id="rooms-list" class="space-y-2">
+                <!--
+                    <li><a href="#" class="block p-2 bg-gray-200 rounded hover:bg-gray-300" data-room="room1">채팅방 1</a></li>
+                    <li><a href="#" class="block p-2 bg-gray-200 rounded hover:bg-gray-300" data-room="room2">채팅방 2</a></li>
+                    <li><a href="#" class="block p-2 bg-gray-200 rounded hover:bg-gray-300" data-room="room3">채팅방 3</a></li>
+                -->
+                <!-- 추가적인 채팅방들... -->
+            </ul>
+            <div class="mt-4 flex">
+                <input id="new-room-name" type="text" class="flex-grow p-2 border rounded-l-lg" placeholder="새 채팅방 이름">
+                <button id="room-create-btn" type="button" class="bg-green-500 text-white px-4 py-2 rounded-r-lg">만들기</button>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="flex-grow flex flex-col p-4 bg-white rounded-lg shadow-md">
+            <h3 id="room-title" class="text-lg font-bold mb-4">채팅방을 선택하세요</h3>
+            <div id="chat-messages" style="max-height: 700px;" class="flex-grow overflow-y-auto p-4 bg-gray-50 rounded-lg mb-4">
+                <!-- 메시지들이 여기에 표시됩니다. -->
+            </div>
+            <!-- Message Input -->
+            <div class="flex space-x-4">
+                <div id="join-div" class="w-full">
+                    <button id="chat-join-btn" type="button" disabled class="disabled:bg-gray-300 bg-blue-500 text-white px-4 py-2 rounded-lg w-full">참가하기</button>
+                </div>
+                <div id="send-div" class="w-full flex space-x-4 hidden">
+                    <input id="message-input" type="text" class="flex-grow p-2 border rounded-lg" placeholder="메시지를 입력하세요...">
+                    <button id="message-send-btn" type="button" class="bg-blue-500 text-white px-4 py-2 rounded-lg">전송</button>
+                    <button id="chat-leave-btn" type="button" class="bg-red-500 text-white px-4 py-2 rounded-lg">나가기</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const usersn = Math.floor(Math.random()*1000);
+        const username = `익명 ${Math.floor(Math.random() * 100)}`;
+        
+
+        // 돔 제어
+
+        // 새 방 이름
+        const domNewRoomName = document.querySelector('#new-room-name');
+        // 채팅방 만들기
+        const domRoomCreateBtn = document.querySelector('#room-create-btn');
+
+        // 채팅방 목록
+        const domRoomList = document.querySelector('#rooms-list');
+
+        // 방 이름
+        const domRoomTitle = document.querySelector('#room-title');
+
+        //채팅창 뷰
+        const domChatMessages = document.querySelector('#chat-messages');
+
+        // 채팅방 참가 영역
+        const domJoinDiv = document.querySelector('#join-div');
+        // 채팅방 전송 & 나가기 영역
+        const domSendDiv = document.querySelector('#send-div');
+
+        // 채팅방 참가
+        const domChatJoinBtn = document.querySelector('#chat-join-btn');
+        // 채팅입력인풋
+        const domMessageInput = document.querySelector('#message-input');
+        // 채팅 전송
+        const domMessageSendBtn = document.querySelector('#message-send-btn');
+        // 채팅방 나가기
+        const domChatLeaveBtn = document.querySelector('#chat-leave-btn');
+
+        // 방 만들기 클릭
+        domRoomCreateBtn.addEventListener('click', (e)=>createChatRoomHandle(e))
+
+        // 방 클릭
+        domRoomList.addEventListener('click', (e)=>chatRoomSelectHandle(e))
+
+        // 참가하기 클릭
+        domChatJoinBtn.addEventListener('click', (e) => {
+            const roomId = domRoomTitle.getAttribute('data-room-id')
+            
+            joinChat(roomId);
+            toggleSendDivArea();
+        })
+
+        // 나가기 클릭
+        domChatLeaveBtn.addEventListener('click', (e) => {
+            
+            toggleJoinDivArea();
+            const roomId = domRoomTitle.getAttribute('data-room-id')
+            leaveChat(roomId);
+        })
+
+        // 전송하기
+        domMessageSendBtn.addEventListener('click', (e) => {
+            const roomId = domRoomTitle.getAttribute('data-room-id')
+            sendChat(roomId);
+        })
+
+        // 엔터
+        domMessageInput.addEventListener('keydown', (e)=>{
+            if (e.key === 'Enter' && !isComposing) {
+                const roomId = domRoomTitle.getAttribute('data-room-id')
+                sendChat(roomId);
+            }
+        })
+        let isComposing = false;
+        domMessageInput.addEventListener('compositionstart', () => {
+            isComposing = true;
+        });
+        domMessageInput.addEventListener('compositionend', () => {
+            isComposing = false;
+            //const roomId = domRoomTitle.getAttribute('data-room-id');
+            // 한글 조합이 끝나고 엔터 키가 눌린 경우에만 메시지 전송
+            //if (domMessageInput.value.trim() !== '') {
+            //    sendChat(roomId);
+            //}
+        });
+
+        // 채팅 제어 소켓
+        let chatCtlWs = {};
+
+        // 방 생성 제어 소켓
+        const roomCtlWs = new WebSocket('/ws/chat/room/lobby')
+        
+        roomCtlWs.addEventListener('open', (event) => {
+            console.log('[room_ctl_ws open!]', event)
+        })
+        roomCtlWs.addEventListener('message', (event) => {
+            console.log('[room_ctl_ws message!]', event)
+            domRoomList.innerHTML = ""
+            const data = JSON.parse(event.data);
+
+            
+
+            domRoomList.insertAdjacentHTML(
+                'beforeend',
+                data.body.rooms
+                    .map(d => {
+                        console.log(d)
+                        return `<li
+                                    class="room-item"
+                                    data-owner-sn="${d.owner_sn}"
+                                    data-room-id="${d.room_id}"
+                                    data-room-name="${d.room_name}"
+                                    data-room-chatters='${JSON.stringify(d.chatters)}'
+                                >
+                                    <a href="#" class="block p-2 bg-gray-200 rounded hover:bg-gray-600">
+                                        ${d.room_name} - ${d.num}
+                                    </a>
+                                </li>`
+                    })
+                    .join('')
+            );
+        })
+        roomCtlWs.addEventListener('close', (event) => {
+            console.log('[room_ctl_ws close!]', event)
+        })
+        roomCtlWs.addEventListener('error', (event => {
+            console.error('[room_ctl_ws error!]', event)
+        }))
+
+        // 채팅방 생성
+        const createChatRoomHandle = (event) => {
+            const roomName = domNewRoomName.value;
+            domNewRoomName.value = '';
+            roomCtlWs.send(
+                JSON.stringify({
+                    type: "cmd",
+                    name: "create_room",
+                    body: {
+                        owner_sn: usersn,
+                        owner: username,
+                        room_name: roomName,
+                    }
+                })
+            );
+        }
+
+        // 채팅방 클릭시
+        const chatRoomSelectHandle = (event) => {
+            domRoomList.querySelectorAll('a')
+                .forEach((d) => {
+                    d.classList.remove('bg-gray-500')
+                    d.classList.add('bg-gray-200')
+                })
+            const target = event.target.closest('.room-item');
+            if (target) {
+                target.querySelector('a').classList.remove('bg-gray-200')
+                target.querySelector('a').classList.add('bg-gray-500')
+                
+                const roomId = target.getAttribute('data-room-id');
+                const roomName = target.getAttribute('data-room-name');
+                const chatters = target.getAttribute('data-room-chatters');
+                const obj_chatters = JSON.parse(chatters);
+                const isjoined = obj_chatters.filter(o => o.sn == usersn);
+                domRoomTitle.innerHTML = roomName;
+                domRoomTitle.setAttribute('data-room-id', roomId);
+
+                if (isjoined.length) {
+                    toggleSendDivArea();
+                } else {
+                    toggleJoinDivArea();
+                }
+                /*
+                    if (joined_room) {
+                        if (joined_room == roomId) {
+                            unDisableChatJoinBtn();
+                            toggleSendDivArea();
+                        } else {
+                            toggleJoinDivArea();
+                            disabeChatJoinBtn();
+                        }
+                    } else {
+                        unDisableChatJoinBtn();
+                    }
+                */
+                if (chatCtlWs[roomId]) {
+                    //toggleSendDivArea();
+                } else {
+                    //toggleJoinDivArea();
+                }
+                unDisableChatJoinBtn();
+
+                clearChat();
+                connectChatWs(roomId);
+            }
+        }
+
+        const connectChatWs = (roomId) => {
+            if (chatCtlWs[roomId]) {
+                console.log('room is exists', roomId)
+                getAllChat(roomId)
+                return;
+            }
+            const ws = new WebSocket(`/ws/chat/room/${roomId}/${usersn}`);
+            ws.addEventListener('open', (event) => {
+                console.log('[chat_ctl_ws open]', event)
+            })
+            ws.addEventListener('message', (event) => {
+                console.log('[chat_ctl_ws message]', event)
+                let obj = JSON.parse(event.data);
+                console.log(obj)
+                const roomId = domRoomTitle.getAttribute('data-room-id')
+                if (obj.name == 'last_chat') {
+                    if (obj.body.chat.room_id == roomId){
+                        appendChat(obj.body.chat.who, obj.body.chat.msg)
+                    }
+                    
+                } else if (obj.name == 'all_chat') {
+                    obj.body.chats.map(c => {
+                        console.log(c)
+                        if (c.room_id == roomId){
+                            appendChat(c.who, c.msg);
+                        }
+                    })
+                    
+                } else if (obj.name == 'room_destory') {
+                    const destroy_room_id = obj.body.room_id;
+                    domRoomList.querySelector(`[data-room-id="${destroy_room_id}"]`).remove()
+                    
+                    
+                    if (roomId == destroy_room_id) {
+                        toggleJoinDivArea();
+                        disabeChatJoinBtn();
+                    }
+                }
+            })
+            ws.addEventListener('close', (event) => {
+                console.log('[chat_ctl_ws close]', event)
+            })
+            ws.addEventListener('error', (event) => {
+                console.error('[chat_ctl_ws error]', event)
+            })
+            chatCtlWs[roomId] = ws;
+        }
+
+        // 채팅창 정리
+        const clearChat = () => {
+            domChatMessages.innerHTML = '';
+        }
+
+        // 채팅 참가
+        const joinChat = (roomId) => {
+            let obj = {
+                type: 'cmd',
+                name: 'chat_join',
+                body: {
+                    who: username,
+                    who_sn: usersn,
+                }
+            }
+            chatCtlWs[roomId].send(JSON.stringify(obj));
+        }
+
+        //  참가 버튼 있는 div로 전환 및 전송 div hide
+        const toggleJoinDivArea = () => {
+            domSendDiv.classList.add('hidden');
+            domJoinDiv.classList.remove('hidden');
+        }
+
+        // 전송 Div로 전환 및 참가 Div hide
+        const toggleSendDivArea = () => {
+            domSendDiv.classList.remove('hidden');
+            domJoinDiv.classList.add('hidden');
+        }
+
+        // 참가 버튼 비활성화 처리
+        const disabeChatJoinBtn = () => {
+            domChatJoinBtn.setAttribute('disabled', true);
+        }
+
+        // 참가 버튼 비활성화 해제
+        const unDisableChatJoinBtn = () => {
+            domChatJoinBtn.removeAttribute('disabled');
+        }
+
+        // 채팅 메시지 추가
+        const appendChat = (who, message) => {
+            const newChatEl = document.createElement('div');
+            newChatEl.classList.add('mb-2');
+            newChatEl.innerHTML = `<strong>${who}:</strong> ${message}`;
+            domChatMessages.appendChild(newChatEl);
+            domChatMessages.scrollTop = domChatMessages.scrollHeight;
+        }
+
+        const getAllChat = (roomId) => {
+            let obj = {
+                type: 'cmd',
+                name: 'get_all_chat',
+                body: {
+                    roomId: roomId,
+                }
+            }
+            chatCtlWs[roomId].send(JSON.stringify(obj));
+        }
+
+        // 채팅 전송
+        const sendChat = (roomId) => {
+            let msg = domMessageInput.value;
+            domMessageInput.value = '';
+            let obj = {
+                type: 'chat',
+                name: 'msg',
+                body: {
+                    who: username,
+                    msg: msg
+                }
+            }
+            chatCtlWs[roomId].send(JSON.stringify(obj));
+        }
+
+        // 채팅 나가기
+        const leaveChat = (roomId) => {
+            let obj = {
+                type: 'cmd',
+                name: 'chat_leave',
+                body: {
+                    who: username,
+                    who_sn: usersn,
+                }
+            }
+            chatCtlWs[roomId].send(JSON.stringify(obj));
+        }
+    </script>
+{% endblock %}

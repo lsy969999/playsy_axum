@@ -6,7 +6,7 @@ jwt_secret = "secret"
 jwt_access_secret = "access_secret"
 jwt_refresh_secret = "refresh_secret"
 jwt_access_time = 60 # 1 * 60
-jwt_refresh_time = 120 # 1 * 60 * 2
+jwt_refresh_time = 86400 # 1 * 60 * 
 
 smtp_from = ""
 smtp_user_name = ""
