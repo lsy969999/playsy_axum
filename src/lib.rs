@@ -1,7 +1,7 @@
-use std::{sync::Arc, time::Duration};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 use axum::{middleware::{self}, routing::get};
 use bb8_redis::RedisConnectionManager;
-use configs::{middlewares::etc::add_original_content_length, models::app_state::AppState, settings::SETTINGS};
+use configs::{middlewares::etc::add_original_content_length, models::app_state::AppState, app_config::APP_CONFIG};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
@@ -20,8 +20,8 @@ pub mod controller;
 pub mod tests;
 
 pub async fn play_sy_main() {
-    configs::settings::load_settings().await;
-    let settings = SETTINGS.get().unwrap();
+    configs::app_config::load_settings().await;
+    let app_config = APP_CONFIG.get().unwrap();
 
     // tracing setting
     let file_appender = tracing_appender::rolling::daily("logs", "web.log");
@@ -35,9 +35,9 @@ pub async fn play_sy_main() {
         .with(tracing_subscriber::fmt::layer())
         .with(tracing_subscriber::fmt::layer().with_writer(non_blocking))
         .init();
-    debug!("settings: {:?}", settings);
+    debug!("app_config: {:?}", app_config);
 
-    let db_pool = configs::db_config::init_db_pool(&settings.database_url).await;
+    let db_pool = configs::db_config::init_db_pool(&app_config.settings.database.database_url).await;
     let manager = RedisConnectionManager::new("redis://localhost").unwrap();
     let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
     let app_state = Arc::new(
@@ -82,13 +82,17 @@ pub async fn play_sy_main() {
             TcpListener::from_std(listener).unwrap()
         }
         None => {
-            let bind_ip = format!("0.0.0.0:{}", settings.server_port);
+            let bind_ip = format!("0.0.0.0:{}", app_config.settings.app.server_port);
             info!("bind_ip: {}", bind_ip);
             tokio::net::TcpListener::bind(bind_ip).await.unwrap()
         },
     };
 
-    axum::serve(listener, app)
+    axum::serve(
+            listener,
+            app
+                .into_make_service_with_connect_info::<SocketAddr>()
+        )
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();

@@ -47,15 +47,15 @@ pub async fn auth_email_request(
 
     // 토큰클레임 생성
     let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let acc_exp = *utils::settings::get_jwt_access_time();
-    let refr_exp = *utils::settings::get_jwt_refresh_time();
+    let acc_exp = *utils::config::get_config_jwt_access_time();
+    let refr_exp = *utils::config::get_config_jwt_refresh_time();
     let access_claims = AccessClaims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None, user.nick_name);
     let refresh_claims = RefreshClaims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None, chk as usize);
 
     // 토큰 생성
-    let acc = utils::settings::get_settings_jwt_access_keys();
+    let acc = utils::config::get_config_jwt_access_keys();
     let access_token = utils::jwt::generate_jwt(&access_claims, &acc.encoding)?;
-    let refr = utils::settings::get_settings_jwt_refresh_keys();
+    let refr = utils::config::get_config_jwt_refresh_keys();
     let refresh_token = utils::jwt::generate_jwt(&refresh_claims, &refr.encoding)?;
 
     // 리프래시토큰 디비 저장값 생성

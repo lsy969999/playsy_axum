@@ -6,6 +6,8 @@ pub struct RefreshToken {
     pub user_sn: i32,
     pub hash: String,
     pub refresh_token: String,
+    pub client_ip: Option<String>,
+    pub user_agent: Option<String>,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
     pub created_by: i32,

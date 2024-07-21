@@ -14,6 +14,8 @@ fn get_auth_page_router() -> Router<Arc<AppState>> {
         .route("/", get(page::auth::auth_page))
         .route("/email", post(page::auth::auth_email_request))
         .route("/logout", post(page::auth::logout))
+        .route("/google/login", get(page::auth::google_login))
+        .route("/google/callback", get(page::auth::google_callback))
 }
 
 fn get_auth_api_router() -> Router<Arc<AppState>> {

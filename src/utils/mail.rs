@@ -4,7 +4,7 @@ use tracing::info;
 use crate::utils;
 
 pub fn send_mail(to: &str, subject: &str, body: &str) -> Result<()> {
-    let info = utils::settings::get_settings_smtp_info();
+    let info = utils::config::get_config_smtp();
     let smtp_from  = &info.smtp_from;
     let from: lettre::message::Mailbox = smtp_from.parse()?;
     let email = Message::builder()

@@ -1,11 +1,14 @@
-use askama::Template;
-use axum::{ response::IntoResponse, Form};
-use axum_extra::extract::{cookie::Cookie, CookieJar};
-use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
-use crate::configs::filters;
 
+use askama::Template;
+use axum::{ extract::Query, response::{IntoResponse, Redirect}, Form};
+use axum_extra::extract::{cookie::Cookie, CookieJar};
+use oauth2::{basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl};
+use serde::Deserialize;
+use time::Duration;
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
+use crate::configs::filters;
 use super::fragment::user_info::UserInfo;
+
 #[derive(Template)]
 #[template(path="pages/auth.html")]
 struct AuthTemplate {
@@ -71,12 +74,12 @@ pub async fn auth_email_request(
         match services::auth::auth_email_request(conn, &form.email, &form.password).await {
             // 성공
             Ok((access_token, refresh_token)) => {
-                let acc_time = utils::settings::get_jwt_access_time();
+                let acc_time = utils::config::get_config_jwt_access_time();
                 let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
                     .path("/")
                     .http_only(true)
                     .max_age(Duration::seconds(*acc_time));
-                let refr_time = utils::settings::get_jwt_refresh_time();
+                let refr_time = utils::config::get_config_jwt_refresh_time();
                 let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
                     .path("/")
                     .http_only(true)
@@ -104,4 +107,56 @@ pub async fn auth_email_request(
             }
         }
     )
+}
+
+
+
+fn google_client() -> BasicClient {
+    BasicClient::new(
+        ClientId::new(format!("")),
+        Some(ClientSecret::new(format!(""))),
+        AuthUrl::new(format!("https://accounts.google.com/o/oauth2/v2/auth")).unwrap(),
+        Some(TokenUrl::new(format!("https://oauth2.googleapis.com/token")).unwrap())
+    )
+    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/google/callback")).unwrap())
+}
+
+pub async fn google_login() -> impl IntoResponse {
+    let client = google_client();
+    let (authorize_url, _csrf_state) = client
+        .authorize_url(CsrfToken::new_random)
+        .add_scope(Scope::new(format!("https://www.googleapis.com/auth/userinfo.profile")))
+        .add_scope(Scope::new(format!("https://www.googleapis.com/auth/userinfo.email")))
+        .url();
+    Redirect::temporary(authorize_url.to_string().as_str())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OAuthCallback {
+    pub code: String,
+    pub state: String,
+}
+
+
+pub async fn google_callback(query: Query<OAuthCallback>) -> impl IntoResponse {
+    tracing::debug!("google_callback!! query: {:?}", query);
+    let client = google_client();
+    let token_result = client
+        .exchange_code(AuthorizationCode::new(query.code.clone()))
+        .request_async(async_http_client)
+        .await;
+
+    match token_result {
+        Ok(token) => {
+            tracing::debug!("token_result: {:?}", token);
+            let a = token.access_token().secret();
+
+            let b = token.scopes();
+            tracing::debug!("at: {:?}, scope: {:?}", a, b);
+        }
+        Err(err) => {
+            tracing::error!("google_callback error: {:?}", err);
+        }
+    }
+    Redirect::to("/")
 }

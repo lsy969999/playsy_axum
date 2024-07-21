@@ -1,10 +1,8 @@
 
-use std::f32::consts::E;
-
 use axum::{extract::Request, http::HeaderValue, middleware::Next, response::{IntoResponse, Response}};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use hyper::StatusCode;
-use jsonwebtoken::{decode, TokenData, Validation};
+use jsonwebtoken::{decode, Validation};
 use sqlx::PgConnection;
 use time::{Duration, OffsetDateTime};
 use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO}, extractors::database_connection::DatabaseConnection, models::claims::{AccessClaims, RefreshClaims}}, repositories::{self, entities::refresh_token::RefreshTokenUser}, utils};
@@ -39,7 +37,7 @@ pub async fn set_user_info_from_cookie_to_header(
     match process_refresh_token(&mut conn, &mut req, &jar, is_acc_chk_success).await {
         // 재발급 토큰이 존재한다면 리스폰스에 세팅해서 액세스토큰쿠키를 세팅해준다.
         Ok(Some(reissued_token)) => {
-            let acc_time = utils::settings::get_jwt_access_time();
+            let acc_time = utils::config::get_config_jwt_access_time();
             let cookie = Cookie::build((ACCESS_TOKEN, reissued_token))
                 .path("/")
                 .http_only(true)
@@ -69,7 +67,7 @@ fn process_access_token(
     Ok(
         match jar.get(ACCESS_TOKEN) {
             Some(acc_tk) => {
-                let acc_keys = utils::settings::get_settings_jwt_access_keys();
+                let acc_keys = utils::config::get_config_jwt_access_keys();
                 let acc_decode = decode::<AccessClaims>(acc_tk.value(), &acc_keys.decoding, &Validation::default())?;
                 let str = serde_json::to_string(&acc_decode.claims)?;
                 // Some(str)
@@ -94,14 +92,14 @@ async fn process_refresh_token(
     Ok(
         match jar.get(REFRESH_TOKEN) {
             Some(refr_tk) if !is_acc_chk_success => {
-                let refr_keys = utils::settings::get_settings_jwt_refresh_keys();
+                let refr_keys = utils::config::get_config_jwt_refresh_keys();
                 let refr_decode = decode::<RefreshClaims>(refr_tk.value(), &refr_keys.decoding, &Validation::default())?;
                 let db_chk = repositories::refresh_token::select_refresh_token_user_by_sn(conn, refr_decode.claims.chk as i32).await?;
                 match db_chk {
                     Some(rtu) => {
                         let now: OffsetDateTime = OffsetDateTime::now_utc();
-                        let acc_keys = utils::settings::get_settings_jwt_access_keys();
-                        let acc_exp = *utils::settings::get_jwt_access_time();
+                        let acc_keys = utils::config::get_config_jwt_access_keys();
+                        let acc_exp = *utils::config::get_config_jwt_access_time();
                         let access_claims = AccessClaims::new(rtu.user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, rtu.nick_name);
                         
                         let str = serde_json::to_string(&access_claims)?;

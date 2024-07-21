@@ -5,6 +5,6 @@ pub mod into_responses;
 pub mod extractors;
 pub mod errors;
 pub mod db_config;
-pub mod settings;
+pub mod app_config;
 pub mod filters;
 pub mod validator;

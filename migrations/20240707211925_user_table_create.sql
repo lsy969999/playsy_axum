@@ -29,6 +29,7 @@ CREATE TABLE tb_user(
     provider_ty_enum PROVIDER_TY_ENUM NOT NULL,
     provider_id VARCHAR(100) NULL,
     provider_secret VARCHAR(100) NULL,
+    provider_access_token VARCHAR(300) NULL,
     user_stt_enum USER_STT_ENUM NOT NULL,
     user_ty_enum USER_TY_ENUM NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -47,6 +48,7 @@ COMMENT ON COLUMN tb_user.password IS '패스워드';
 COMMENT ON COLUMN tb_user.provider_ty_enum IS '프로바이더타입';
 COMMENT ON COLUMN tb_user.provider_id IS '프로바이더아이디';
 COMMENT ON COLUMN tb_user.provider_secret IS '프로바이더시크릿';
+COMMENT ON COLUMN tb_user.provider_access_token IS '프로바이더액세스토큰';
 COMMENT ON COLUMN tb_user.user_stt_enum IS '상태코드';
 COMMENT ON COLUMN tb_user.user_ty_enum IS '타입코드';
 COMMENT ON COLUMN tb_user.created_at IS '생성일시';
