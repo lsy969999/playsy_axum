@@ -1,5 +1,5 @@
 use std::{sync::Arc, time::Duration};
-use axum::middleware::{self};
+use axum::{middleware::{self}, routing::get};
 use bb8_redis::RedisConnectionManager;
 use configs::{middlewares::etc::add_original_content_length, models::app_state::AppState, settings::SETTINGS};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
@@ -50,6 +50,7 @@ pub async fn play_sy_main() {
 
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))
+        .route("/health", get(|| async { "OK" }))
         .nest("/", get_openapi_route())
         .nest("/", get_home_router(Arc::clone(&app_state)))
         .nest("/", get_auth_router())
