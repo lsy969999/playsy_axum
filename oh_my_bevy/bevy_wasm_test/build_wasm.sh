@@ -7,6 +7,9 @@ wasm-bindgen --out-name $name \
   --out-dir wasm \
   --target web target/wasm32-unknown-unknown/release/$name.wasm
 
+# wasm build 에의해 생성되는 fetch를 추적가능한 fetch로 바꾸기
+sed -i '' 's/input = fetch(input)/input = bevyProgressiveFetch(input)/' ./wasm/${name}.js
+
 wasm-opt -Oz --output optimized.wasm wasm/${name}_bg.wasm
 mv optimized.wasm wasm/${name}_bg.wasm
 

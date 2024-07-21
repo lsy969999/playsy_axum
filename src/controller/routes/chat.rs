@@ -15,6 +15,6 @@ pub fn get_chat_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
         .layer(Extension(ws_state))
         .layer(
             ServiceBuilder::new()
-            .layer(middleware::from_fn_with_state(state, set_user_info_from_cookie_to_header))
+                .layer(middleware::from_fn_with_state(state, set_user_info_from_cookie_to_header))
         )
 }

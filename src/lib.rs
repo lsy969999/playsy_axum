@@ -1,13 +1,14 @@
 use std::{sync::Arc, time::Duration};
+use axum::middleware::{self};
 use bb8_redis::RedisConnectionManager;
-use configs::{models::app_state::AppState, settings::SETTINGS};
+use configs::{middlewares::etc::add_original_content_length, models::app_state::AppState, settings::SETTINGS};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tracing::{debug, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir, timeout::TimeoutLayer, trace::TraceLayer};
+use tower_http::{compression::CompressionLayer, limit::RequestBodyLimitLayer, services::ServeDir, timeout::TimeoutLayer, trace::TraceLayer};
 
 pub mod utils;
 pub mod configs;
@@ -53,17 +54,21 @@ pub async fn play_sy_main() {
         .nest("/", get_home_router(Arc::clone(&app_state)))
         .nest("/", get_auth_router())
         .nest("/", get_user_router())
-        .nest("/", get_game_router())
+        .nest("/", get_game_router(Arc::clone(&app_state)))
         .nest("/", get_chat_router(Arc::clone(&app_state)))
         .with_state(Arc::clone(&app_state))
-        // 
         .layer(
             ServiceBuilder::new()
+                .layer(middleware::from_fn(add_original_content_length))
                 // 요청 로깅
                 .layer(TraceLayer::new_for_http())
                 // 요청 바디 크기 제한 (1MB)
                 .layer(RequestBodyLimitLayer::new(1024 * 1024))
                 .layer(TimeoutLayer::new(Duration::from_secs(5)))
+                // 압축스
+                // ios safari에서 gzip 사용하면 webkit error가 발생함;; 일단 nogzip으로 가자고
+                .layer(CompressionLayer::new().no_gzip())
+                
         );
 
     // reload

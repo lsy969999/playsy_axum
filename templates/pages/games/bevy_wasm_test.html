@@ -6,15 +6,18 @@
     <!-- <main class="flex-grow flex items-center justify-center">
         <canvas id="bevy_canvas"></canvas>
     </main> -->
-
+    
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script> -->
     <main class="flex-grow p-6">
         <!-- Game Screen -->
         <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
             <h2 class="text-2xl font-bold mb-4">게임 화면</h2>
-            <div class="aspect-w-16 aspect-h-9 bg-gray-800 rounded-lg shadow-md">
+            <div class=" aspect-w-16 aspect-h-9 bg-gray-800 rounded-lg shadow-md">
+                <div id="progress" class="ldBar " data-preset="bubble" style="position: absolute; left: 50%; transform: translateX(-50%);""></div>
                 <!-- 게임 화면을 나타내는 플레이스홀더 -->
                 <!-- <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen class="w-full h-full rounded-lg"></iframe> -->
-                <canvas id="bevy_canvas"></canvas>
+                <canvas class=" " id="bevy_canvas"></canvas>
             </div>
         </div>
 
@@ -47,8 +50,37 @@
             </div>
         </div>
     </main>
+    <script>
+        //window.fetch = (...abc) => {
+        //    console.log(abc)
+        //}
+    </script>
     <script type="module">
         import init from '/static/game/bevy_wasm_test/bevy_wasm_test.js'
+        var prg = new ldBar("#progress");
+        window.bevyProgressiveFetch = async (resource) => {
+            return progressive_fetch(resource, {
+                start: (length) => {
+                    console.log('[progressive_fetch] start', length)
+                },
+                progress: (progress, length) => {
+                    //console.log('[progressive_fetch] update', progress, length, 100 * progress/length)
+                    const per = 100 * progress/length;
+                    prg.set(per)
+                },
+                flush: (length) => {
+                    console.log('[progressive_fetch] flush', length)
+                    //prg.style.display='none'
+                    document.querySelector('#progress').style.display = 'none'
+                }
+            })
+        }
         init()
+            /*.then(() => {
+                console.log('END!')
+            })
+            .catch((e) => {
+                console.error('Err!', e)
+            })*/
     </script>
 {% endblock %}

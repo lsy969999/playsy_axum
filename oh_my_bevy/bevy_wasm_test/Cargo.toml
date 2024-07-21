@@ -13,6 +13,7 @@ bevy = { version = "0.14.0", features = [
     # "bevy_state",
     # "bevy_text",
     # "bevy_gizmos",
+    # "bevy_render",
     # "bevy_ui",
     # "webgl2",
 ], default-features = true }
@@ -36,6 +37,8 @@ codegen-units = 1
 # Do a second optimization pass over the entire program, including dependencies.
 # Slows compile times, marginal improvements.
 lto = "thin"
+# lto = true
+# lto = "fat"
 
 # Optimize for size in the wasm-release profile to reduce load times and bandwidth usage on web.
 [profile.wasm-release]
