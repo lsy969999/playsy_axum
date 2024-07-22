@@ -7,7 +7,7 @@ use axum_extra::{extract::{cookie::Cookie, CookieJar}, headers::UserAgent, Typed
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 use crate::configs::askama_filters as filters;
 use super::{fragment::user_info::UserInfo, user};
 
@@ -147,36 +147,58 @@ pub struct OAuthCallback {
 }
 
 
-pub async fn google_callback(query: Query<OAuthCallback>) -> impl IntoResponse {
-    tracing::debug!("google_callback!! query: {:?}", query);
+pub async fn google_callback(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    TypedHeader(user_agent): TypedHeader<UserAgent>,
+    DatabaseConnection(conn): DatabaseConnection,
+    query: Query<OAuthCallback>,
+    jar: CookieJar, 
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    tracing::debug!("google_callback!! query: {:?}, addr: {:?}, user_agent: {:?}", query, addr, user_agent);
     let client = utils::oauth2::google_oauth2_client();
     let token_result = client
         .exchange_code(AuthorizationCode::new(query.code.clone()))
         .request_async(async_http_client)
         .await;
 
-    match token_result {
-        Ok(token) => {
-            tracing::debug!("token_result: {:?}", token);
-            let a = token.access_token().secret();
+    Ok(
+        match token_result {
+            Ok(token) => {
+                tracing::debug!("token_result: {:?}", token);
+                let at: &str = token.access_token().secret();
+                let info = utils::oauth2::google_oauth2_user_info_api(at).await?;
+                let tokens = services::auth::auth_google_request(
+                    conn,
+                    info,
+                    Some(at),
+                    addr.to_string(),
+                    user_agent.to_string()
+                ).await;
 
-            let b = token.scopes();
-            tracing::debug!("at: {:?}, scope: {:?}", a, b);
-
-            let c = utils::oauth2::google_oauth2_user_info_api(a).await;
-            
-            match c {
-                Ok(r) => {
-                    tracing::debug!("google oauth user info {:?}", r);
-                }
-                Err(err) => {
-                    tracing::error!("err {}", err);
+                match tokens {
+                    Ok((access_token, refresh_token)) => {
+                        let acc_time = utils::config::get_config_jwt_access_time();
+                        let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
+                            .path("/")
+                            .http_only(true)
+                            .max_age(Duration::seconds(*acc_time));
+                        let refr_time = utils::config::get_config_jwt_refresh_time();
+                        let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
+                            .path("/")
+                            .http_only(true)
+                            .max_age(Duration::seconds(*refr_time));
+                        (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response()
+                    }
+                    Err(err) => {
+                        tracing::error!("google login service err {}", err);
+                        Err(err)?
+                    }
                 }
             }
+            Err(err) => {
+                tracing::error!("google_callback error: {:?}", err);
+                Err(anyhow::anyhow!(err))?
+            }
         }
-        Err(err) => {
-            tracing::error!("google_callback error: {:?}", err);
-        }
-    }
-    Redirect::to("/")
+    )
 }

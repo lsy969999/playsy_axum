@@ -100,7 +100,7 @@ async fn process_refresh_token(
                         let now: OffsetDateTime = OffsetDateTime::now_utc();
                         let acc_keys = utils::config::get_config_jwt_access_keys();
                         let acc_exp = *utils::config::get_config_jwt_access_time();
-                        let access_claims = AccessClaims::new(rtu.user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, rtu.nick_name);
+                        let access_claims = AccessClaims::new(rtu.user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, rtu.nick_name, rtu.avatar_url);
                         
                         let str = serde_json::to_string(&access_claims)?;
                         req.headers_mut().insert(USER_INFO, str.parse()?);

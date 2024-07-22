@@ -22,4 +22,5 @@ pub struct RefreshTokenUser {
     pub refresh_token_sn: i32,
     pub user_sn: i32,
     pub nick_name: String,
+    pub avatar_url: Option<String>,
 }

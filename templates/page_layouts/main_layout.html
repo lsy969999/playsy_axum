@@ -44,15 +44,22 @@
                         {% when Some with (user) %}
                             <input id="user_nick_name" type="hidden" value="{{user.nick_name}}">
                             <div class="flex items-center space-x-2">
-                                <img
+                                {% if let Some(avatar_url) = user.avatar_url %}
+                                    <img
+                                    onerror="this.src='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'"
+                                    class="w-8 h-8 rounded-full"
+                                    src="{{ avatar_url }}">
+                                {% else %}
+                                    <img
                                     class="w-8 h-8 rounded-full"
                                     src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
-                                    <p> {{ user.nick_name }} </p>
+                                {% endif %}
+                                <p> {{ user.nick_name }} </p>
                             </div>
                             <button hx-post="/auth/logout" hx-swap="none" class="border hover:bg-slate-500 px-3 py-2 rounded">로그아웃</button>
                         {% when None %}
                             <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
-                            <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a>
+                            <!-- <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a> -->
                     {% endmatch %}
                 </div>
             </nav>

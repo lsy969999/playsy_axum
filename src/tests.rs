@@ -9,6 +9,6 @@ fn test_add() {
 
 #[test]
 fn test_rand_alphanumeric_code() {
-    let code = crate::utils::rand::generate_alphanumeric_code();
+    let code = crate::utils::rand::generate_alphanumeric_code(10);
     println!("code: {}", code);
 }

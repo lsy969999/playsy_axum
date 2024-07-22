@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 use axum::{async_trait, extract::{FromRef, FromRequestParts}, http::request::Parts};
-use crate::{configs::{consts::USER_INFO, models::{app_state::ArcAppState, claims::AccessClaims}}, controller::handlers::page::fragment::user_info::UserInfo};
+use crate::{configs::{consts::USER_INFO, models::{app_state::ArcAppState, claims::{self, AccessClaims}}}, controller::handlers::page::fragment::user_info::UserInfo};
 
 // pub struct UserInfo {
 //     pub nick_name: String
@@ -24,7 +24,8 @@ where
                         let claim = serde_json::from_str::<AccessClaims>(str)?;
                         Some(
                             UserInfo {
-                                nick_name: claim.nick_name
+                                nick_name: claim.nick_name,
+                                avatar_url: claim.avatar_url,
                             }
                         )
                     }

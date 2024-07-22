@@ -48,16 +48,18 @@ pub struct AccessClaims {
     pub iat: usize,
     pub scope: Option<String>,
     pub nick_name: String,
+    pub avatar_url: Option<String>,
 }
 
 impl AccessClaims {
-    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>,  nick_name: String) -> Self {
+    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>,  nick_name: String, avatar_url: Option<String>) -> Self {
         Self {
             sub,
             exp: exp.unix_timestamp() as usize,
             iat: iat.unix_timestamp() as usize,
             scope,
-            nick_name
+            nick_name,
+            avatar_url,
         }
     }
 }

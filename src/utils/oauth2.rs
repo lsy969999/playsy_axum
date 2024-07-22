@@ -1,6 +1,9 @@
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, Scope, TokenUrl};
 use reqwest::Client;
 use serde::Deserialize;
+use validator::Validate;
+
+use crate::configs::validator::nick_name_vali_char;
 
 pub fn google_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();
@@ -21,13 +24,16 @@ pub fn google_oauth2_scope_email() -> Scope {
     Scope::new(format!("https://www.googleapis.com/auth/userinfo.email"))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct GoogleOauth2UserInfo {
     pub sub: Option<String>,
+    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
+    #[validate(custom(function="nick_name_vali_char"))]
     pub name: Option<String>,
     pub given_name: Option<String>,
     pub family_name: Option<String>,
     pub picture: Option<String>,
+    pub email: Option<String>,
     pub email_verified: Option<bool>
 }
 
@@ -40,5 +46,6 @@ pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<G
         .bearer_auth(access_token)
         .send()
         .await?;
+
     Ok(response.json::<GoogleOauth2UserInfo>().await?)
 }

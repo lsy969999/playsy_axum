@@ -26,6 +26,7 @@ pub async fn insert_refresh_token(
     hash: String,
     refresh_token: String,
     expires_at: DateTime<Utc>,
+    forwarded_id: Option<String>,
     addr: String,
     user_agent: String,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
@@ -33,15 +34,16 @@ pub async fn insert_refresh_token(
         sqlx::query!(
             r#"
                 INSERT INTO tb_refresh_token 
-                    ( sn, user_sn, hash, refresh_token, expires_at, client_ip, user_agent, created_by, updated_at, updated_by )
+                    ( sn, user_sn, hash, refresh_token, expires_at, forwarded_ip, client_ip, user_agent, created_by, updated_at, updated_by )
                 VALUES
-                    ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 )
+                    ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 )
             "#,
             sn,
             user_sn,
             hash,
             refresh_token,
             expires_at,
+            forwarded_id,
             addr,
             user_agent,
             user_sn,
@@ -64,6 +66,7 @@ pub async fn select_refresh_token_user_by_sn(
                 SELECT 
                     trt.sn AS refresh_token_sn,
                     tu.sn AS user_sn,
+                    tu.avatar_url,
                     tu.nick_name 
                 FROM tb_refresh_token trt 
                     INNER JOIN tb_user tu ON tu.sn = trt.user_sn

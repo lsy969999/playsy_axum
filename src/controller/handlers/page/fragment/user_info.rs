@@ -1,6 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct UserInfo{
     pub nick_name: String,
+    pub avatar_url: Option<String>,
 }
 
 impl std::fmt::Display for UserInfo {

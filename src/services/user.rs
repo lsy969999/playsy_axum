@@ -38,17 +38,21 @@ pub async fn user_join_service(
     // add user
     let _insert = repositories::user::insert_user(
             &mut tx,
+            None,
             user_sn,
             nick_name,
             email,
-            &password,
+            Some(&password),
             ProviderTyEnum::Email,
+            None,
+            None,
+            None,
             UserSttEnum::WaitEmailVeri,
         ).await?;
         
     // email_code_dup_chk
     for i in 1..=4 {
-        let email_code = utils::rand::generate_alphanumeric_code();
+        let email_code = utils::rand::generate_alphanumeric_code(10);
         let dup_chk = repositories::email_join_verifications::select_email_join_veri_for_code_dup_chk(&mut tx, &email_code).await?;
         if dup_chk.is_none() {
             let now = Utc::now();
@@ -75,6 +79,15 @@ pub async fn nick_name_is_some(conn: &mut PgConnection, nick_name: &str) -> Resu
     let user = repositories::user::select_user_by_nick_name(
         conn,
         nick_name
+    ).await?;
+    Ok(user.is_some())
+}
+
+pub async fn user_by_email_and_provider_ty_enum_is_some(conn: &mut PgConnection, email: &str, provider_type: ProviderTyEnum) -> Result<bool, ServiceLayerError> {
+    let user = repositories::user::select_user_by_email_and_login_ty_cd(
+        conn,
+        email,
+        provider_type,
     ).await?;
     Ok(user.is_some())
 }

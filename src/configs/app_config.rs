@@ -18,6 +18,7 @@ pub async fn load_settings() -> Arc<AppConfig> {
 
 #[derive(Debug, Deserialize)]
 pub struct AppSettings {
+    pub is_prd: bool,
     pub server_protocol: String,
     pub server_host: String,
     pub server_port: u32,

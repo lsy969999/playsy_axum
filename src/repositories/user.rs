@@ -91,11 +91,15 @@ pub async fn select_next_user_seq(conn: &mut PgConnection) -> Result<Sequence, R
 
 pub async fn insert_user(
     conn: &mut PgConnection,
+    avatar_url: Option<&str>,
     user_sn: i32,
     nick_name: &str,
     email: &str,
-    password: &str,
+    password: Option<&str>,
     provider_ty_enum: ProviderTyEnum,
+    provider_id: Option<&str>,
+    provider_secret: Option<&str>,
+    provider_access_token: Option<&str>,
     user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
@@ -104,21 +108,21 @@ pub async fn insert_user(
             r#"
                 INSERT INTO tb_user
                 (
-                    sn, nick_name, email, password,
-                    provider_ty_enum , user_stt_enum, user_ty_enum,
+                    sn, avatar_url, nick_name, email, password,
+                    provider_ty_enum , provider_id, provider_secret, provider_access_token,
+                    user_stt_enum, user_ty_enum,
                     created_at, created_by, updated_at, updated_by
                 )
                 VALUES
                 (
-                    $1, $2, $3, $4,
-                    $5, $6, $7,
-                    $8, $9, $10, $11
+                    $1, $2, $3, $4, $5,
+                    $6, $7, $8, $9,
+                    $10, $11, $12, $13, $14, $15
                 )
             "#,
-            user_sn, nick_name, email, password,
-            provider_ty_enum as ProviderTyEnum,
-                user_stt_enum as UserSttEnum,
-                    UserTyEnum::User as UserTyEnum,
+            user_sn, avatar_url, nick_name, email, password,
+            provider_ty_enum as ProviderTyEnum, provider_id, provider_secret, provider_access_token,
+            user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum,
             now, user_sn, now, user_sn
         )
         .execute(conn)

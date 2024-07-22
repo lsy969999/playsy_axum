@@ -12,7 +12,9 @@ pub enum PageHandlerLayerError {
     #[error("Service Error")]
     Service(#[from] ServiceLayerError),
     #[error("Csrf Error")]
-    Csrf(#[from] CsrfError)
+    Csrf(#[from] CsrfError),
+    #[error("Any")]
+    Any(#[from] anyhow::Error)
 }
 
 #[derive(Error, Debug)]
@@ -37,6 +39,8 @@ pub enum RepositoryLayerError {
 
 #[derive(Error, Debug)]
 pub enum UserError {
+    #[error("UserError")]
+    UserError,
     #[error("UserExists")]
     UserExists,
     #[error("UserNotExists")]
