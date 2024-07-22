@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc, time::Duration};
+use std::{net::SocketAddr, time::Duration};
 use axum::{middleware::{self}, routing::get};
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
