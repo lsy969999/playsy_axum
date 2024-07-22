@@ -14,7 +14,9 @@ pub enum PageHandlerLayerError {
     #[error("Csrf Error")]
     Csrf(#[from] CsrfError),
     #[error("Any")]
-    Any(#[from] anyhow::Error)
+    Any(#[from] anyhow::Error),
+    #[error("Auth Error")]
+    Auth
 }
 
 #[derive(Error, Debug)]

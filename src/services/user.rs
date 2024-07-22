@@ -2,7 +2,7 @@ use askama::Template;
 use chrono::Duration;
 use sqlx::{pool::PoolConnection, types::chrono::Utc, PgConnection, Postgres};
 use tracing::{error, warn};
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories::{self, enums::{user::ProviderTyEnum, user::UserSttEnum}}, utils};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories::{self, entities::user::User, enums::user::{ProviderTyEnum, UserSttEnum}}, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -112,4 +112,19 @@ fn email_join_verification_code_send(to: &str, code: &str) -> anyhow::Result<()>
     let body = EmailVeriHtml{ code }.render()?;
     utils::mail::send_mail(to, subject, &body)?;
     Ok(())
+}
+
+
+pub async fn select_user(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<User, ServiceLayerError> {
+    let useroption = repositories::user::select_user_by_sn(&mut conn, sn).await?;
+    Ok(
+        match useroption {
+            Some(user) => user,
+            None => Err(UserError::UserNotExists)?
+        }
+    )
+}
+
+pub async fn user_withdrawl(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<u64, ServiceLayerError> {
+    Ok(repositories::user::delete_user_by_sn(&mut conn, sn).await?.rows_affected())
 }

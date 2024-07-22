@@ -43,19 +43,21 @@
                     {% match user_info %}
                         {% when Some with (user) %}
                             <input id="user_nick_name" type="hidden" value="{{user.nick_name}}">
-                            <div class="flex items-center space-x-2">
-                                {% if let Some(avatar_url) = user.avatar_url %}
-                                    <img
-                                    onerror="this.src='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'"
-                                    class="w-8 h-8 rounded-full"
-                                    src="{{ avatar_url }}">
-                                {% else %}
-                                    <img
-                                    class="w-8 h-8 rounded-full"
-                                    src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
-                                {% endif %}
-                                <p> {{ user.nick_name }} </p>
-                            </div>
+                            <a href="/user/mypage" class="flex hover:bg-gray-700 px-3 py-2 rounded">
+                                <div class="flex items-center space-x-2">
+                                    {% if let Some(avatar_url) = user.avatar_url %}
+                                        <img
+                                        onerror="this.src='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'"
+                                        class="w-8 h-8 rounded-full"
+                                        src="{{ avatar_url }}">
+                                    {% else %}
+                                        <img
+                                        class="w-8 h-8 rounded-full"
+                                        src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
+                                    {% endif %}
+                                    <p> {{ user.nick_name }} </p>
+                                </div>
+                            </a>
                             <button hx-post="/auth/logout" hx-swap="none" class="border hover:bg-slate-500 px-3 py-2 rounded">로그아웃</button>
                         {% when None %}
                             <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
@@ -103,8 +105,15 @@
         </div>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 text-white p-4 text-center">
-            &copy; 2024 Playsy. All rights reserved.
+        <footer class="bg-gray-800 text-white text-sm py-2 text-center mt-6">
+            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+                <p class="mb-2 sm:mb-0">&copy; 2024 Playsy. All rights reserved.</p>
+                <nav class="flex space-x-2">
+                    <a href="/privacy" class="hover:underline">개인정보 처리방침</a>
+                    <!-- <span>|</span>
+                    <a href="/terms-of-service.html" class="hover:underline">이용 약관</a> -->
+                </nav>
+            </div>
         </footer>
         
         {% include "page_layouts/blocks/default_script.html" %}

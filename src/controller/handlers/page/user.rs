@@ -1,7 +1,9 @@
 use askama::Template;
-use axum::{extract::Query, response::{Html, IntoResponse}, Form};
+use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
+use axum_extra::extract::{cookie::Cookie, CookieJar};
+use time::Duration;
 use validator::ValidateArgs;
-use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, services, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, repositories::entities::user::User, services, utils};
 use crate::configs::askama_filters as filters;
 
 use super::fragment::user_info::UserInfo;
@@ -133,4 +135,45 @@ pub async fn join_request(
             Err(err) => Err(err)?
         }
     )
+}
+
+#[derive(Template)]
+#[template(path="pages/mypage.html")]
+pub struct MyPageTemplate {
+    user_info: Option<UserInfo>,
+    user: User
+}
+
+pub async fn my_page(
+    DatabaseConnection(conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let user = services::user::select_user(conn, user_info.user_sn).await?;
+    Ok(
+        HtmlTemplate(
+            MyPageTemplate {
+                user_info: Some(user_info),
+                user,
+            }
+        )
+    )
+}
+
+pub async fn user_withdrawl(
+    DatabaseConnection(conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+    jar: CookieJar
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let _ = services::user::user_withdrawl(conn, user_info.user_sn).await?;
+    let acc_token_cookie = Cookie::build((ACCESS_TOKEN, ""))
+        .path("/")
+        .http_only(true)
+        .max_age(Duration::seconds(0));
+    let ref_token_cookie = Cookie::build((REFRESH_TOKEN, ""))
+        .path("/")
+        .http_only(true)
+        .max_age(Duration::seconds(0));
+    let jar = jar.remove(acc_token_cookie);
+    let jar = jar.remove(ref_token_cookie);
+    Ok((jar, Redirect::to("/")))
 }

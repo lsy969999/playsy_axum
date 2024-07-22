@@ -5,6 +5,7 @@ use crate::{configs::{middlewares::auth::set_user_info_from_cookie_to_header, mo
 pub fn get_home_router(state: ArcAppState) -> Router<ArcAppState>{
     Router::new()
         .route("/", get(page::home::home_page))
+        .route("/privacy", get(page::home::privacy_page))
         .layer(
             ServiceBuilder::new()
                 .layer(from_fn_with_state(state, set_user_info_from_cookie_to_header))

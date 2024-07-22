@@ -1,5 +1,6 @@
 #[derive(Debug, Clone)]
 pub struct UserInfo{
+    pub user_sn: i32,
     pub nick_name: String,
     pub avatar_url: Option<String>,
 }

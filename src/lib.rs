@@ -1,9 +1,10 @@
 use std::{net::SocketAddr, time::Duration};
-use axum::{middleware::{self}, routing::get};
+use axum::{middleware::{self}, response::IntoResponse, routing::get};
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
-use configs::{app_config::APP_CONFIG, middlewares::etc::add_original_content_length, models::app_state::{AppState, ArcAppState}};
+use configs::{app_config::APP_CONFIG, into_responses::{errors::ErrorTemplate, html_template::HtmlTemplate}, middlewares::etc::add_original_content_length, models::app_state::{AppState, ArcAppState}};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
+use hyper::StatusCode;
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
@@ -53,7 +54,7 @@ pub async fn play_sy_main() {
         .nest("/", get_openapi_route())
         .nest("/", get_home_router(arc_app_state.clone()))
         .nest("/", get_auth_router())
-        .nest("/", get_user_router())
+        .nest("/", get_user_router(arc_app_state.clone()))
         .nest("/", get_game_router(arc_app_state.clone()))
         .nest("/", get_chat_router(arc_app_state.clone()))
         .with_state(arc_app_state.clone())
@@ -90,11 +91,21 @@ pub async fn play_sy_main() {
     axum::serve(
             listener,
             app
+                .fallback(global_404_handler)
                 .into_make_service_with_connect_info::<SocketAddr>()
         )
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
+}
+
+async fn global_404_handler() -> impl IntoResponse {
+    HtmlTemplate(
+        ErrorTemplate {
+            error_code: StatusCode::NOT_FOUND.to_string(),
+            error_message: format!("Page Not Found"),
+        }
+    )
 }
 
 

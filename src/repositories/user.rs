@@ -2,6 +2,41 @@ use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
 use super::{entities::user::User, enums::{user::ProviderTyEnum, user::UserSttEnum, user::UserTyEnum}};
 use crate::{configs::errors::app_error::RepositoryLayerError, repositories::entities::sequence::Sequence};
 
+pub async fn select_user_by_sn(
+    conn: &mut PgConnection,
+    sn: i32,
+) -> Result<Option<User>, RepositoryLayerError> {
+    Ok(
+        sqlx::query_as!(
+            User,
+            r#"
+                SELECT 
+                    sn,
+                    avatar_url,
+                    nick_name,
+                    email,
+                    password,
+                    provider_id,
+                    provider_secret,
+                    provider_access_token,
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    is_deleted
+                FROM tb_user tu
+                WHERE tu.sn = $1 AND tu.is_deleted = FALSE
+            "#, 
+            sn
+        )
+        .fetch_optional(conn)
+        .await?
+    )
+}
+
 pub async fn select_user_by_nick_name(
     conn: &mut PgConnection,
     nick_name: &str,
@@ -147,6 +182,29 @@ pub async fn update_user_stt_enum(
             "#,
             user_stt_enum as UserSttEnum,
             user_sn,
+        )
+        .execute(conn)
+        .await?
+    )
+}
+
+pub async fn delete_user_by_sn(
+    conn: &mut PgConnection,
+    user_sn: i32,
+) -> Result<PgQueryResult, RepositoryLayerError> {
+    Ok(
+        sqlx::query!(
+            r#"
+                UPDATE tb_user
+                SET
+                    is_deleted = TRUE,
+                    user_stt_enum = $1,
+                    updated_at = now(),
+                    updated_by = $2
+                WHERE sn = $2
+            "#,
+            UserSttEnum::Quit as UserSttEnum,
+            user_sn
         )
         .execute(conn)
         .await?

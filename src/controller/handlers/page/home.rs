@@ -12,9 +12,24 @@ struct HomeTemplate {
 pub async fn home_page(
     ExtUserInfo(user_info): ExtUserInfo,
 ) -> impl IntoResponse{
-    tracing::info!("[home_page] user_info: {:?}", user_info);
     HtmlTemplate(
         HomeTemplate{
+            user_info
+        }
+    )
+}
+
+#[derive(Template)]
+#[template(path="pages/privacy.html")]
+struct PrivacyTemplate {
+    user_info: Option<UserInfo>
+}
+
+pub async fn privacy_page(
+    ExtUserInfo(user_info): ExtUserInfo,
+) -> impl IntoResponse {
+    HtmlTemplate(
+        PrivacyTemplate {
             user_info
         }
     )
