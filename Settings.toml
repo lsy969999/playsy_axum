@@ -1,9 +1,14 @@
 [app]
+server_protocol = "http"
+server_host = "localhost"
 server_port = 4000
 csrf_key = "csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf"
 
 [database]
-database_url = "postgres://myuser:mypassword@localhost:5432/mydatabase"
+database_url = "postgres://myuser:mypassword@localhost/mydatabase"
+
+[redis]
+redis_url = "redis://localhost"
 
 [jwt]
 jwt_access_secret = "access_access_access_access_access_access_access_access_access_access"

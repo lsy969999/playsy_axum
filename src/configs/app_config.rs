@@ -18,6 +18,8 @@ pub async fn load_settings() -> Arc<AppConfig> {
 
 #[derive(Debug, Deserialize)]
 pub struct AppSettings {
+    pub server_protocol: String,
+    pub server_host: String,
     pub server_port: u32,
     pub csrf_key: String,
 }
@@ -25,6 +27,11 @@ pub struct AppSettings {
 #[derive(Debug, Deserialize)]
 pub struct DatabaseSettings {
     pub database_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RedisSettings {
+    pub redis_url: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +59,7 @@ pub struct Oauth2Settings {
 pub struct Settings {
     pub app: AppSettings,
     pub database: DatabaseSettings,
+    pub redis: RedisSettings,
     pub jwt: JwtSettings,
     pub smtp: SmtpSettings,
     pub oauth2: Oauth2Settings,

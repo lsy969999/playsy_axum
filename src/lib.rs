@@ -39,8 +39,8 @@ pub async fn play_sy_main() {
     debug!("app_config: {:?}", app_config);
 
     let db_pool = configs::db_config::init_db_pool(&app_config.settings.database.database_url).await;
-    let manager = RedisConnectionManager::new("redis://localhost").unwrap();
-    let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
+    let redis_manager = RedisConnectionManager::new(format!("{}", &app_config.settings.redis.redis_url)).unwrap();
+    let redis_pool = bb8::Pool::builder().build(redis_manager).await.unwrap();
     let csrf_key = Key::from(&app_config.settings.app.csrf_key.as_bytes());
     let csrf_config = CsrfConfig::default().with_key(Some(csrf_key));
     let app_state = AppState::new(db_pool, redis_pool, csrf_config);
