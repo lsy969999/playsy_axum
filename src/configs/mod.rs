@@ -6,5 +6,5 @@ pub mod extractors;
 pub mod errors;
 pub mod db_config;
 pub mod app_config;
-pub mod filters;
+pub mod askama_filters;
 pub mod validator;

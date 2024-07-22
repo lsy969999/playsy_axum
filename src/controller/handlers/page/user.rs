@@ -2,7 +2,7 @@ use askama::Template;
 use axum::{extract::Query, response::{Html, IntoResponse}, Form};
 use validator::ValidateArgs;
 use crate::{configs::{errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, services, utils};
-use crate::configs::filters;
+use crate::configs::askama_filters as filters;
 
 use super::fragment::user_info::UserInfo;
 

@@ -6,7 +6,7 @@ use oauth2::{basic::BasicClient, reqwest::async_http_client, AuthUrl, Authorizat
 use serde::Deserialize;
 use time::Duration;
 use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
-use crate::configs::filters;
+use crate::configs::askama_filters as filters;
 use super::fragment::user_info::UserInfo;
 
 #[derive(Template)]
@@ -109,24 +109,12 @@ pub async fn auth_email_request(
     )
 }
 
-
-
-fn google_client() -> BasicClient {
-    BasicClient::new(
-        ClientId::new(format!("")),
-        Some(ClientSecret::new(format!(""))),
-        AuthUrl::new(format!("https://accounts.google.com/o/oauth2/v2/auth")).unwrap(),
-        Some(TokenUrl::new(format!("https://oauth2.googleapis.com/token")).unwrap())
-    )
-    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/google/callback")).unwrap())
-}
-
 pub async fn google_login() -> impl IntoResponse {
-    let client = google_client();
+    let client = utils::oauth2::google_oauth2_client();
     let (authorize_url, _csrf_state) = client
         .authorize_url(CsrfToken::new_random)
-        .add_scope(Scope::new(format!("https://www.googleapis.com/auth/userinfo.profile")))
-        .add_scope(Scope::new(format!("https://www.googleapis.com/auth/userinfo.email")))
+        .add_scope(utils::oauth2::google_oauth2_scope_email())
+        .add_scope(utils::oauth2::google_oauth2_scope_profile())
         .url();
     Redirect::temporary(authorize_url.to_string().as_str())
 }
@@ -140,7 +128,7 @@ pub struct OAuthCallback {
 
 pub async fn google_callback(query: Query<OAuthCallback>) -> impl IntoResponse {
     tracing::debug!("google_callback!! query: {:?}", query);
-    let client = google_client();
+    let client = utils::oauth2::google_oauth2_client();
     let token_result = client
         .exchange_code(AuthorizationCode::new(query.code.clone()))
         .request_async(async_http_client)
@@ -153,6 +141,17 @@ pub async fn google_callback(query: Query<OAuthCallback>) -> impl IntoResponse {
 
             let b = token.scopes();
             tracing::debug!("at: {:?}, scope: {:?}", a, b);
+
+            let c = utils::oauth2::google_oauth2_user_info_api(a).await;
+            
+            match c {
+                Ok(r) => {
+                    tracing::debug!("google oauth user info {:?}", r);
+                }
+                Err(err) => {
+                    tracing::error!("err {}", err);
+                }
+            }
         }
         Err(err) => {
             tracing::error!("google_callback error: {:?}", err);
