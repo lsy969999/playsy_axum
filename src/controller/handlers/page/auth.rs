@@ -2,14 +2,14 @@
 use std::net::SocketAddr;
 
 use askama::Template;
-use axum::{ extract::{ConnectInfo, Query, State}, response::{IntoResponse, Redirect}, Form};
+use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::{cookie::Cookie, CookieJar}, headers::UserAgent, TypedHeader};
-use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
+use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, etc::oauth2_naver_client::NaverClient, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 use crate::configs::askama_filters as filters;
-use super::{fragment::user_info::UserInfo, user};
+use super::fragment::user_info::UserInfo;
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]
@@ -203,7 +203,6 @@ pub async fn google_callback(
 }
 
 pub async fn naver_login(
-    State(client): State<NaverClient>
 ) -> impl IntoResponse {
     let client = utils::oauth2::naver_oauth2_client().await;
     let (authorize_url, _csrf_state) = client
@@ -214,7 +213,6 @@ pub async fn naver_login(
 }
 
 pub async fn naver_callback(
-    State(client): State<NaverClient>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
     DatabaseConnection(conn): DatabaseConnection,
