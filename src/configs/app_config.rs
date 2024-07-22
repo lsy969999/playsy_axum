@@ -54,6 +54,10 @@ pub struct SmtpSettings {
 pub struct Oauth2Settings {
     pub oauth2_google_client_id: String,
     pub oauth2_google_client_secret: String,
+    pub oauth2_naver_client_id: String,
+    pub oauth2_naver_client_secret: String,
+    pub oauth2_github_client_id: String,
+    pub oauth2_github_client_secret: String,
 }
 
 #[derive(Debug, Deserialize)]

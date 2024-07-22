@@ -14,6 +14,7 @@ pub struct User {
     pub provider_id: Option<String>,
     pub provider_secret: Option<String>,
     pub provider_access_token: Option<String>,
+    pub provider_refresh_token: Option<String>,
     pub user_stt_enum: UserSttEnum,
     pub user_ty_enum: UserTyEnum,
     pub created_at: DateTime<Utc>,

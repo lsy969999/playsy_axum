@@ -31,7 +31,7 @@ pub async fn play_sy_main() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                "web=debug,sqlx=debug,tower_http=debug,axum=debug,axum::rejection=trace,bb8=debug,bb8-redis=debug,redis=debug".into()
+                "web=debug,sqlx=debug,tower_http=debug,axum=debug,axum::rejection=trace,bb8=debug,bb8-redis=debug,redis=debug,reqwest=debug,oauth2=debug".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())

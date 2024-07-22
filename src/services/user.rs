@@ -47,6 +47,7 @@ pub async fn user_join_service(
             None,
             None,
             None,
+            None,
             UserSttEnum::WaitEmailVeri,
         ).await?;
         

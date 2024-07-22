@@ -8,3 +8,4 @@ pub mod db_config;
 pub mod app_config;
 pub mod askama_filters;
 pub mod validator;
+pub mod etc;

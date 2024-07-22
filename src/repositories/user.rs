@@ -19,6 +19,7 @@ pub async fn select_user_by_sn(
                     provider_id,
                     provider_secret,
                     provider_access_token,
+                    provider_refresh_token,
                     provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
@@ -54,6 +55,7 @@ pub async fn select_user_by_nick_name(
                     provider_id,
                     provider_secret,
                     provider_access_token,
+                    provider_refresh_token,
                     provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
@@ -90,6 +92,7 @@ pub async fn select_user_by_email_and_login_ty_cd(
                     provider_id,
                     provider_secret,
                     provider_access_token,
+                    provider_refresh_token,
                     provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
@@ -135,6 +138,7 @@ pub async fn insert_user(
     provider_id: Option<&str>,
     provider_secret: Option<&str>,
     provider_access_token: Option<&str>,
+    provider_refresh_token: Option<&str>,
     user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
@@ -144,19 +148,19 @@ pub async fn insert_user(
                 INSERT INTO tb_user
                 (
                     sn, avatar_url, nick_name, email, password,
-                    provider_ty_enum , provider_id, provider_secret, provider_access_token,
+                    provider_ty_enum , provider_id, provider_secret, provider_access_token, provider_refresh_token,
                     user_stt_enum, user_ty_enum,
                     created_at, created_by, updated_at, updated_by
                 )
                 VALUES
                 (
                     $1, $2, $3, $4, $5,
-                    $6, $7, $8, $9,
-                    $10, $11, $12, $13, $14, $15
+                    $6, $7, $8, $9, $10,
+                    $11, $12, $13, $14, $15, $16
                 )
             "#,
             user_sn, avatar_url, nick_name, email, password,
-            provider_ty_enum as ProviderTyEnum, provider_id, provider_secret, provider_access_token,
+            provider_ty_enum as ProviderTyEnum, provider_id, provider_secret, provider_access_token, provider_refresh_token,
             user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum,
             now, user_sn, now, user_sn
         )

@@ -14,6 +14,8 @@ fn get_auth_page_router() -> Router<ArcAppState> {
         .route("/logout", post(page::auth::logout))
         .route("/google/login", get(page::auth::google_login))
         .route("/google/callback", get(page::auth::google_callback))
+        .route("/naver/login", get(page::auth::naver_login))
+        .route("/naver/callback", get(page::auth::naver_callback))
 }
 
 fn get_auth_api_router() -> Router<ArcAppState> {
