@@ -1,3 +1,4 @@
+use axum_csrf::CsrfError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,7 +10,9 @@ pub enum ApiHandlerLayerError {
 #[derive(Error, Debug)]
 pub enum PageHandlerLayerError {
     #[error("Service Error")]
-    Service(#[from] ServiceLayerError)
+    Service(#[from] ServiceLayerError),
+    #[error("Csrf Error")]
+    Csrf(#[from] CsrfError)
 }
 
 #[derive(Error, Debug)]

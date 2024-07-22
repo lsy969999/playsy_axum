@@ -1,8 +1,6 @@
-use std::{convert::Infallible, net::SocketAddr, sync::Arc};
-
+use std::{convert::Infallible, net::SocketAddr};
 use axum::{async_trait, extract::{ConnectInfo, FromRef, FromRequestParts}, http::request::Parts};
-
-use crate::configs::models::app_state::AppState;
+use crate::configs::models::app_state::ArcAppState;
 
 pub struct ExtClientIp(pub Option<String>);
 
@@ -10,7 +8,7 @@ pub struct ExtClientIp(pub Option<String>);
 #[async_trait]
 impl<S> FromRequestParts<S> for ExtClientIp
 where
-    Arc<AppState>: FromRef<S>,
+   ArcAppState: FromRef<S>,
     S: Send + Sync
 {
     type Rejection = Infallible;

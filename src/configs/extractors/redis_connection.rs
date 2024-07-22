@@ -1,24 +1,25 @@
-use std::{convert::Infallible, sync::Arc, time::Duration};
+use std::{convert::Infallible, time::Duration};
 use axum::{async_trait, extract::{FromRef, FromRequestParts}, http::request::Parts};
 use bb8::{Pool, PooledConnection};
 use bb8_redis::RedisConnectionManager;
 use redis::RedisError;
 use tokio::time::timeout;
-use crate::configs::models::app_state::AppState;
+use crate::configs::models::app_state::ArcAppState;
 
 pub struct RedisConnection(pub Option<PooledConnection<'static, RedisConnectionManager>>);
 
 #[async_trait]
 impl<S> FromRequestParts<S> for RedisConnection
 where
-    Arc<AppState>: FromRef<S>,
+    ArcAppState: FromRef<S>,
+    Pool<RedisConnectionManager>: FromRef<S>,
     S: Send + Sync,
 {
     type Rejection = Infallible;
 
     async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let state = Arc::from_ref(state);
-        let pool = Pool::from_ref(&state.redis_pool);
+        // let state = Arc::from_ref(state);
+        let pool = Pool::from_ref(state);
         let conn = pool.get_owned();
         let timeout_duration = Duration::from_secs(5); //TODO! sec정하기
         let timeout_conn = timeout(timeout_duration, conn)

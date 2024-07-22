@@ -19,6 +19,7 @@ pub async fn load_settings() -> Arc<AppConfig> {
 #[derive(Debug, Deserialize)]
 pub struct AppSettings {
     pub server_port: u32,
+    pub csrf_key: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,7 +29,6 @@ pub struct DatabaseSettings {
 
 #[derive(Debug, Deserialize)]
 pub struct JwtSettings {
-    pub jwt_secret: String,
     pub jwt_access_secret: String,
     pub jwt_refresh_secret: String,
     pub jwt_access_time: i64,

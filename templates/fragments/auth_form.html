@@ -8,6 +8,7 @@
     x-on:htmx:before-request="loading = true"
     x-on:htmx:after-request="loading = false"
 >
+    <input type="hidden" name="authenticity_token" value="{{ authenticity_token }}"/>
     {% call inputs::email(
         input_name="이메일", id="email", name="email", required=true,
         value=(email_value|nf),

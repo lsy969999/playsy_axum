@@ -1,15 +1,13 @@
-use std::sync::Arc;
 use axum::{ routing::get, Router};
+use crate::{configs::models::app_state::ArcAppState, controller::handlers::page};
 
-use crate::{configs::models::app_state::AppState, controller::handlers::page};
 
-
-pub fn get_user_router() -> Router<Arc<AppState>> {
+pub fn get_user_router() -> Router<ArcAppState> {
     Router::new()
         .nest("/user", get_user_page_router())
 }
 
-fn get_user_page_router() -> Router<Arc<AppState>> {
+fn get_user_page_router() -> Router<ArcAppState> {
     Router::new()
         .route(
             "/join",

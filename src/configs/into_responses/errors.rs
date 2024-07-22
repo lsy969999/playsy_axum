@@ -27,6 +27,10 @@ impl IntoResponse for PageHandlerLayerError {
                 tracing::error!("{TAG} {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
+            Self::Csrf(err) => {
+                tracing::error!("{TAG} {}", err);
+                (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
+            }
         };
         let body = Json(json!({
             "error_message": error_message

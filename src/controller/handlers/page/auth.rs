@@ -2,7 +2,7 @@
 use askama::Template;
 use axum::{ extract::Query, response::{IntoResponse, Redirect}, Form};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
-use oauth2::{basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenResponse, TokenUrl};
+use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
 use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
@@ -19,6 +19,7 @@ struct AuthTemplate {
 #[derive(Template)]
 #[template(path="fragments/auth_form.html")]
 struct AuthFormFragment {
+    authenticity_token: String,
     email_value: Option<String>,
     pass_value: Option<String>,
     email_err_msg: Option<String>,
@@ -26,28 +27,38 @@ struct AuthFormFragment {
 }
 
 impl AuthFormFragment {
-    pub fn new(email_value: Option<String>, pass_value: Option<String>, email_err_msg: Option<String>, pass_err_msg: Option<String>,) -> Self {
-        Self { email_value, pass_value, email_err_msg, pass_err_msg }
+    pub fn new(authenticity_token: String, email_value: Option<String>, pass_value: Option<String>, email_err_msg: Option<String>, pass_err_msg: Option<String>,) -> Self {
+        Self { authenticity_token, email_value, pass_value, email_err_msg, pass_err_msg }
     }
 }
 
-impl Default for AuthFormFragment {
-    fn default() -> Self {
-        Self { email_value: None, pass_value: None, email_err_msg: None, pass_err_msg: None }
-    }
-}
+// impl Default for AuthFormFragment {
+//     fn default() -> Self {
+//         Self { email_value: None, pass_value: None, email_err_msg: None, pass_err_msg: None }
+//     }
+// }
 
 #[derive(Template)]
 #[template(path="fragments/auth_fail.html")]
 struct AuthFailTemplate;
 
-pub async fn auth_page() -> impl IntoResponse {
-    HtmlTemplate(
-        AuthTemplate {
-            auth_form: AuthFormFragment::default(),
-            user_info: None,
-        }
-    )
+pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
+    let authenticity_token = token.authenticity_token().unwrap();
+    (
+        token, 
+        HtmlTemplate(
+            AuthTemplate {
+                auth_form: AuthFormFragment {
+                    authenticity_token,
+                    email_value: None,
+                    pass_value: None,
+                    email_err_msg: None,
+                    pass_err_msg: None,
+                },
+                user_info: None,
+            }
+        )
+    ).into_response()
 }
 
 pub async fn logout(jar: CookieJar) -> impl IntoResponse {
@@ -65,10 +76,14 @@ pub async fn logout(jar: CookieJar) -> impl IntoResponse {
 }
 
 pub async fn auth_email_request(
+    token: axum_csrf::CsrfToken,
     DatabaseConnection(conn): DatabaseConnection,
     jar: CookieJar, 
     Form(form): Form<LoginAuthReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    //csrf
+    token.verify(&form.authenticity_token)?;
+
     // 이메일 로그인 서비스 호출
     Ok(
         match services::auth::auth_email_request(conn, &form.email, &form.password).await {
@@ -100,7 +115,7 @@ pub async fn auth_email_request(
                     }
                     _ => Err(err)?
                 };
-                let af = AuthFormFragment::new(None, None, None, Some(msg.to_string()));
+                let af = AuthFormFragment::new("".to_string(),None, None, None, Some(msg.to_string()));
                 HtmlTemplate(
                     af
                 ).into_response()

@@ -1,7 +1,8 @@
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 use axum::{middleware::{self}, routing::get};
+use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
-use configs::{middlewares::etc::add_original_content_length, models::app_state::AppState, app_config::APP_CONFIG};
+use configs::{app_config::APP_CONFIG, middlewares::etc::add_original_content_length, models::app_state::{AppState, ArcAppState}};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use listenfd::ListenFd;
 use tokio::net::TcpListener;
@@ -40,24 +41,22 @@ pub async fn play_sy_main() {
     let db_pool = configs::db_config::init_db_pool(&app_config.settings.database.database_url).await;
     let manager = RedisConnectionManager::new("redis://localhost").unwrap();
     let redis_pool = bb8::Pool::builder().build(manager).await.unwrap();
-    let app_state = Arc::new(
-        AppState::new(
-            db_pool, redis_pool,
-        )
-    );
+    let csrf_key = Key::from(&app_config.settings.app.csrf_key.as_bytes());
+    let csrf_config = CsrfConfig::default().with_key(Some(csrf_key));
+    let app_state = AppState::new(db_pool, redis_pool, csrf_config);
     debug!("app_state: {:?}", app_state);
-
+    let arc_app_state = ArcAppState::new(app_state);
 
     let app = axum::Router::new()
         .nest_service("/static", ServeDir::new("./static"))
         .route("/health", get(|| async { "OK" }))
         .nest("/", get_openapi_route())
-        .nest("/", get_home_router(Arc::clone(&app_state)))
+        .nest("/", get_home_router(arc_app_state.clone()))
         .nest("/", get_auth_router())
         .nest("/", get_user_router())
-        .nest("/", get_game_router(Arc::clone(&app_state)))
-        .nest("/", get_chat_router(Arc::clone(&app_state)))
-        .with_state(Arc::clone(&app_state))
+        .nest("/", get_game_router(arc_app_state.clone()))
+        .nest("/", get_chat_router(arc_app_state.clone()))
+        .with_state(arc_app_state.clone())
         .layer(
             ServiceBuilder::new()
                 .layer(middleware::from_fn(add_original_content_length))

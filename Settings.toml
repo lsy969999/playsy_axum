@@ -1,13 +1,13 @@
 [app]
 server_port = 4000
+csrf_key = "csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf_csrf"
 
 [database]
 database_url = "postgres://myuser:mypassword@localhost:5432/mydatabase"
 
 [jwt]
-jwt_secret = "secret"
-jwt_access_secret = "access_secret"
-jwt_refresh_secret = "refresh_secret"
+jwt_access_secret = "access_access_access_access_access_access_access_access_access_access"
+jwt_refresh_secret = "refresh_refresh_refresh_refresh_refresh_refresh_refresh_refresh_refresh"
 jwt_access_time = 60 # 1 * 60
 jwt_refresh_time = 86400 # 1 * 60 * 
 

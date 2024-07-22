@@ -1,6 +1,6 @@
-use std::{convert::Infallible, sync::Arc};
+use std::convert::Infallible;
 use axum::{async_trait, extract::{FromRef, FromRequestParts}, http::request::Parts};
-use crate::{configs::{consts::USER_INFO, models::{app_state::AppState, claims::AccessClaims}}, controller::handlers::page::fragment::user_info::UserInfo};
+use crate::{configs::{consts::USER_INFO, models::{app_state::ArcAppState, claims::AccessClaims}}, controller::handlers::page::fragment::user_info::UserInfo};
 
 // pub struct UserInfo {
 //     pub nick_name: String
@@ -11,7 +11,7 @@ pub struct ExtUserInfo(pub Option<UserInfo>);
 #[async_trait]
 impl<S> FromRequestParts<S> for ExtUserInfo
 where
-    Arc<AppState>: FromRef<S>,
+    ArcAppState: FromRef<S>,
     S: Send + Sync
 {
     type Rejection = Infallible;

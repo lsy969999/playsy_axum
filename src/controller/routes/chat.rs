@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use axum::{middleware, routing::get, Extension, Router};
 use tower::ServiceBuilder;
 
-use crate::{configs::{middlewares::auth::set_user_info_from_cookie_to_header, models::{app_state::AppState,  ws_state::WsState}}, controller::handlers::page::chat::{chat_page, ws_room_handler, ws_room_lobby_handler}};
+use crate::{configs::{middlewares::auth::set_user_info_from_cookie_to_header, models::{app_state::ArcAppState,  ws_state::WsState}}, controller::handlers::page::chat::{chat_page, ws_room_handler, ws_room_lobby_handler}};
 
-pub fn get_chat_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
+pub fn get_chat_router(state: ArcAppState) -> Router<ArcAppState> {
     let ws_state: WsState = WsState::new();
     WsState::run_room_checker(ws_state.clone());
     Router::new()
