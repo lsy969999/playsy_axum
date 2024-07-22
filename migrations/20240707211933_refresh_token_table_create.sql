@@ -16,8 +16,9 @@ CREATE TABLE tb_refresh_token(
     hash VARCHAR(200) NOT NULL,
     refresh_token VARCHAR(500) NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    client_ip VARCHAR(100) NULL,
-    user_agent VARCHAR(300) NULL,
+    forwarded_ip VARCHAR(100) NULL,
+    client_ip VARCHAR(100) NOT NULL,
+    user_agent VARCHAR(300) NOT NULL,
 
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by INT NOT NULL,
@@ -31,6 +32,7 @@ COMMENT ON COLUMN tb_refresh_token.user_sn IS '사용자 식별자';
 COMMENT ON COLUMN tb_refresh_token.hash IS '해시';
 COMMENT ON COLUMN tb_refresh_token.refresh_token IS '새로고침토큰';
 COMMENT ON COLUMN tb_refresh_token.expires_at IS '만료일시';
+COMMENT ON COLUMN tb_refresh_token.forwarded_ip IS 'forwardedIP';
 COMMENT ON COLUMN tb_refresh_token.client_ip IS '클라이언트IP';
 COMMENT ON COLUMN tb_refresh_token.user_agent IS '유저에이전트';
 COMMENT ON COLUMN tb_refresh_token.created_at IS '생성일시';

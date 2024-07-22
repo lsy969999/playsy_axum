@@ -25,21 +25,25 @@ pub async fn insert_refresh_token(
     user_sn: i32,
     hash: String,
     refresh_token: String,
-    expires_at: DateTime<Utc>
+    expires_at: DateTime<Utc>,
+    addr: String,
+    user_agent: String,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     Ok(
         sqlx::query!(
             r#"
                 INSERT INTO tb_refresh_token 
-                    ( sn, user_sn, hash, refresh_token, expires_at, created_by, updated_at, updated_by )
+                    ( sn, user_sn, hash, refresh_token, expires_at, client_ip, user_agent, created_by, updated_at, updated_by )
                 VALUES
-                    ( $1, $2, $3, $4, $5, $6, $7, $8 )
+                    ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 )
             "#,
             sn,
             user_sn,
             hash,
             refresh_token,
             expires_at,
+            addr,
+            user_agent,
             user_sn,
             Utc::now(),
             user_sn,

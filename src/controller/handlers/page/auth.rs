@@ -1,13 +1,15 @@
 
+use std::net::SocketAddr;
+
 use askama::Template;
-use axum::{ extract::Query, response::{IntoResponse, Redirect}, Form};
-use axum_extra::extract::{cookie::Cookie, CookieJar};
+use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
+use axum_extra::{extract::{cookie::Cookie, CookieJar}, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
 use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::{database_connection::DatabaseConnection, ext_client_ip::ExtClientIp, redis_connection::RedisConnection}, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
 use crate::configs::askama_filters as filters;
-use super::fragment::user_info::UserInfo;
+use super::{fragment::user_info::UserInfo, user};
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]
@@ -77,16 +79,17 @@ pub async fn logout(jar: CookieJar) -> impl IntoResponse {
 
 pub async fn auth_email_request(
     token: axum_csrf::CsrfToken,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    TypedHeader(user_agnet): TypedHeader<UserAgent>,
     DatabaseConnection(conn): DatabaseConnection,
     jar: CookieJar, 
     Form(form): Form<LoginAuthReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     //csrf
     token.verify(&form.authenticity_token)?;
-
     // 이메일 로그인 서비스 호출
     Ok(
-        match services::auth::auth_email_request(conn, &form.email, &form.password).await {
+        match services::auth::auth_email_request(conn, &form.email, &form.password, addr.to_string(), user_agnet.to_string()).await {
             // 성공
             Ok((access_token, refresh_token)) => {
                 let acc_time = utils::config::get_config_jwt_access_time();
@@ -115,9 +118,12 @@ pub async fn auth_email_request(
                     }
                     _ => Err(err)?
                 };
-                let af = AuthFormFragment::new("".to_string(),None, None, None, Some(msg.to_string()));
-                HtmlTemplate(
-                    af
+                let af = AuthFormFragment::new(token.authenticity_token().unwrap(), None, None, None, Some(msg.to_string()));
+                (
+                    token,
+                    HtmlTemplate(
+                        af
+                    )
                 ).into_response()
             }
         }

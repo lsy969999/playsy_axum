@@ -8,6 +8,8 @@ pub async fn auth_email_request(
     mut conn: PoolConnection<Postgres>,
     email: &str,
     password: &str,
+    addr: String,
+    user_agent: String,
 ) -> Result<(String, String), ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
@@ -72,7 +74,9 @@ pub async fn auth_email_request(
             user.sn,
             refresh_token_hash,
             refresh_token.clone(),
-            db_refr_exp_timestap
+            db_refr_exp_timestap,
+            addr,
+            user_agent,
         ).await?;
 
     repositories::tx::commit(tx).await?;
