@@ -1,5 +1,5 @@
 
-use std::{f64::consts::E, net::SocketAddr};
+use std::net::SocketAddr;
 use anyhow::anyhow;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::CookieJar, headers::UserAgent, TypedHeader};

@@ -1,6 +1,6 @@
 
 use axum::{extract::Request, http::HeaderValue, middleware::Next, response::{IntoResponse, Response}};
-use axum_extra::extract::{cookie::Cookie, CookieJar};
+use axum_extra::extract::CookieJar;
 use hyper::StatusCode;
 use jsonwebtoken::{decode, Validation};
 use sqlx::PgConnection;
