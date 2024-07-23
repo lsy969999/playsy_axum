@@ -2,7 +2,7 @@ use sqlx::{pool::PoolConnection, types::chrono::DateTime, Postgres};
 use time::{Duration, OffsetDateTime};
 use tracing::error;
 use validator::Validate;
-use crate::{configs::{errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::{AccessClaims, RefreshClaims}}, repositories::{self, enums::user::{ProviderTyEnum, UserSttEnum}}, utils::{self, oauth2::{GoogleOauth2UserInfo, NaverUserInfo}}};
+use crate::{configs::errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::{claims::{AccessClaims, RefreshClaims}, entities::user::{ProviderTyEnum, UserSttEnum}}, repositories::{self, }, utils::{self, oauth2::{GoogleOauth2UserInfo, NaverUserInfo}}};
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(

@@ -2,10 +2,13 @@ use std::{net::SocketAddr, time::Duration};
 use axum::{middleware::{self}, response::IntoResponse, routing::get};
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
-use configs::{app_config::APP_CONFIG, into_responses::html_template::HtmlTemplate, middlewares::etc::add_original_content_length, models::app_state::{AppState, ArcAppState}};
-use controller::{handlers::page::templates::error::ErrorTemplate, routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router }};
+use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}};
+use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use hyper::StatusCode;
 use listenfd::ListenFd;
+use middlewares::etc::add_original_content_length;
+use responses::html_template::HtmlTemplate;
+use templates::error::ErrorTemplate;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tracing::{debug, info};
@@ -17,6 +20,12 @@ pub mod configs;
 pub mod services;
 pub mod repositories;
 pub mod controller;
+pub mod responses;
+pub mod extractors;
+pub mod middlewares;
+pub mod models;
+pub mod validators;
+pub mod templates;
 
 #[cfg(test)]
 pub mod tests;

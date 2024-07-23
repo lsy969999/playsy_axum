@@ -5,8 +5,7 @@ use axum_extra::{extract::{cookie::Cookie, CookieJar}, headers::UserAgent, Typed
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
-use super::templates::auth::{AuthFormFragment, AuthTemplate};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::request::auth::LoginAuthReqDto, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
 
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
     let authenticity_token = token.authenticity_token().unwrap();

@@ -7,16 +7,16 @@ use uuid::Uuid;
 
 
 #[derive(Clone)]
-pub struct WsState {
-    inner: Arc<Mutex<WsStateInner>>
+pub struct WsChatExtension {
+    inner: Arc<Mutex<WsChatExtensionInner>>
 }
 
-impl WsState {
+impl WsChatExtension {
     pub fn new() -> Self {
         Self {
             inner: Arc::new(
                     Mutex::new(
-                            WsStateInner {
+                            WsChatExtensionInner {
                                 chat_room_lobby: ChatRoomLobby {
                                     rooms: HashMap::new(),
                                     rooms_tx: broadcast::Sender::<String>::new(100),
@@ -27,7 +27,7 @@ impl WsState {
         }
     }
 
-    pub fn run_room_checker(ws_state: WsState) {
+    pub fn run_room_checker(ws_state: WsChatExtension) {
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
             loop {
@@ -38,7 +38,7 @@ impl WsState {
     }
 
     pub fn destroyroom(&self) {
-        let mut guard: std::sync::MutexGuard<WsStateInner> = self.inner.lock().unwrap();
+        let mut guard: std::sync::MutexGuard<WsChatExtensionInner> = self.inner.lock().unwrap();
         let rooms = &mut guard.chat_room_lobby.rooms;
         rooms.iter_mut().for_each(|(k,v)| {
             if v.chatters.len() == 0 {
@@ -111,7 +111,7 @@ impl WsState {
         }
     }
 
-    pub fn remove_room(&self, room_id: Uuid) {
+    pub fn remove_room(&self, _room_id: Uuid) {
         todo!()
     }
 
@@ -239,7 +239,7 @@ impl WsState {
     }
 }
 
-struct WsStateInner {
+struct WsChatExtensionInner {
     pub chat_room_lobby: ChatRoomLobby
 }
 

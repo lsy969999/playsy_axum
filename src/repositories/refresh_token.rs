@@ -1,8 +1,7 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection};
 
-use crate::configs::errors::app_error::RepositoryLayerError;
+use crate::{configs::errors::app_error::RepositoryLayerError, models::entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence}};
 
-use super::entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence};
 
 pub async fn select_next_refresh_token_seq(conn: &mut PgConnection) -> Result<Sequence, RepositoryLayerError> {
     let sequence = sqlx::query_as!(

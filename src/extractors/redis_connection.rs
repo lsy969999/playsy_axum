@@ -4,7 +4,8 @@ use bb8::{Pool, PooledConnection};
 use bb8_redis::RedisConnectionManager;
 use redis::RedisError;
 use tokio::time::timeout;
-use crate::configs::models::app_state::ArcAppState;
+
+use crate::configs::app_state::ArcAppState;
 
 pub struct RedisConnection(pub Option<PooledConnection<'static, RedisConnectionManager>>);
 

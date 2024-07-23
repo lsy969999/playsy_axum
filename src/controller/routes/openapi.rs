@@ -1,5 +1,5 @@
 use axum::{routing::get, Router};
-use crate::{configs::models::app_state::ArcAppState, controller::handlers::api};
+use crate::{ configs::app_state::ArcAppState, controller::handlers::api};
 
 pub fn get_openapi_route() -> Router<ArcAppState> {
     Router::new()

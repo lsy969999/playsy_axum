@@ -1,6 +1,7 @@
 use axum::{async_trait, extract::{FromRef, FromRequestParts}, http::request::Parts};use hyper::StatusCode;
 use sqlx::PgPool;
-use crate::configs::models::app_state::ArcAppState;
+
+use crate::configs::app_state::ArcAppState;
 
 pub struct DatabaseConnection(pub sqlx::pool::PoolConnection<sqlx::Postgres>);
 

@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use validator::Validate;
-use crate::configs::validator::{email_vali_dup_chk, nick_name_vali_char, nick_name_vali_dup_chk, pass_vali_1_lower, pass_vali_1_num, pass_vali_1_upper, pass_vali_special_char, JoinReqValiContext};
+
+use crate::validators::{email_vali_dup_chk, nick_name_vali_char, nick_name_vali_dup_chk, pass_vali_1_lower, pass_vali_1_num, pass_vali_1_upper, pass_vali_special_char, JoinReqValiContext};
 
 #[derive(Deserialize, Debug, Validate)]
 #[validate(context = "JoinReqValiContext")]

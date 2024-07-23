@@ -1,6 +1,6 @@
 use axum::{middleware::from_fn_with_state, routing::get, Router};
 use tower::ServiceBuilder;
-use crate::{configs::{middlewares::auth::set_user_info_from_cookie_to_header, models::app_state::ArcAppState}, controller::handlers::page};
+use crate::{ configs::app_state::ArcAppState, controller::handlers::page, middlewares::auth::set_user_info_from_cookie_to_header};
 
 pub fn get_home_router(state: ArcAppState) -> Router<ArcAppState>{
     Router::new()

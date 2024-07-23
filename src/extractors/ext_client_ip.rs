@@ -1,6 +1,8 @@
 use std::{convert::Infallible, net::SocketAddr};
 use axum::{async_trait, extract::{ConnectInfo, FromRef, FromRequestParts}, http::request::Parts};
-use crate::configs::models::app_state::ArcAppState;
+
+use crate::configs::app_state::ArcAppState;
+
 
 pub struct ExtClientIp(pub Option<String>);
 

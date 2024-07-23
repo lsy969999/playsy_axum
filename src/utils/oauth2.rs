@@ -3,7 +3,8 @@ use reqwest::Client;
 use serde::Deserialize;
 use validator::Validate;
 
-use crate::configs::{etc::oauth2_naver_client::NaverClient, validator::nick_name_vali_char};
+use crate::{configs::etc::oauth2_naver_client::NaverClient, validators::nick_name_vali_char};
+
 
 pub fn google_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();

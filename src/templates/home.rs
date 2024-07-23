@@ -1,5 +1,6 @@
 use askama::Template;
-use crate::configs::models::user_info::UserInfo;
+
+use crate::models::user_info::UserInfo;
 
 #[derive(Template)]
 #[template(path="pages/home.html")]

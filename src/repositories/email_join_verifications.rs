@@ -2,7 +2,7 @@ use sqlx::postgres::PgQueryResult;
 use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::PgConnection;
 use crate::configs::errors::app_error::RepositoryLayerError;
-use crate::repositories::entities::email_join_verifications::EmailJoinVerifications;
+use crate::models::entities::email_join_verifications::EmailJoinVerifications;
 
 pub async fn select_email_join_veri_for_code_dup_chk(
     conn: &mut PgConnection,

@@ -1,6 +1,7 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
-use super::{entities::user::User, enums::{user::ProviderTyEnum, user::UserSttEnum, user::UserTyEnum}};
-use crate::{configs::errors::app_error::RepositoryLayerError, repositories::entities::sequence::Sequence};
+
+use crate::{configs::errors::app_error::RepositoryLayerError, models::entities::{sequence::Sequence, user::{ProviderTyEnum, User, UserSttEnum, UserTyEnum}}};
+
 
 pub async fn select_user_by_sn(
     conn: &mut PgConnection,

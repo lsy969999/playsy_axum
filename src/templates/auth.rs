@@ -1,6 +1,5 @@
 use askama::Template;
-use crate::configs::models::user_info::UserInfo;
-use crate::configs::askama_filters as filters;
+use crate::{configs::askama_filters as filters, models::user_info::UserInfo};
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]

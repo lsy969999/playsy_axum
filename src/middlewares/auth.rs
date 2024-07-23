@@ -5,7 +5,7 @@ use hyper::StatusCode;
 use jsonwebtoken::{decode, Validation};
 use sqlx::PgConnection;
 use time::{Duration, OffsetDateTime};
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO}, extractors::database_connection::DatabaseConnection, models::claims::{AccessClaims, RefreshClaims}}, repositories::{self, entities::refresh_token::RefreshTokenUser}, utils};
+use crate::{configs::consts::{ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO}, extractors::database_connection::DatabaseConnection, models::claims::{AccessClaims, RefreshClaims}, repositories::{self}, utils};
 
 /// 이 미들웨어는 헤더에 유저값 세팅만 관여한다. 에러반환은 하지 않는다.
 /// case 1:

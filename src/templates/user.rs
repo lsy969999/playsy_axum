@@ -1,7 +1,7 @@
 use askama::Template;
-use crate::configs::models::user_info::UserInfo;
 use crate::configs::askama_filters as filters;
-use crate::repositories::entities::user::User;
+use crate::models::entities::user::User;
+use crate::models::user_info::UserInfo;
 
 #[derive(Template)]
 #[template(path="pages/join.html")]

@@ -4,8 +4,7 @@ use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use uuid::Uuid;
-use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::ws_state::WsState};
-use super::templates::chat::ChatTempalte;
+use crate::{ configs::app_extensions::WsChatExtension, extractors::ext_user_info::ExtUserInfo, responses::html_template::HtmlTemplate, templates::chat::ChatTempalte};
 
 
 pub async  fn chat_page(
@@ -57,17 +56,17 @@ pub struct WsChatMsg {
 
 pub async fn ws_room_lobby_handler(
     ws: WebSocketUpgrade,
-    Extension(state): Extension<WsState>
+    Extension(state): Extension<WsChatExtension>
 ) -> impl IntoResponse {
     ws.on_upgrade(|socket| ws_room_lobby(socket, state))
 }
 
-async fn ws_room_lobby(socket: WebSocket, state: WsState) {
+async fn ws_room_lobby(socket: WebSocket, state: WsChatExtension) {
     let (mut sender,
         mut receiver) = socket.split();
         
 
-    fn refresh(state: WsState) -> String {
+    fn refresh(state: WsChatExtension) -> String {
         let rooms = state.get_all_room();
         let v = rooms.iter().map(|(_key, val )| {
             serde_json::json!({
@@ -137,12 +136,12 @@ async fn ws_room_lobby(socket: WebSocket, state: WsState) {
 pub async fn ws_room_handler(
     Path((roomid, usersn)): Path<(String, u32)>,
     ws: WebSocketUpgrade,
-    Extension(state): Extension<WsState>
+    Extension(state): Extension<WsChatExtension>
 ) -> impl IntoResponse {
     ws.on_upgrade(move |socket| ws_room(socket, state, roomid, usersn))
 }
 
-async fn ws_room(socket: WebSocket, state: WsState, roomid: String, usersn: u32) {
+async fn ws_room(socket: WebSocket, state: WsChatExtension, roomid: String, usersn: u32) {
     tracing::debug!("usersn {}", usersn);
     let roomid = Uuid::from_str(&roomid).unwrap();
     let (sender,
@@ -151,7 +150,7 @@ async fn ws_room(socket: WebSocket, state: WsState, roomid: String, usersn: u32)
     let arc_sender = Arc::new(tokio::sync::Mutex::new(sender));
 
 
-    fn get_all_chat(state: WsState, roomid: &Uuid) -> String {
+    fn get_all_chat(state: WsChatExtension, roomid: &Uuid) -> String {
         let all_chat = state.get_all_chat(roomid);
         let chat  = serde_json::json!({
             "chats": all_chat

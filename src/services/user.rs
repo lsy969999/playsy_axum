@@ -1,8 +1,7 @@
 use askama::Template;
 use chrono::Duration;
 use sqlx::{pool::PoolConnection, types::chrono::Utc, PgConnection, Postgres};
-use tracing::{error, warn};
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, repositories::{self, entities::user::User, enums::user::{ProviderTyEnum, UserSttEnum}}, utils};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::entities::user::{ProviderTyEnum, User, UserSttEnum}, repositories::{self}, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -28,7 +27,7 @@ pub async fn user_join_service(
     // password hash
     let password = utils::hash::hash_argon2(password)
         .map_err(|error| {
-            error!("passwod: {}", error);
+            tracing::error!("passwod: {}", error);
             CryptoError::Argon2GenFail
         })?;
 

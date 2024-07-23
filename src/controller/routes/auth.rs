@@ -1,5 +1,5 @@
 use axum::{routing::{get, post}, Router};
-use crate::{configs::models::app_state::ArcAppState, controller::handlers::page};
+use crate::{configs::app_state::ArcAppState, controller::handlers::page};
 
 pub fn get_auth_router() -> Router<ArcAppState> {
     Router::new()

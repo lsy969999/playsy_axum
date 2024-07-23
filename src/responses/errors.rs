@@ -1,7 +1,7 @@
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
 use serde_json::json;
-use crate::{configs::{errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, RepositoryLayerError, ServiceLayerError}, into_responses::html_template::HtmlTemplate}, controller::handlers::page::templates::error::ErrorTemplate};
+use crate::{configs::errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, RepositoryLayerError, ServiceLayerError},  responses::html_template::HtmlTemplate, templates::error::ErrorTemplate};
 
 impl IntoResponse for PageHandlerLayerError {
     fn into_response(self) -> axum::response::Response {
