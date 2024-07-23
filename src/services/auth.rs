@@ -1,23 +1,20 @@
-use sqlx::{pool::PoolConnection, types::chrono::DateTime, Postgres};
-use time::{Duration, OffsetDateTime};
+use chrono::Utc;
+use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::error;
 use validator::Validate;
-use crate::{configs::errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::{claims::{AccessClaims, RefreshClaims}, entities::user::{ProviderTyEnum, UserSttEnum}}, repositories::{self, }, utils::{self, oauth2::{GoogleOauth2UserInfo, NaverUserInfo}}};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::EmailLoginArgs, repo::InsertRefreshTokenArgs, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}}, repositories::{self, }, utils::{self, oauth2::{GoogleOauth2UserInfo, NaverUserInfo}}};
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
     mut conn: PoolConnection<Postgres>,
-    email: &str,
-    password: &str,
-    addr: String,
-    user_agent: String,
-) -> Result<(String, String), ServiceLayerError> {
+    args: EmailLoginArgs,
+) -> Result<AuthResult, ServiceLayerError> {
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
             &mut tx,
-            email,
+            &args.email,
             ProviderTyEnum::Email
         ).await?;
 
@@ -28,13 +25,13 @@ pub async fn auth_email_request(
     };
 
     // 패스워드 언랩
-    let password_hash = match user.password {
+    let password_hash = match user.password.clone() {
         Some(pass) => pass,
         None => return Err(UserError::UserPasswordNotExists)?
     };
 
     // 해시 매치 검증
-    let result = utils::hash::verify_argon2(password, &password_hash)
+    let result = utils::hash::verify_argon2(&args.password, &password_hash)
         .map_err(|error| {
             error!("error {}", error);
             CryptoError::Argon2VerfyFail
@@ -45,44 +42,12 @@ pub async fn auth_email_request(
         return Err(UserError::UserPasswordNotMatch)?;
     }
 
-    let sequence = repositories::refresh_token::select_next_refresh_token_seq(&mut tx).await?;
-    let chk = sequence.nextval;
-
-    // 토큰클레임 생성
-    let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let acc_exp = *utils::config::get_config_jwt_access_time();
-    let refr_exp = *utils::config::get_config_jwt_refresh_time();
-    let access_claims = AccessClaims::new(user.sn.to_string(), now + Duration::seconds(acc_exp), now, None, user.nick_name, user.avatar_url);
-    let refresh_claims = RefreshClaims::new(user.sn.to_string(), now + Duration::seconds(refr_exp), now, None, chk as usize);
-
-    // 토큰 생성
-    let acc = utils::config::get_config_jwt_access_keys();
-    let access_token = utils::jwt::generate_jwt(&access_claims, &acc.encoding)?;
-    let refr = utils::config::get_config_jwt_refresh_keys();
-    let refresh_token = utils::jwt::generate_jwt(&refresh_claims, &refr.encoding)?;
-
-    // 리프래시토큰 디비 저장값 생성
-    let refresh_token_hash = utils::hash::hash_sha_256(&refresh_token);
-    let db_refr_exp_timestap = match DateTime::from_timestamp(now.unix_timestamp(), 0) {
-        Some(time) => time,
-        None => return Err(AuthError::TokenCreation)?,
-    };
-    
-    // 리프래시 토큰 정보 저장
-    repositories::refresh_token::insert_refresh_token(
-            &mut tx,
-            chk as i32,
-            user.sn,
-            refresh_token_hash,
-            refresh_token.clone(),
-            db_refr_exp_timestap,
-            None,
-            addr,
-            user_agent,
-        ).await?;
+    // 로그인 처리
+    let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
-    Ok((access_token, refresh_token))
+    
+    Ok(auth_result)
 }
 
 /// 구글 소셜 로그인 처리
@@ -92,21 +57,23 @@ pub async fn auth_google_request(
     provider_access_token: Option<&str>,
     addr: String,
     user_agent: String,
-) -> Result<(String, String), ServiceLayerError> {
+) -> Result<AuthResult, ServiceLayerError> {
     if info.email.is_none() {
         Err(UserError::UserError)?
     }
+
     let mut tx = repositories::tx::begin(&mut conn).await?;
-    let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
+
+    let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
-        info.email.clone().unwrap().as_str(),
-        ProviderTyEnum::Google
+        ProviderTyEnum::Google,
+        info.sub.clone().as_str(),
+        
     ).await?;
     
-
     // 미가입 상태는 가입시켜준다.
-    let (user_sn, nick_name, avatar_url) = match user_select {
-        Some(user) => (user.sn, user.nick_name, user.avatar_url),
+    let user = match user_select {
+        Some(user) => user,
         None => {
             let mut nick_name = info.name.clone().unwrap();
             let is_nick_error = info.validate().is_err();
@@ -133,7 +100,7 @@ pub async fn auth_google_request(
             let sequence = repositories::user::select_next_user_seq(&mut tx).await?;
             let user_sn = sequence.nextval as i32;
 
-            let _insert = repositories::user::insert_user(
+            let user = repositories::user::insert_user(
                 &mut tx,
                 info.picture.as_deref(),
                 user_sn,
@@ -141,55 +108,22 @@ pub async fn auth_google_request(
                 info.email.as_deref(),
                 None,
                 ProviderTyEnum::Google,
-                info.sub.unwrap().as_str(),
+                info.sub.as_str(),
                 provider_access_token,
                 None,
                 None,
                 UserSttEnum::Ok,
             ).await?;
-            (user_sn, nick_name, info.picture)
+
+            user
         }
     };
 
-    // 로그인 처리
-    let sequence = repositories::refresh_token::select_next_refresh_token_seq(&mut tx).await?;
-    let chk = sequence.nextval;
-
-    // 토큰클레임 생성
-    let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let acc_exp = *utils::config::get_config_jwt_access_time();
-    let refr_exp = *utils::config::get_config_jwt_refresh_time();
-    let access_claims = AccessClaims::new(user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, nick_name, avatar_url);
-    let refresh_claims = RefreshClaims::new(user_sn.to_string(), now + Duration::seconds(refr_exp), now, None, chk as usize);
-
-    // 토큰 생성
-    let acc = utils::config::get_config_jwt_access_keys();
-    let access_token = utils::jwt::generate_jwt(&access_claims, &acc.encoding)?;
-    let refr = utils::config::get_config_jwt_refresh_keys();
-    let refresh_token = utils::jwt::generate_jwt(&refresh_claims, &refr.encoding)?;
-
-    // 리프래시토큰 디비 저장값 생성
-    let refresh_token_hash = utils::hash::hash_sha_256(&refresh_token);
-    let db_refr_exp_timestap = match DateTime::from_timestamp(now.unix_timestamp(), 0) {
-        Some(time) => time,
-        None => return Err(AuthError::TokenCreation)?,
-    };
-    
-    // 리프래시 토큰 정보 저장
-    repositories::refresh_token::insert_refresh_token(
-            &mut tx,
-            chk as i32,
-            user_sn,
-            refresh_token_hash,
-            refresh_token.clone(),
-            db_refr_exp_timestap,
-            None,
-            addr,
-            user_agent,
-        ).await?;
+    let auth_result = login_process(&mut tx, user, &addr, &user_agent).await?;
 
     repositories::tx::commit(tx).await?;
-    Ok((access_token, refresh_token))
+
+    Ok(auth_result)
 }
 
 /// 네이버 소셜 로그인 처리
@@ -200,21 +134,22 @@ pub async fn auth_naver_request(
     provider_refresh_token: Option<&str>,
     addr: String,
     user_agent: String,
-) -> Result<(String, String), ServiceLayerError> {
+) -> Result<AuthResult, ServiceLayerError> {
     // if info.email.is_none() {
     //     Err(UserError::UserError)?
     // }
     let mut tx = repositories::tx::begin(&mut conn).await?;
-    let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
+
+    let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
-        info.email.clone().as_str(),
-        ProviderTyEnum::Naver
+        ProviderTyEnum::Naver,
+        info.id.clone().as_str(),
     ).await?;
     
 
     // 미가입 상태는 가입시켜준다.
-    let (user_sn, nick_name, avatar_url) = match user_select {
-        Some(user) => (user.sn, user.nick_name, user.avatar_url),
+    let user = match user_select {
+        Some(user) => user,
         None => {
             let mut nick_name = match info.nickname.clone() {
                 Some(n) => n,
@@ -247,7 +182,7 @@ pub async fn auth_naver_request(
             let sequence = repositories::user::select_next_user_seq(&mut tx).await?;
             let user_sn = sequence.nextval as i32;
 
-            let _insert = repositories::user::insert_user(
+            let user = repositories::user::insert_user(
                 &mut tx,
                 info.profile_image.as_deref(),
                 user_sn,
@@ -261,53 +196,57 @@ pub async fn auth_naver_request(
                 None,
                 UserSttEnum::Ok,
             ).await?;
-            (user_sn, nick_name, info.profile_image)
+            user
         }
     };
 
-    // 로그인 처리
-
-    let sequence = repositories::refresh_token::select_next_refresh_token_seq(&mut tx).await?;
-    let chk = sequence.nextval;
-
-    // 토큰클레임 생성
-    let now: OffsetDateTime = OffsetDateTime::now_utc();
-    let acc_exp = *utils::config::get_config_jwt_access_time();
-    let refr_exp = *utils::config::get_config_jwt_refresh_time();
-    let access_claims = AccessClaims::new(user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, nick_name, avatar_url);
-    let refresh_claims = RefreshClaims::new(user_sn.to_string(), now + Duration::seconds(refr_exp), now, None, chk as usize);
-
-    // 토큰 생성
-    let acc = utils::config::get_config_jwt_access_keys();
-    let access_token = utils::jwt::generate_jwt(&access_claims, &acc.encoding)?;
-    let refr = utils::config::get_config_jwt_refresh_keys();
-    let refresh_token = utils::jwt::generate_jwt(&refresh_claims, &refr.encoding)?;
-
-    // 리프래시토큰 디비 저장값 생성
-    let refresh_token_hash = utils::hash::hash_sha_256(&refresh_token);
-    let db_refr_exp_timestap = match DateTime::from_timestamp(now.unix_timestamp(), 0) {
-        Some(time) => time,
-        None => return Err(AuthError::TokenCreation)?,
-    };
-    
-    // 리프래시 토큰 정보 저장
-    repositories::refresh_token::insert_refresh_token(
-            &mut tx,
-            chk as i32,
-            user_sn,
-            refresh_token_hash,
-            refresh_token.clone(),
-            db_refr_exp_timestap,
-            None,
-            addr,
-            user_agent,
-        ).await?;
+    let auth_result = login_process(&mut tx, user, &addr, &user_agent).await?;
 
     repositories::tx::commit(tx).await?;
-    Ok((access_token, refresh_token))
+    
+    Ok(auth_result)
 }
 
 /// 깃허브 소셜 로그인 처리
 pub async fn auth_github_request() -> Result<(String, String), ServiceLayerError> {
     todo!()
+}
+
+
+/// 로그인 처리시  
+/// 각 로그인별 공통처리 사항  
+/// 토큰 발급받고, 리프레시토큰 인서트  
+async fn login_process(tx: &mut PgConnection, user: User, addr: &str, user_agent: &str) -> Result<AuthResult, ServiceLayerError> {
+    let sequence = repositories::refresh_token::select_next_refresh_token_seq(tx).await?;
+    let chk = sequence.nextval;
+
+    let access_token = utils::jwt::generate_access_token(GenAccessTokenArgs {
+        avatar_url: user.avatar_url,
+        nick_name: user.nick_name,
+        user_sn: user.sn.to_string(),
+    })?;
+
+    let refresh_token = utils::jwt::generate_refresh_token(GenRefreshTokenArgs {
+        chk: chk as usize,
+        user_sn: user.sn.to_string()
+    })?;
+
+    let refresh_token_hash = utils::hash::hash_sha_256(&refresh_token);
+    let db_refr_exp_timestap = Utc::now() + chrono::Duration::seconds(*utils::config::get_config_jwt_refresh_time());
+
+    repositories::refresh_token::insert_refresh_token(
+            tx,
+            InsertRefreshTokenArgs {
+                sn: chk as i32,
+                user_sn: user.sn,
+                refresh_token: &refresh_token,
+                expires_at: db_refr_exp_timestap,
+                addr: &addr,
+                user_agent: &user_agent,
+                forwarded_id: None,
+                hash: &refresh_token_hash
+            }
+        ).await?;
+
+    Ok(AuthResult { access_token, refresh_token })
 }

@@ -58,7 +58,9 @@
                                     <p> {{ user.nick_name }} </p>
                                 </div>
                             </a>
-                            <button hx-post="/auth/logout" hx-swap="none" class="border hover:bg-slate-500 px-3 py-2 rounded">로그아웃</button>
+                            <a href="/auth/logout">
+                                <button class="border hover:bg-slate-500 px-3 py-2 rounded">로그아웃</button>
+                            </a>
                         {% when None %}
                             <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
                             <!-- <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a> -->

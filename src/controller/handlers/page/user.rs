@@ -115,15 +115,9 @@ pub async fn user_withdrawl(
     jar: CookieJar
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     let _ = services::user::user_withdrawl(conn, user_info.user_sn).await?;
-    let acc_token_cookie = Cookie::build((ACCESS_TOKEN, ""))
-        .path("/")
-        .http_only(true)
-        .max_age(Duration::seconds(0));
-    let ref_token_cookie = Cookie::build((REFRESH_TOKEN, ""))
-        .path("/")
-        .http_only(true)
-        .max_age(Duration::seconds(0));
-    let jar = jar.remove(acc_token_cookie);
-    let jar = jar.remove(ref_token_cookie);
-    Ok((jar, Redirect::to("/")))
+    let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+    let ref_token_cookie = utils::cookie::generate_refresh_token_remove_cookie();
+    Ok(
+        (jar.remove(acc_token_cookie).remove(ref_token_cookie), Redirect::to("/"))
+    )
 }

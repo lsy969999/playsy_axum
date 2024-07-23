@@ -2,7 +2,7 @@
 {%- import "macros/inputs.html" as inputs -%}
 
 <form
-    hx-post="/auth/email"
+    hx-post="/auth/email/login"
     hx-swap="outerHTML"
     x-data="{ loading: false }"
     x-on:htmx:before-request="loading = true"

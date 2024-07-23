@@ -17,17 +17,9 @@ pub fn google_oauth2_client() -> BasicClient {
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/google/callback")).unwrap())
 }
 
-pub fn google_oauth2_scope_profile() -> Scope {
-    Scope::new(format!("https://www.googleapis.com/auth/userinfo.profile"))
-}
-
-pub fn google_oauth2_scope_email() -> Scope {
-    Scope::new(format!("https://www.googleapis.com/auth/userinfo.email"))
-}
-
 #[derive(Debug, Deserialize, Validate)]
 pub struct GoogleOauth2UserInfo {
-    pub sub: Option<String>,
+    pub sub: String,
     #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
     #[validate(custom(function="nick_name_vali_char"))]
     pub name: Option<String>,

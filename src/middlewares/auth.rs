@@ -37,20 +37,13 @@ pub async fn set_user_info_from_cookie_to_header(
     match process_refresh_token(&mut conn, &mut req, &jar, is_acc_chk_success).await {
         // 재발급 토큰이 존재한다면 리스폰스에 세팅해서 액세스토큰쿠키를 세팅해준다.
         Ok(Some(reissued_token)) => {
-            let acc_time = utils::config::get_config_jwt_access_time();
-            let cookie = Cookie::build((ACCESS_TOKEN, reissued_token))
-                .path("/")
-                .http_only(true)
-                .max_age(Duration::seconds(*acc_time));
+            let cookie = utils::cookie::generate_access_token_cookie(reissued_token);
             jar = jar.add(cookie);
         }
         Ok(None) => {}
         Err(err) => {
             tracing::error!("process refresh token err {err} remove refres token");
-            let ref_token_cookie = Cookie::build((REFRESH_TOKEN, ""))
-                .path("/")
-                .http_only(true)
-                .max_age(Duration::seconds(0));
+            let ref_token_cookie = utils::cookie::generate_refresh_token_remove_cookie();
             jar = jar.remove(ref_token_cookie);
         }
     };

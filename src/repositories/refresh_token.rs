@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection};
 
-use crate::{configs::errors::app_error::RepositoryLayerError, models::entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence}};
+use crate::{configs::errors::app_error::RepositoryLayerError, models::{entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence}, fn_args::repo::InsertRefreshTokenArgs}};
 
 
 pub async fn select_next_refresh_token_seq(conn: &mut PgConnection) -> Result<Sequence, RepositoryLayerError> {
@@ -18,16 +18,9 @@ pub async fn select_next_refresh_token_seq(conn: &mut PgConnection) -> Result<Se
 /**
  * refresh_token 인서트
  */
-pub async fn insert_refresh_token(
+pub async fn insert_refresh_token<'a>(
     conn: &mut PgConnection,
-    sn: i32,
-    user_sn: i32,
-    hash: String,
-    refresh_token: String,
-    expires_at: DateTime<Utc>,
-    forwarded_id: Option<String>,
-    addr: String,
-    user_agent: String,
+    args: InsertRefreshTokenArgs<'a>,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     Ok(
         sqlx::query!(
@@ -37,17 +30,17 @@ pub async fn insert_refresh_token(
                 VALUES
                     ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 )
             "#,
-            sn,
-            user_sn,
-            hash,
-            refresh_token,
-            expires_at,
-            forwarded_id,
-            addr,
-            user_agent,
-            user_sn,
+            args.sn,
+            args.user_sn,
+            args.hash,
+            args.refresh_token,
+            args.expires_at,
+            args.forwarded_id,
+            args.addr,
+            args.user_agent,
+            args.user_sn,
             Utc::now(),
-            user_sn,
+            args.user_sn,
         )
         .execute(conn)
         .await?

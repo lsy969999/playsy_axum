@@ -75,6 +75,47 @@ pub async fn select_user_by_nick_name(
     )
 }
 
+pub async fn select_user_by_provider_type_enum_and_provider_id(
+    conn: &mut PgConnection,
+    provider_ty_enum: ProviderTyEnum,
+    provider_id: &str,
+) -> Result<Option<User>, RepositoryLayerError> {
+    Ok(
+        sqlx::query_as!(
+            User,
+            r#"
+                SELECT 
+                    sn,
+                    nick_name,
+                    avatar_url,
+                    email,
+                    password,
+                    user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    provider_id,
+                    provider_access_token,
+                    provider_refresh_token,
+                    provider_etc,
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    is_deleted
+                FROM tb_user tu
+                WHERE 1 = 1
+                    AND tu.provider_ty_enum = $1
+                    AND tu.provider_id = $2
+                    AND tu.is_deleted = FALSE
+            "#,
+            provider_ty_enum as ProviderTyEnum,
+            provider_id,
+        )
+        .fetch_optional(conn)
+        .await?
+    )
+}
+
 pub async fn select_user_by_email_and_login_ty_cd(
     conn: &mut PgConnection,
     email: &str,
@@ -141,10 +182,11 @@ pub async fn insert_user(
     provider_refresh_token: Option<&str>,
     provider_etc: Option<serde_json::Value>,
     user_stt_enum: UserSttEnum,
-) -> Result<PgQueryResult, RepositoryLayerError> {
+) -> Result<User, RepositoryLayerError> {
     let now = Utc::now();
     Ok(
-        sqlx::query!(
+        sqlx::query_as!(
+            User,
             r#"
                 INSERT INTO tb_user
                 (
@@ -158,12 +200,30 @@ pub async fn insert_user(
                     $6, $7, $8, $9, $10,
                     $11, $12, $13, $14, $15, $16
                 )
+                RETURNING 
+                    sn,
+                    nick_name,
+                    avatar_url,
+                    email,
+                    password,
+                    user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    provider_id,
+                    provider_access_token,
+                    provider_refresh_token,
+                    provider_etc,
+                    created_at,
+                    created_by,
+                    updated_at,
+                    updated_by,
+                    is_deleted
             "#,
             user_sn, avatar_url, nick_name, email, password,
             provider_ty_enum as ProviderTyEnum, provider_id, provider_access_token, provider_refresh_token, provider_etc,
             user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum, now, user_sn, now, user_sn
         )
-        .execute(conn)
+        .fetch_one(conn)
         .await?
     )
 }

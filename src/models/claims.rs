@@ -70,6 +70,7 @@ pub struct RefreshClaims {
     pub exp: usize, 
     pub iat: usize,
     pub scope: Option<String>,
+    // refresh 토큰 검증 디비 식별자
     pub chk: usize,
 }
 
