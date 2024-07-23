@@ -306,7 +306,7 @@ pub async fn github_callback(
             tracing::debug!("atatat {:?}", at);
             // let rt = token.refresh_token().unwrap().secret();
             // tracing::debug!("rtrtrt {:?}", rt);
-            let info = utils::oauth2::github_oauth2_user_info(at).await?;
+            // let info = utils::oauth2::github_oauth2_user_info(at).await?;
             // tracing::debug!("info: {:?}", info);
             // let tokens = services::auth::auth_naver_request(
             //     conn,

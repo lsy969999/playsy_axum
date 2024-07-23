@@ -35,16 +35,18 @@ pub async fn user_join_service(
     let sequence = repositories::user::select_next_user_seq(&mut tx).await?;
     let user_sn = sequence.nextval as i32;
 
+    let email_provider_id = utils::hash::hash_sha_256(&format!("{}:{}", user_sn, email));
+
     // add user
     let _insert = repositories::user::insert_user(
             &mut tx,
             None,
             user_sn,
             nick_name,
-            email,
+            Some(email),
             Some(&password),
             ProviderTyEnum::Email,
-            None,
+            &email_provider_id,
             None,
             None,
             None,

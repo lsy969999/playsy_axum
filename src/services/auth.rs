@@ -4,7 +4,7 @@ use tracing::error;
 use validator::Validate;
 use crate::{configs::{errors::app_error::{AuthError, CryptoError, ServiceLayerError, UserError}, models::claims::{AccessClaims, RefreshClaims}}, repositories::{self, enums::user::{ProviderTyEnum, UserSttEnum}}, utils::{self, oauth2::{GoogleOauth2UserInfo, NaverUserInfo}}};
 
-// 이메일 로그인 요청 처리
+/// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
     mut conn: PoolConnection<Postgres>,
     email: &str,
@@ -85,13 +85,7 @@ pub async fn auth_email_request(
     Ok((access_token, refresh_token))
 }
 
-// 구글 소셜 로그인 처리
-/*
- 1. 가입 여부 체크
-   가입 안되어 있으면 가입시켜주고 토큰발급 진행
-
-   가입되어 있으면 토큰 발급 진행
-*/
+/// 구글 소셜 로그인 처리
 pub async fn auth_google_request(
     mut conn: PoolConnection<Postgres>,
     info: GoogleOauth2UserInfo,
@@ -144,12 +138,12 @@ pub async fn auth_google_request(
                 info.picture.as_deref(),
                 user_sn,
                 &nick_name,
-                &info.email.unwrap(),
+                info.email.as_deref(),
                 None,
                 ProviderTyEnum::Google,
-                info.sub.as_deref(),
-                None,
+                info.sub.unwrap().as_str(),
                 provider_access_token,
+                None,
                 None,
                 UserSttEnum::Ok,
             ).await?;
@@ -158,7 +152,6 @@ pub async fn auth_google_request(
     };
 
     // 로그인 처리
-
     let sequence = repositories::refresh_token::select_next_refresh_token_seq(&mut tx).await?;
     let chk = sequence.nextval;
 
@@ -199,6 +192,7 @@ pub async fn auth_google_request(
     Ok((access_token, refresh_token))
 }
 
+/// 네이버 소셜 로그인 처리
 pub async fn auth_naver_request(
     mut conn: PoolConnection<Postgres>,
     info: NaverUserInfo,
@@ -258,13 +252,13 @@ pub async fn auth_naver_request(
                 info.profile_image.as_deref(),
                 user_sn,
                 &nick_name,
-                &info.email,
+                Some(&info.email),
                 None,
                 ProviderTyEnum::Naver,
-                Some(&info.id),
-                None,
+                &info.id,
                 provider_access_token,
-                provider_refresh_token,
+                None,
+                None,
                 UserSttEnum::Ok,
             ).await?;
             (user_sn, nick_name, info.profile_image)
@@ -311,4 +305,9 @@ pub async fn auth_naver_request(
 
     repositories::tx::commit(tx).await?;
     Ok((access_token, refresh_token))
+}
+
+/// 깃허브 소셜 로그인 처리
+pub async fn auth_github_request() -> Result<(String, String), ServiceLayerError> {
+    todo!()
 }

@@ -12,17 +12,17 @@ pub async fn select_user_by_sn(
             r#"
                 SELECT 
                     sn,
-                    avatar_url,
                     nick_name,
+                    avatar_url,
                     email,
                     password,
-                    provider_id,
-                    provider_secret,
-                    provider_access_token,
-                    provider_refresh_token,
-                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    provider_id,
+                    provider_access_token,
+                    provider_refresh_token,
+                    provider_etc,
                     created_at,
                     created_by,
                     updated_at,
@@ -48,17 +48,17 @@ pub async fn select_user_by_nick_name(
             r#"
                 SELECT 
                     sn,
-                    avatar_url,
                     nick_name,
+                    avatar_url,
                     email,
                     password,
-                    provider_id,
-                    provider_secret,
-                    provider_access_token,
-                    provider_refresh_token,
-                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    provider_id,
+                    provider_access_token,
+                    provider_refresh_token,
+                    provider_etc,
                     created_at,
                     created_by,
                     updated_at,
@@ -85,17 +85,17 @@ pub async fn select_user_by_email_and_login_ty_cd(
             r#"
                 SELECT 
                     sn,
-                    avatar_url,
                     nick_name,
+                    avatar_url,
                     email,
                     password,
-                    provider_id,
-                    provider_secret,
-                    provider_access_token,
-                    provider_refresh_token,
-                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
                     user_stt_enum AS "user_stt_enum: UserSttEnum",
                     user_ty_enum AS "user_ty_enum: UserTyEnum",
+                    provider_ty_enum AS "provider_ty_enum: ProviderTyEnum",
+                    provider_id,
+                    provider_access_token,
+                    provider_refresh_token,
+                    provider_etc,
                     created_at,
                     created_by,
                     updated_at,
@@ -132,13 +132,13 @@ pub async fn insert_user(
     avatar_url: Option<&str>,
     user_sn: i32,
     nick_name: &str,
-    email: &str,
+    email: Option<&str>,
     password: Option<&str>,
     provider_ty_enum: ProviderTyEnum,
-    provider_id: Option<&str>,
-    provider_secret: Option<&str>,
+    provider_id: &str,
     provider_access_token: Option<&str>,
     provider_refresh_token: Option<&str>,
+    provider_etc: Option<serde_json::Value>,
     user_stt_enum: UserSttEnum,
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     let now = Utc::now();
@@ -148,9 +148,8 @@ pub async fn insert_user(
                 INSERT INTO tb_user
                 (
                     sn, avatar_url, nick_name, email, password,
-                    provider_ty_enum , provider_id, provider_secret, provider_access_token, provider_refresh_token,
-                    user_stt_enum, user_ty_enum,
-                    created_at, created_by, updated_at, updated_by
+                    provider_ty_enum , provider_id, provider_access_token, provider_refresh_token, provider_etc,
+                    user_stt_enum, user_ty_enum, created_at, created_by, updated_at, updated_by
                 )
                 VALUES
                 (
@@ -160,9 +159,8 @@ pub async fn insert_user(
                 )
             "#,
             user_sn, avatar_url, nick_name, email, password,
-            provider_ty_enum as ProviderTyEnum, provider_id, provider_secret, provider_access_token, provider_refresh_token,
-            user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum,
-            now, user_sn, now, user_sn
+            provider_ty_enum as ProviderTyEnum, provider_id, provider_access_token, provider_refresh_token, provider_etc,
+            user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum, now, user_sn, now, user_sn
         )
         .execute(conn)
         .await?

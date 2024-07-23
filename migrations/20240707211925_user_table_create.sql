@@ -22,17 +22,18 @@ COMMENT ON SEQUENCE tb_user_seq IS '유저테이블 시퀀스';
 -- 유저 테이블
 CREATE TABLE tb_user(
     sn INT PRIMARY KEY DEFAULT nextval('tb_user_seq'),
-    avatar_url VARCHAR(255) NULL,
     nick_name VARCHAR(30) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    password VARCHAR(500) NULL,
-    provider_ty_enum PROVIDER_TY_ENUM NOT NULL,
-    provider_id VARCHAR(100) NULL,
-    provider_secret VARCHAR(100) NULL,
-    provider_access_token VARCHAR(300) NULL,
-    provider_refresh_token VARCHAR(300) NULL,
+    avatar_url VARCHAR(255) NULL,
+    email VARCHAR(100) NULL,
+    password VARCHAR(200) NULL,
     user_stt_enum USER_STT_ENUM NOT NULL,
     user_ty_enum USER_TY_ENUM NOT NULL,
+    provider_ty_enum PROVIDER_TY_ENUM NOT NULL,
+    provider_id VARCHAR(100) NOT NULL,
+    provider_access_token VARCHAR(300) NULL,
+    provider_refresh_token VARCHAR(300) NULL,
+    provider_etc JSONB NULL,
+    --
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by INT NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -42,17 +43,17 @@ CREATE TABLE tb_user(
 
 COMMENT ON TABLE tb_user IS '유저테이블';
 COMMENT ON COLUMN tb_user.sn IS '식별자';
-COMMENT ON COLUMN tb_user.avatar_url IS '아바타url';
 COMMENT ON COLUMN tb_user.nick_name IS '닉네임';
+COMMENT ON COLUMN tb_user.avatar_url IS '아바타url';
 COMMENT ON COLUMN tb_user.email IS '이메일';
 COMMENT ON COLUMN tb_user.password IS '패스워드';
-COMMENT ON COLUMN tb_user.provider_ty_enum IS '프로바이더타입';
-COMMENT ON COLUMN tb_user.provider_id IS '프로바이더아이디';
-COMMENT ON COLUMN tb_user.provider_secret IS '프로바이더시크릿';
-COMMENT ON COLUMN tb_user.provider_access_token IS '프로바이더액세스토큰';
-COMMENT ON COLUMN tb_user.provider_refresh_token IS '프로바이더리프레시토큰';
 COMMENT ON COLUMN tb_user.user_stt_enum IS '상태코드';
 COMMENT ON COLUMN tb_user.user_ty_enum IS '타입코드';
+COMMENT ON COLUMN tb_user.provider_ty_enum IS '프로바이더타입';
+COMMENT ON COLUMN tb_user.provider_id IS '프로바이더아이디';
+COMMENT ON COLUMN tb_user.provider_access_token IS '프로바이더액세스토큰';
+COMMENT ON COLUMN tb_user.provider_refresh_token IS '프로바이더리프레시토큰';
+COMMENT ON COLUMN tb_user.provider_etc IS '프로바이더기타';
 COMMENT ON COLUMN tb_user.created_at IS '생성일시';
 COMMENT ON COLUMN tb_user.created_by IS '생성자';
 COMMENT ON COLUMN tb_user.updated_at IS '수정일시';
@@ -61,9 +62,9 @@ COMMENT ON COLUMN tb_user.is_deleted IS '삭제여부';
 
 -- 유저테이블 인덱스
 CREATE UNIQUE INDEX tb_user_uidx__nick_name ON tb_user (nick_name);
-CREATE INDEX tb_user_idx__email__provider_ty_enum__is_deleted ON tb_user (email, provider_ty_enum, is_deleted);
+CREATE INDEX tb_user_idx__provider_ty_enum__provider_id__is_deleted ON tb_user (provider_ty_enum, provider_id, is_deleted);
 COMMENT ON INDEX tb_user_uidx__nick_name IS '유저 닉네임 유니크 인덱스';
-COMMENT ON INDEX tb_user_idx__email__provider_ty_enum__is_deleted IS '유저 가입여부 인덱스';
+COMMENT ON INDEX tb_user_idx__provider_ty_enum__provider_id__is_deleted IS '유저 식별 인덱스';
 
 --- 유저 이메일 인증 시퀀스
 CREATE SEQUENCE tb_email_join_verifications_seq
@@ -80,6 +81,7 @@ CREATE TABLE tb_email_join_verifications(
     code VARCHAR(15) NOT NULL,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    --
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by INT NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,

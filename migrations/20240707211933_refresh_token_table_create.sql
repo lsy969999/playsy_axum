@@ -19,7 +19,7 @@ CREATE TABLE tb_refresh_token(
     forwarded_ip VARCHAR(100) NULL,
     client_ip VARCHAR(100) NOT NULL,
     user_agent VARCHAR(300) NOT NULL,
-
+    --
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by INT NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
