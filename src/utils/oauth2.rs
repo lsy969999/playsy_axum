@@ -87,7 +87,7 @@ pub struct NaverResponse {
 }
 
 pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<NaverUserInfo> {
-let url = "https://openapi.naver.com/v1/nid/me";
+    let url = "https://openapi.naver.com/v1/nid/me";
 
     let client = Client::new();
     let response = client
@@ -100,3 +100,38 @@ let url = "https://openapi.naver.com/v1/nid/me";
 }
 
 
+//
+
+pub async fn github_oauth2_client() -> BasicClient {
+    let o = super::config::get_config_oauth2();
+    BasicClient::new(
+        ClientId::new(format!("{}",o.oauth2_github_client_id)),
+        Some(ClientSecret::new(format!("{}", o.oauth2_github_client_secret))),
+        AuthUrl::new(format!("https://github.com/login/oauth/authorize")).unwrap(),
+        Some(TokenUrl::new(format!("https://github.com/login/oauth/access_token")).unwrap())
+    )
+    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/github/callback")).unwrap())
+}
+
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct GithubUserInfo {
+
+}
+
+pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<GithubUserInfo> {
+    
+    let url = "https://api.github.com/user";
+
+    let client = Client::new();
+    let response = client
+        .get(url)
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+    let json  = response.json::<serde_json::Value>().await?;
+    tracing::debug!("json::: {:?}", json);
+    // Ok(json.response)
+    todo!()
+
+}
