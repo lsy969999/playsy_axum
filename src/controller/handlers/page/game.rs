@@ -1,9 +1,6 @@
 use askama::Template;
 use axum::response::IntoResponse;
-
-use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate};
-
-use super::fragment::user_info::UserInfo;
+use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::user_info::UserInfo};
 
 #[derive(Template)]
 #[template(path="pages/games/bevy_wasm_test.html")]

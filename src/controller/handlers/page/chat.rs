@@ -7,9 +7,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::ws_state::WsState};
-
-use super::fragment::user_info::UserInfo;
+use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::{user_info::UserInfo, ws_state::WsState}};
 
 
 #[derive(Template)]

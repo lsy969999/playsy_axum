@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 use axum::{async_trait, extract::{FromRef, FromRequestParts}, http::request::Parts};
-use crate::{configs::{consts::USER_INFO, errors::app_error::PageHandlerLayerError, models::{app_state::ArcAppState, claims::{self, AccessClaims}}}, controller::handlers::page::fragment::user_info::UserInfo};
+use crate::configs::{consts::USER_INFO, errors::app_error::PageHandlerLayerError, models::{app_state::ArcAppState, claims::AccessClaims, user_info::UserInfo}};
 
 // pub struct UserInfo {
 //     pub nick_name: String

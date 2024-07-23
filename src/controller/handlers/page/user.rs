@@ -3,10 +3,8 @@ use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use time::Duration;
 use validator::ValidateArgs;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, repositories::entities::user::User, services, utils};
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, into_responses::html_template::HtmlTemplate, models::user_info::UserInfo, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, repositories::entities::user::User, services, utils};
 use crate::configs::askama_filters as filters;
-
-use super::fragment::user_info::UserInfo;
 
 #[derive(Template)]
 #[template(path="pages/join.html")]
