@@ -1,7 +1,7 @@
 use askama::Template;
 use chrono::Duration;
 use sqlx::{pool::PoolConnection, types::chrono::Utc, PgConnection, Postgres};
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::entities::user::{ProviderTyEnum, User, UserSttEnum}, repositories::{self}, utils};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::repo::InsertUserArgs}, repositories::{self}, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -39,17 +39,19 @@ pub async fn user_join_service(
     // add user
     let _insert = repositories::user::insert_user(
             &mut tx,
-            None,
-            user_sn,
-            nick_name,
-            Some(email),
-            Some(&password),
-            ProviderTyEnum::Email,
-            &email_provider_id,
-            None,
-            None,
-            None,
-            UserSttEnum::WaitEmailVeri,
+            InsertUserArgs {
+                avatar_url: None,
+                email: Some(email),
+                nick_name,
+                password: Some(&password),
+                provider_access_token: None,
+                provider_refresh_token: None,
+                provider_id: &email_provider_id,
+                provider_etc: None,
+                provider_ty_enum: ProviderTyEnum::Email,
+                user_stt_enum: UserSttEnum::WaitEmailVeri,
+                user_sn
+            }
         ).await?;
         
     // email_code_dup_chk

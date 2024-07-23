@@ -1,4 +1,4 @@
-use sqlx::{postgres::PgQueryResult, types::chrono::{DateTime, Utc}, PgConnection};
+use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
 
 use crate::{configs::errors::app_error::RepositoryLayerError, models::{entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence}, fn_args::repo::InsertRefreshTokenArgs}};
 

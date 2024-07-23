@@ -31,6 +31,8 @@ pub enum ServiceLayerError {
     CustomCrypto(#[from] CryptoError),
     #[error("Auth Error")]
     CustomAuth(#[from] AuthError),
+    #[error("ParseJson Error")]
+    ParseJson(#[from] serde_json::Error)
 }
 
 #[derive(Error, Debug)]

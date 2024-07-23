@@ -1,9 +1,6 @@
-use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, Scope, TokenUrl};
+use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 use reqwest::Client;
-use serde::Deserialize;
-use validator::Validate;
-
-use crate::{configs::etc::oauth2_naver_client::NaverClient, validators::nick_name_vali_char};
+use crate::{configs::etc::oauth2_naver_client::NaverClient, models::oauth2::{GithubUserInfo, GoogleOauth2UserInfo, NaverResponse, NaverUserInfo}};
 
 
 pub fn google_oauth2_client() -> BasicClient {
@@ -15,19 +12,6 @@ pub fn google_oauth2_client() -> BasicClient {
         Some(TokenUrl::new(format!("https://oauth2.googleapis.com/token")).unwrap())
     )
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/google/callback")).unwrap())
-}
-
-#[derive(Debug, Deserialize, Validate)]
-pub struct GoogleOauth2UserInfo {
-    pub sub: String,
-    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
-    #[validate(custom(function="nick_name_vali_char"))]
-    pub name: Option<String>,
-    pub given_name: Option<String>,
-    pub family_name: Option<String>,
-    pub picture: Option<String>,
-    pub email: Option<String>,
-    pub email_verified: Option<bool>
 }
 
 pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<GoogleOauth2UserInfo> {
@@ -56,28 +40,6 @@ pub async fn naver_oauth2_client() -> NaverClient {
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/naver/callback")).unwrap())
 }
 
-#[derive(Debug, Deserialize, Validate)]
-pub struct NaverUserInfo {
-    pub id: String,
-    pub name: Option<String>,
-    pub email: String,
-    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
-    #[validate(custom(function="nick_name_vali_char"))]
-    pub nickname: Option<String>,
-    pub profile_image: Option<String>,
-    // age: String,
-    // gender: String,
-    // birthday: String,
-    // birthyear: String,
-    // mobile: String,
-}
-
-#[derive(Debug, Deserialize, Validate)]
-pub struct NaverResponse {
-    resultcode: String,
-    message: String,
-    response: NaverUserInfo,
-}
 
 pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<NaverUserInfo> {
     let url = "https://openapi.naver.com/v1/nid/me";
@@ -107,10 +69,6 @@ pub async fn github_oauth2_client() -> BasicClient {
 }
 
 
-#[derive(Debug, Deserialize, Validate)]
-pub struct GithubUserInfo {
-
-}
 
 pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<GithubUserInfo> {
     

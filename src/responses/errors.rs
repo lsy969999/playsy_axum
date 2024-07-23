@@ -27,6 +27,10 @@ impl IntoResponse for PageHandlerLayerError {
                 tracing::error!("{TAG} custom_auth {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
+            Self::Service(ServiceLayerError::ParseJson(err)) => {
+                tracing::error!("{TAG} parse_json {}", err);
+                (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
+            }
             Self::Csrf(err) => {
                 tracing::error!("{TAG} csrf {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")

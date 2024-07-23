@@ -1,6 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
 
-use crate::{configs::errors::app_error::RepositoryLayerError, models::entities::{sequence::Sequence, user::{ProviderTyEnum, User, UserSttEnum, UserTyEnum}}};
+use crate::{configs::errors::app_error::RepositoryLayerError, models::{entities::{sequence::Sequence, user::{ProviderTyEnum, User, UserSttEnum, UserTyEnum}}, fn_args::repo::InsertUserArgs}};
 
 
 pub async fn select_user_by_sn(
@@ -169,19 +169,9 @@ pub async fn select_next_user_seq(conn: &mut PgConnection) -> Result<Sequence, R
     Ok(sequence)
 }
 
-pub async fn insert_user(
+pub async fn insert_user<'a>(
     conn: &mut PgConnection,
-    avatar_url: Option<&str>,
-    user_sn: i32,
-    nick_name: &str,
-    email: Option<&str>,
-    password: Option<&str>,
-    provider_ty_enum: ProviderTyEnum,
-    provider_id: &str,
-    provider_access_token: Option<&str>,
-    provider_refresh_token: Option<&str>,
-    provider_etc: Option<serde_json::Value>,
-    user_stt_enum: UserSttEnum,
+    args: InsertUserArgs<'a>,
 ) -> Result<User, RepositoryLayerError> {
     let now = Utc::now();
     Ok(
@@ -219,9 +209,9 @@ pub async fn insert_user(
                     updated_by,
                     is_deleted
             "#,
-            user_sn, avatar_url, nick_name, email, password,
-            provider_ty_enum as ProviderTyEnum, provider_id, provider_access_token, provider_refresh_token, provider_etc,
-            user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum, now, user_sn, now, user_sn
+            args.user_sn, args.avatar_url, args.nick_name, args.email, args.password,
+            args.provider_ty_enum as ProviderTyEnum, args.provider_id, args.provider_access_token, args.provider_refresh_token, args.provider_etc,
+            args.user_stt_enum as UserSttEnum, UserTyEnum::User as UserTyEnum, now, args.user_sn, now, args.user_sn
         )
         .fetch_one(conn)
         .await?
@@ -268,6 +258,35 @@ pub async fn delete_user_by_sn(
             "#,
             UserSttEnum::Quit as UserSttEnum,
             user_sn
+        )
+        .execute(conn)
+        .await?
+    )
+}
+
+pub async fn update_user_provider_by_sn(
+    conn: &mut PgConnection,
+    provider_access_token: Option<&str>,
+    provider_refresh_token: Option<&str>,
+    provider_etc: serde_json::Value,
+    user_sn: i32,
+) -> Result<PgQueryResult, RepositoryLayerError> {
+    Ok(
+        sqlx::query!(
+            r#"
+                UPDATE tb_user
+                SET
+                    provider_access_token = $1,
+                    provider_refresh_token = $2,
+                    provider_etc = $3,
+                    updated_at = now(),
+                    updated_by = $4
+                WHERE sn = $4
+            "#,
+            provider_access_token,
+            provider_refresh_token,
+            provider_etc,
+            user_sn,
         )
         .execute(conn)
         .await?

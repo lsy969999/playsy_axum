@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::CookieJar, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::EmailLoginArgs, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, GoogleLoginArgs, NaverLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
 
 /// 로그인 페이지
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
@@ -124,10 +124,12 @@ pub async fn google_login_callback(
 
     let AuthResult {access_token, refresh_token} = services::auth::auth_google_request(
         conn,
-        info,
-        Some(at),
-        addr.to_string(),
-        user_agent.to_string()
+        GoogleLoginArgs {
+            info,
+            provider_access_token: Some(at),
+            addr: addr.to_string(),
+            user_agent: user_agent.to_string(),
+        }
     ).await?;
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
@@ -172,11 +174,13 @@ pub async fn naver_login_callback(
     
     let AuthResult {access_token, refresh_token} = services::auth::auth_naver_request(
         conn,
-        info,
-        Some(at),
-        Some(rt),
-        addr.to_string(),
-        user_agent.to_string()
+        NaverLoginArgs {
+            info,
+            provider_access_token: Some(at),
+            provider_refresh_token: Some(rt),
+            addr: addr.to_string(),
+            user_agent: user_agent.to_string(),
+        }
     ).await?;
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);

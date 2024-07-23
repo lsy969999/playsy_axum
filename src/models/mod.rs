@@ -4,3 +4,4 @@ pub mod entities;
 pub mod request;
 pub mod fn_args;
 pub mod auth_result;
+pub mod oauth2;
