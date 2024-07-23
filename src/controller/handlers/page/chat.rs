@@ -1,20 +1,12 @@
 use std::{str::FromStr, sync::Arc};
-
-use askama::Template;
 use axum::{extract::{ws::{Message, WebSocket}, Path, WebSocketUpgrade}, response::IntoResponse, Extension};
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use uuid::Uuid;
+use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::ws_state::WsState};
+use super::templates::chat::ChatTempalte;
 
-use crate::configs::{extractors::ext_user_info::ExtUserInfo, into_responses::html_template::HtmlTemplate, models::{user_info::UserInfo, ws_state::WsState}};
-
-
-#[derive(Template)]
-#[template(path="pages/chat.html")]
-pub struct ChatTempalte {
-    user_info: Option<UserInfo>
-}
 
 pub async  fn chat_page(
     ExtUserInfo(user_info): ExtUserInfo,
@@ -62,8 +54,6 @@ pub struct WsChatMsg {
     who: String,
     msg: String,
 }
-
-
 
 pub async fn ws_room_lobby_handler(
     ws: WebSocketUpgrade,

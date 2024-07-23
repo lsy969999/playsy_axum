@@ -1,47 +1,12 @@
 
 use std::net::SocketAddr;
-
-use askama::Template;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::{cookie::Cookie, CookieJar}, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
 use serde::Deserialize;
 use time::Duration;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate, models::user_info::UserInfo}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
-use crate::configs::askama_filters as filters;
-
-#[derive(Template)]
-#[template(path="pages/auth.html")]
-struct AuthTemplate {
-    user_info: Option<UserInfo>,
-    auth_form: AuthFormFragment
-}
-
-#[derive(Template)]
-#[template(path="fragments/auth_form.html")]
-struct AuthFormFragment {
-    authenticity_token: String,
-    email_value: Option<String>,
-    pass_value: Option<String>,
-    email_err_msg: Option<String>,
-    pass_err_msg: Option<String>,
-}
-
-impl AuthFormFragment {
-    pub fn new(authenticity_token: String, email_value: Option<String>, pass_value: Option<String>, email_err_msg: Option<String>, pass_err_msg: Option<String>,) -> Self {
-        Self { authenticity_token, email_value, pass_value, email_err_msg, pass_err_msg }
-    }
-}
-
-// impl Default for AuthFormFragment {
-//     fn default() -> Self {
-//         Self { email_value: None, pass_value: None, email_err_msg: None, pass_err_msg: None }
-//     }
-// }
-
-#[derive(Template)]
-#[template(path="fragments/auth_fail.html")]
-struct AuthFailTemplate;
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError}, extractors::database_connection::DatabaseConnection, into_responses::html_template::HtmlTemplate}, controller::handlers::dto::auth::LoginAuthReqDto, services, utils};
+use super::templates::auth::{AuthFormFragment, AuthTemplate};
 
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
     let authenticity_token = token.authenticity_token().unwrap();

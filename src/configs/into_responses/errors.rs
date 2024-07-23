@@ -1,15 +1,7 @@
-use askama::Template;
 use axum::{response::IntoResponse, Json};
 use hyper::StatusCode;
 use serde_json::json;
-use crate::configs::{errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, RepositoryLayerError, ServiceLayerError}, into_responses::html_template::HtmlTemplate};
-
-#[derive(Template)]
-#[template(path="pages/error.html")]
-pub struct ErrorTemplate {
-    pub error_code: String,
-    pub error_message: String,
-}
+use crate::{configs::{errors::app_error::{ApiHandlerLayerError, PageHandlerLayerError, RepositoryLayerError, ServiceLayerError}, into_responses::html_template::HtmlTemplate}, controller::handlers::page::templates::error::ErrorTemplate};
 
 impl IntoResponse for PageHandlerLayerError {
     fn into_response(self) -> axum::response::Response {

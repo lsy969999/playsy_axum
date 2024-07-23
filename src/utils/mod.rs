@@ -6,3 +6,4 @@ pub mod mail;
 pub mod rand;
 pub mod redis;
 pub mod oauth2;
+pub mod cookie;

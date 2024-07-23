@@ -1,49 +1,9 @@
-use askama::Template;
 use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
 use time::Duration;
 use validator::ValidateArgs;
-use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, into_responses::html_template::HtmlTemplate, models::user_info::UserInfo, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, repositories::entities::user::User, services, utils};
-use crate::configs::askama_filters as filters;
-
-#[derive(Template)]
-#[template(path="pages/join.html")]
-struct JoinTemplate {
-    user_info: Option<UserInfo>,
-    join_form: JoinFormFragment,
-}
-
-#[derive(Template)]
-#[template(path="fragments/join_form.html")]
-struct JoinFormFragment {
-    nick_name_value: Option<String>,
-    email_value: Option<String>,
-    pass_value: Option<String>,
-    nick_name_err_msg: Option<String>,
-    email_err_msg: Option<String>,
-    pass_err_msg: Option<String>,
-}
-impl JoinFormFragment {
-    pub fn new(
-        nick_name_value: Option<String>,
-        email_value: Option<String>,
-        pass_value: Option<String>,
-        nick_name_err_msg: Option<String>,
-        email_err_msg: Option<String>,
-        pass_err_msg: Option<String>,
-    ) -> Self {
-        Self { nick_name_value, email_value, pass_value, nick_name_err_msg, email_err_msg, pass_err_msg }
-    }
-}
-impl Default for JoinFormFragment {
-    fn default() -> Self {
-        Self { nick_name_value: None, email_value: None, pass_value: None, nick_name_err_msg: None, email_err_msg: None, pass_err_msg: None }
-    }
-}
-
-#[derive(Template)]
-#[template(path="fragments/join_success.html")]
-struct JoinSuccessFragment;
+use crate::{configs::{consts::{ACCESS_TOKEN, REFRESH_TOKEN}, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, into_responses::html_template::HtmlTemplate, validator::JoinReqValiContext}, controller::handlers::dto::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, services, utils};
+use super::templates::user::{JoinFormFragment, JoinSuccessFragment, JoinTemplate, MyPageTemplate};
 
 /// 가입 페이지
 pub async fn join_page() -> impl IntoResponse {
@@ -133,13 +93,6 @@ pub async fn join_request(
             Err(err) => Err(err)?
         }
     )
-}
-
-#[derive(Template)]
-#[template(path="pages/mypage.html")]
-pub struct MyPageTemplate {
-    user_info: Option<UserInfo>,
-    user: User
 }
 
 pub async fn my_page(

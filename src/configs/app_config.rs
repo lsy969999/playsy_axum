@@ -82,12 +82,6 @@ impl Settings {
     }
 }
 
-#[test]
-fn settings_test() {
-    let settings = Settings::new();
-    println!("settings: {:?}", settings)
-}
-
 #[derive(Debug)]
 pub struct AppConfig {
     pub settings: Settings,
