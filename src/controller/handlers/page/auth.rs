@@ -35,11 +35,11 @@ pub async fn logout(jar: CookieJar) -> impl IntoResponse {
 
 /// 이메일 로그인
 pub async fn email_login(
+    jar: CookieJar, 
     csrf: axum_csrf::CsrfToken,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agnet): TypedHeader<UserAgent>,
     DatabaseConnection(conn): DatabaseConnection,
-    jar: CookieJar, 
     Form(form): Form<LoginAuthReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     //csrf
