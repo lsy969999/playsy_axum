@@ -2,6 +2,7 @@ use askama::Template;
 use crate::configs::askama_filters as filters;
 use crate::models::entities::user::User;
 use crate::models::user_info::UserInfo;
+use crate::models::entities::user::ProviderTyEnum;
 
 #[derive(Template)]
 #[template(path="pages/join.html")]
@@ -38,7 +39,6 @@ impl Default for JoinFormFragment {
         Self { nick_name_value: None, email_value: None, pass_value: None, nick_name_err_msg: None, email_err_msg: None, pass_err_msg: None }
     }
 }
-
 #[derive(Template)]
 #[template(path="pages/mypage.html")]
 pub struct MyPageTemplate {

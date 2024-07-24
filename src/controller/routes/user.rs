@@ -19,6 +19,7 @@ fn get_user_page_router(state:ArcAppState ) -> Router<ArcAppState> {
         .route("/mypage", get(page::user::my_page))
         .route("/nick_validate", get(page::user::nick_validate))
         .route("/email_validate", get(page::user::email_validate))
+        .route("/nick_update", post(page::user::user_nick_name_update))
         .layer(
             ServiceBuilder::new()
                 .layer(from_fn_with_state(state, set_user_info_from_cookie_to_header))

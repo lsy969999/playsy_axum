@@ -39,3 +39,12 @@ pub struct JoinReqDto {
     #[validate(custom(function="pass_vali_special_char"))]
     pub password: String,
 }
+
+#[derive(Deserialize, Debug, Validate)]
+#[validate(context = "JoinReqValiContext")]
+pub struct NickNameUpdateDto {
+    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
+    #[validate(custom(function="nick_name_vali_dup_chk", use_context))]
+    #[validate(custom(function="nick_name_vali_char"))]
+    pub nick_name: String,
+}

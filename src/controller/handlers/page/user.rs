@@ -1,7 +1,7 @@
 use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::CookieJar;
 use validator::ValidateArgs;
-use crate::{configs::errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, models::request::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto}, responses::html_template::HtmlTemplate, services, templates::user::{JoinFormFragment, JoinSuccessFragment, JoinTemplate, MyPageTemplate}, utils, validators::JoinReqValiContext};
+use crate::{configs::errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, models::request::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, NickNameUpdateDto}, responses::html_template::HtmlTemplate, services, templates::user::{JoinFormFragment, JoinSuccessFragment, JoinTemplate, MyPageTemplate}, utils, validators::JoinReqValiContext};
 
 /// 가입 페이지
 pub async fn join_page() -> impl IntoResponse {
@@ -119,4 +119,24 @@ pub async fn user_withdrawl(
     Ok(
         (jar.remove(acc_token_cookie).remove(ref_token_cookie), Redirect::to("/"))
     )
+}
+
+pub async fn user_nick_name_update(
+    jar: CookieJar, 
+    DatabaseConnection(mut conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+    Form(query): Form<NickNameUpdateDto>,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &query.nick_name).await?;
+    let val_ctx = JoinReqValiContext::new(nick_name_is_some, false); // email_is_some 강제로 넣어준다. 이건 Nick_chk니까
+    if let Err(error) = query.validate_with_args(&val_ctx) {
+        let nick_name_err_msg = utils::validator::get_validate_error_messages(&error, "nick_name", "<br/>")
+            .unwrap_or("".to_string());
+        return Ok(Html(nick_name_err_msg).into_response())
+    }
+    let _ = services::user::update_user_nick_name(conn, user_info.user_sn, &query.nick_name).await;
+
+    // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 닉네임이 업데이트 될것임
+    let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+    Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
 }

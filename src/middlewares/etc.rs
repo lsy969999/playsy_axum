@@ -1,6 +1,7 @@
 use std::fs::metadata;
 
 use axum::{extract::Request, http::HeaderValue, middleware::Next, response::Response};
+use hyper::HeaderMap;
 
 
 /// compression 의 경우 content-length를 모르는데
@@ -24,4 +25,25 @@ pub async fn add_original_content_length(
         // tracing::debug!("add_original_content_length NO OK {}", path);
         response
     }
+}
+
+pub async fn htmx_hx_header_pass(
+    req: Request,
+    next: Next,
+) -> Response {
+    let hx_headers = req.headers()
+        .iter()
+        .filter_map(|(k, v)| {
+            if k.as_str().starts_with("hx-") {
+                Some((k.clone(), v.clone()))
+            } else {
+                None
+            }
+        })
+        .collect::<HeaderMap>();
+    let mut response = next.run(req).await;
+    hx_headers.iter().for_each(|(k,v)|{
+        response.headers_mut().insert(k, v.clone());
+    });
+    response
 }

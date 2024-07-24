@@ -292,3 +292,26 @@ pub async fn update_user_provider_by_sn(
         .await?
     )
 }
+
+pub async fn update_user_nick_name_by_sn(
+    conn: &mut PgConnection,
+    user_sn: i32,
+    nick_name: &str,
+) -> Result<PgQueryResult, RepositoryLayerError> {
+    Ok(
+        sqlx::query!(
+            r#"
+                UPDATE tb_user
+                SET
+                    nick_name = $2,
+                    updated_at = now(),
+                    updated_by = $1
+                WHERE sn = $1
+            "#,
+            user_sn,
+            nick_name,
+        )
+        .execute(conn)
+        .await?
+    )
+}

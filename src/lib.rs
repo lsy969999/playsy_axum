@@ -6,7 +6,7 @@ use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}};
 use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use hyper::StatusCode;
 use listenfd::ListenFd;
-use middlewares::etc::add_original_content_length;
+use middlewares::etc::{add_original_content_length, htmx_hx_header_pass};
 use responses::html_template::HtmlTemplate;
 use templates::error::ErrorTemplate;
 use tokio::net::TcpListener;
@@ -70,6 +70,7 @@ pub async fn play_sy_main() {
         .layer(
             ServiceBuilder::new()
                 .layer(middleware::from_fn(add_original_content_length))
+                .layer(middleware::from_fn(htmx_hx_header_pass))
                 // 요청 로깅
                 .layer(TraceLayer::new_for_http())
                 // 요청 바디 크기 제한 (1MB)

@@ -141,13 +141,13 @@ async fn social_login_user_validate_process<'a, T>(
                 Some(n) => n,
                 None => {
                     let rand_alpha = utils::rand::generate_alphanumeric_code(4);
-                    format!("User_{rand_alpha}")
+                    format!("User#{rand_alpha}")
                 }
             };
             let is_nick_error = info.validate().is_err();
             if is_nick_error {
                 let rand_alpha = utils::rand::generate_alphanumeric_code(4);
-                nick_name = format!("User_{rand_alpha}");
+                nick_name = format!("User#{rand_alpha}");
             }
             
             // 가입되어 있지 않은 상태, 가입처리
@@ -156,7 +156,7 @@ async fn social_login_user_validate_process<'a, T>(
                 if nick_is_some {
                     // 닉네임 변경 필요
                     let rand_alpha = utils::rand::generate_alphanumeric_code(4);
-                    nick_name = format!("User_{rand_alpha}");
+                    nick_name = format!("User#{rand_alpha}");
                 } else {
                     break
                 }
