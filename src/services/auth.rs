@@ -2,7 +2,7 @@ use chrono::Utc;
 use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::error;
 use validator::Validate;
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, GoogleLoginArgs, NaverLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}}, repositories::{self, }, utils::{self}};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, GoogleLoginArgs, NaverLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}, oauth2::{GoogleOauth2UserInfo, NaverOauth2UserInfo}}, repositories::{self, }, utils::{self}};
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
@@ -55,7 +55,8 @@ pub async fn auth_google_request<'a>(
     mut conn: PoolConnection<Postgres>,
     args: GoogleLoginArgs<'a>,
 ) -> Result<AuthResult, ServiceLayerError> {
-    if args.info.email.is_none() {
+    let google_info = serde_json::from_value::<GoogleOauth2UserInfo>(args.info.clone())?;
+    if google_info.email.is_none() {
         Err(UserError::UserError)?
     }
 
@@ -64,19 +65,19 @@ pub async fn auth_google_request<'a>(
     let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
         ProviderTyEnum::Google,
-        args.info.sub.clone().as_str(),
+        google_info.sub.clone().as_str(),
         
     ).await?;
-    let jsonb = serde_json::to_value(&args.info)?;
+
     // 미가입 상태는 가입시켜준다.
     let user = match user_select {
         Some(user) => {
-            repositories::user::update_user_provider_by_sn(&mut tx, args.provider_access_token, None, jsonb, user.sn).await?;
+            repositories::user::update_user_provider_by_sn(&mut tx, args.provider_access_token, None, args.info, user.sn).await?;
             user
         },
         None => {
-            let mut nick_name = args.info.name.clone().unwrap();
-            let is_nick_error = args.info.validate().is_err();
+            let mut nick_name = google_info.name.clone().unwrap();
+            let is_nick_error = google_info.validate().is_err();
             if is_nick_error {
                 let rand_alpha = utils::rand::generate_alphanumeric_code(4);
                 nick_name = format!("User_{rand_alpha}");
@@ -103,15 +104,15 @@ pub async fn auth_google_request<'a>(
             let user = repositories::user::insert_user(
                 &mut tx,
                 InsertUserArgs {
-                    avatar_url: args.info.picture.as_deref(),
-                    email: args.info.email.as_deref(),
+                    avatar_url: google_info.picture.as_deref(),
+                    email: google_info.email.as_deref(),
                     nick_name: &nick_name,
                     password: None,
                     user_sn,
                     provider_access_token: args.provider_access_token,
-                    provider_refresh_token: None,
-                    provider_etc: Some(jsonb),
-                    provider_id: args.info.sub.as_str(),
+                    provider_refresh_token: args.provider_refresh_token,
+                    provider_etc: Some(args.info),
+                    provider_id: google_info.sub.as_str(),
                     provider_ty_enum: ProviderTyEnum::Google,
                     user_stt_enum: UserSttEnum::Ok,
                 }
@@ -133,33 +134,31 @@ pub async fn auth_naver_request<'a>(
     mut conn: PoolConnection<Postgres>,
     args: NaverLoginArgs<'a>
 ) -> Result<AuthResult, ServiceLayerError> {
-    // if info.email.is_none() {
-    //     Err(UserError::UserError)?
-    // }
+    let naver_info = serde_json::from_value::<NaverOauth2UserInfo>(args.info.clone())?;
+
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
     let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
         ProviderTyEnum::Naver,
-        args.info.id.clone().as_str(),
+        naver_info.id.clone().as_str(),
     ).await?;
     
-    let jsonb = serde_json::to_value(&args.info)?;
     // 미가입 상태는 가입시켜준다.
     let user = match user_select {
         Some(user) => {
-            repositories::user::update_user_provider_by_sn(&mut tx, args.provider_access_token, args.provider_refresh_token, jsonb, user.sn).await?;
+            repositories::user::update_user_provider_by_sn(&mut tx, args.provider_access_token, args.provider_refresh_token, args.info, user.sn).await?;
             user
         },
         None => {
-            let mut nick_name = match args.info.nickname.clone() {
+            let mut nick_name = match naver_info.nickname.clone() {
                 Some(n) => n,
                 None => {
                     let rand_alpha = utils::rand::generate_alphanumeric_code(4);
                     format!("User_{rand_alpha}")
                 }
             };
-            let is_nick_error = args.info.validate().is_err();
+            let is_nick_error = naver_info.validate().is_err();
             if is_nick_error {
                 let rand_alpha = utils::rand::generate_alphanumeric_code(4);
                 nick_name = format!("User_{rand_alpha}");
@@ -186,15 +185,15 @@ pub async fn auth_naver_request<'a>(
             let user = repositories::user::insert_user(
                 &mut tx,
                 InsertUserArgs {
-                    avatar_url: args.info.profile_image.as_deref(),
-                    email: Some(&args.info.email),
+                    avatar_url: naver_info.profile_image.as_deref(),
+                    email: naver_info.email.as_deref(),
                     nick_name: &nick_name,
                     user_sn: user_sn,
                     password: None,
                     provider_access_token: args.provider_access_token,
                     provider_refresh_token: args.provider_refresh_token,
-                    provider_etc: Some(jsonb),
-                    provider_id: &args.info.id,
+                    provider_etc: Some(args.info),
+                    provider_id: &naver_info.id,
                     provider_ty_enum: ProviderTyEnum::Naver,
                     user_stt_enum: UserSttEnum::Ok
                 }

@@ -1,6 +1,3 @@
-use crate::models::oauth2::{GoogleOauth2UserInfo, NaverUserInfo};
-
-
 pub struct EmailLoginArgs {
     pub email: String,
     pub password: String,
@@ -10,7 +7,8 @@ pub struct EmailLoginArgs {
 
 pub struct GoogleLoginArgs<'a> {
     pub provider_access_token: Option<&'a str>,
-    pub info: GoogleOauth2UserInfo,
+    pub provider_refresh_token: Option<&'a str>,
+    pub info: serde_json::Value,
     pub addr: String,
     pub user_agent: String,
 }
@@ -18,7 +16,7 @@ pub struct GoogleLoginArgs<'a> {
 pub struct NaverLoginArgs<'a> {
     pub provider_access_token: Option<&'a str>,
     pub provider_refresh_token: Option<&'a str>,
-    pub info: NaverUserInfo,
+    pub info: serde_json::Value,
     pub addr: String,
     pub user_agent: String,
 }

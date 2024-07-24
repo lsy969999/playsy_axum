@@ -118,7 +118,11 @@ pub async fn google_login_callback(
         .await
         .map_err(|err| anyhow!(err))?;
 
-    let at: &str = token_result.access_token().secret();
+    let at = token_result.access_token().secret().as_str();
+    let rt = match token_result.refresh_token() {
+        Some(r) => Some(r.secret().as_str()),
+        None => None
+    };
     let info = utils::oauth2::google_oauth2_user_info_api(at).await?;
     tracing::info!("google_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
@@ -127,6 +131,7 @@ pub async fn google_login_callback(
         GoogleLoginArgs {
             info,
             provider_access_token: Some(at),
+            provider_refresh_token: rt,
             addr: addr.to_string(),
             user_agent: user_agent.to_string(),
         }
@@ -143,7 +148,7 @@ pub async fn google_login_callback(
 /// 네이버 소셜 로그인 
 pub async fn naver_login(
 ) -> impl IntoResponse {
-    let client = utils::oauth2::naver_oauth2_client().await;
+    let client = utils::oauth2::naver_oauth2_client();
     let (authorize_url, _csrf_state) = client
         .authorize_url(CsrfToken::new_random)
         .url();
@@ -158,7 +163,7 @@ pub async fn naver_login_callback(
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    let client = utils::oauth2::naver_oauth2_client().await;
+    let client = utils::oauth2::naver_oauth2_client();
     let token_result = client
         .exchange_code(AuthorizationCode::new(query.code.clone()))
         .add_extra_param("grant_type", "authorization_code")
@@ -168,7 +173,10 @@ pub async fn naver_login_callback(
         .map_err(|err| anyhow!(err))?;
     
     let at = token_result.access_token().secret();
-    let rt = token_result.refresh_token().unwrap().secret();
+    let rt = match token_result.refresh_token() {
+        Some(r) => Some(r.secret().as_str()),
+        None => None
+    };
     let info = utils::oauth2::naver_oauth2_user_info_api(at).await?;
     tracing::info!("naver_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
     
@@ -177,7 +185,7 @@ pub async fn naver_login_callback(
         NaverLoginArgs {
             info,
             provider_access_token: Some(at),
-            provider_refresh_token: Some(rt),
+            provider_refresh_token: rt,
             addr: addr.to_string(),
             user_agent: user_agent.to_string(),
         }
@@ -223,6 +231,10 @@ pub async fn github_login_callback(
         Ok(token) => {
             tracing::debug!("okokok {:?}", token);
             let at = token.access_token().secret();
+            let rt = match token.refresh_token() {
+                Some(r) => Some(r.secret().as_str()),
+                None => None
+            };
             tracing::debug!("atatat {:?}", at);
             // let rt = token.refresh_token().unwrap().secret();
             // tracing::debug!("rtrtrt {:?}", rt);

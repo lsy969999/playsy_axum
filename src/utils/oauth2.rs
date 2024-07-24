@@ -1,7 +1,6 @@
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 use reqwest::Client;
-use crate::{configs::etc::oauth2_naver_client::NaverClient, models::oauth2::{GithubUserInfo, GoogleOauth2UserInfo, NaverResponse, NaverUserInfo}};
-
+use crate::{configs::etc::oauth2_naver_client::NaverClient, models::oauth2::{GithubOauth2UserInfo, NaverResponse}};
 
 pub fn google_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();
@@ -14,9 +13,8 @@ pub fn google_oauth2_client() -> BasicClient {
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/google/callback")).unwrap())
 }
 
-pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<GoogleOauth2UserInfo> {
+pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<serde_json::Value> {
     let url = "https://www.googleapis.com/oauth2/v3/userinfo";
-
     let client = Client::new();
     let response = client
         .get(url)
@@ -24,12 +22,10 @@ pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<G
         .send()
         .await?;
 
-    Ok(response.json::<GoogleOauth2UserInfo>().await?)
+    Ok(response.json::<serde_json::Value>().await?)
 }
 
-//
-
-pub async fn naver_oauth2_client() -> NaverClient {
+pub fn naver_oauth2_client() -> NaverClient {
     let o = super::config::get_config_oauth2();
     NaverClient::new(
         ClientId::new(format!("{}",o.oauth2_naver_client_id)),
@@ -41,9 +37,8 @@ pub async fn naver_oauth2_client() -> NaverClient {
 }
 
 
-pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<NaverUserInfo> {
+pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<serde_json::Value> {
     let url = "https://openapi.naver.com/v1/nid/me";
-
     let client = Client::new();
     let response = client
         .get(url)
@@ -51,9 +46,8 @@ pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<Na
         .send()
         .await?;
     let json  = response.json::<NaverResponse>().await?;
-    Ok(json.response)
+    Ok(serde_json::to_value(json.response)?)
 }
-
 
 //
 
@@ -70,10 +64,8 @@ pub async fn github_oauth2_client() -> BasicClient {
 
 
 
-pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<GithubUserInfo> {
-    
+pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<GithubOauth2UserInfo> {
     let url = "https://api.github.com/user";
-
     let client = Client::new();
     let response = client
         .get(url)
@@ -84,5 +76,4 @@ pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<Githu
     tracing::debug!("json::: {:?}", json);
     // Ok(json.response)
     todo!()
-
 }
