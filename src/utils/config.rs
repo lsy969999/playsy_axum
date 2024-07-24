@@ -1,4 +1,4 @@
-use crate::configs::app_config::{Access, JwtKeys, Oauth2Settings, Refresh, SmtpSettings, APP_CONFIG};
+use crate::{configs::app_config::{Oauth2Settings, SmtpSettings, APP_CONFIG}, models::jwt_keys::{Access, JwtKeys, Refresh}};
 
 pub fn get_config_jwt_access_keys() -> &'static JwtKeys<Access> {
     &APP_CONFIG.get().unwrap().jwt_access_keys

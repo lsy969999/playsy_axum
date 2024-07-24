@@ -7,6 +7,6 @@ pub struct UserInfo{
 
 impl std::fmt::Display for UserInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "nick_name: {}", self.nick_name)
+        write!(f, "user_sn: {:?}, nick_name: {:?}, avatar_url: {:?}", self.user_sn, self.nick_name, self.avatar_url)
     }
 }

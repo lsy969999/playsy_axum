@@ -1,8 +1,9 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::sync::Arc;
 use config::Config;
-use jsonwebtoken::{DecodingKey, EncodingKey};
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
+
+use crate::models::jwt_keys::{Access, JwtKeys, Refresh};
 
 pub static APP_CONFIG: OnceCell<Arc<AppConfig>> = OnceCell::new();
 
@@ -94,37 +95,5 @@ impl AppConfig {
         let jwt_access_keys = JwtKeys::new(jwt_access_secret);
         let jwt_refresh_keys = JwtKeys::new(jwt_refresh_secret);
         Self { settings, jwt_access_keys, jwt_refresh_keys }
-    }
-}
-
-// ---
-
-pub struct Access;
-pub struct Refresh;
-
-#[derive(Clone)]
-pub struct JwtKeys<T> {
-    pub encoding: EncodingKey,
-    pub decoding: DecodingKey,
-    _marker: PhantomData<T>,
-}
-
-impl<T> std::fmt::Debug for JwtKeys<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("JwtKeys")
-            .field("encoding", &"EncodingKey(...)")
-            .field("decoding", &"DecodingKey(...)")
-            .finish()
-    }
-}
-
-impl<T> JwtKeys<T> {
-    pub fn new(secret: &str) -> Self {
-        let bsecret = secret.as_bytes();
-        Self {
-            encoding: EncodingKey::from_secret(bsecret),
-            decoding: DecodingKey::from_secret(bsecret),
-            _marker: PhantomData,
-        }
     }
 }

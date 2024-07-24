@@ -16,7 +16,9 @@ pub enum PageHandlerLayerError {
     #[error("Any")]
     Any(#[from] anyhow::Error),
     #[error("Auth Error")]
-    Auth
+    Auth,
+    #[error("Template Error")]
+    Template(#[from] askama::Error)
 }
 
 #[derive(Error, Debug)]

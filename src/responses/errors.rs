@@ -35,6 +35,10 @@ impl IntoResponse for PageHandlerLayerError {
                 tracing::error!("{TAG} csrf {}", err);
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
+            Self::Template(err) => {
+                tracing::error!("{TAG} template {}", err);
+                (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
+            }
             Self::Auth => {
                 tracing::error!("{TAG} auth");
                 (StatusCode::UNAUTHORIZED, "UNAUTHORIZED")

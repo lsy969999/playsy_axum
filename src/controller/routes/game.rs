@@ -11,3 +11,13 @@ pub fn get_game_router(state: ArcAppState) -> Router<ArcAppState>{
                 .layer(middleware::from_fn_with_state(state, set_user_info_from_cookie_to_header))
         )
 }
+
+#[allow(dead_code)]
+fn get_page_router() {
+    todo!()
+}
+
+#[allow(dead_code)]
+fn get_api_router() {
+    todo!()
+}
