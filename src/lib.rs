@@ -1,5 +1,5 @@
 use std::{net::SocketAddr, time::Duration};
-use axum::{middleware::{self}, response::IntoResponse, routing::get};
+use axum::{extract::OriginalUri, middleware::{self}, response::IntoResponse, routing::get};
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
 use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}};
@@ -107,7 +107,8 @@ pub async fn play_sy_main() {
         .unwrap();
 }
 
-async fn global_404_handler() -> impl IntoResponse {
+async fn global_404_handler(OriginalUri(uri): OriginalUri) -> impl IntoResponse {
+    tracing::error!("404 return! uri: {:?}", uri);
     HtmlTemplate(
         ErrorTemplate {
             error_code: StatusCode::NOT_FOUND.to_string(),

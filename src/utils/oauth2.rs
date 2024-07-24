@@ -47,7 +47,7 @@ pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<se
     Ok(serde_json::to_value(json.response)?)
 }
 
-pub async fn github_oauth2_client() -> BasicClient {
+pub fn github_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();
     BasicClient::new(
         ClientId::new(format!("{}",o.oauth2_github_client_id)),
@@ -67,6 +67,28 @@ pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<serde
         // user-agent 없으면 403 리턴됨 그래서 아무값 넣음
         // https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api?apiVersion=2022-11-28#user-agent-required
         .header("User-Agent", "playsy-reqwest")
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+    Ok(response.json::<serde_json::Value>().await?)
+}
+
+pub fn kakao_oauth2_client() -> BasicClient {
+    let o = super::config::get_config_oauth2();
+    BasicClient::new(
+        ClientId::new(format!("{}",o.oauth2_kakao_client_id)),
+        Some(ClientSecret::new(format!("{}", o.oauth2_kakao_client_secret))),
+        AuthUrl::new(format!("https://kauth.kakao.com/oauth/authorize")).unwrap(),
+        Some(TokenUrl::new(format!("https://kauth.kakao.com/oauth/token")).unwrap())
+    )
+    .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/kakao/callback")).unwrap())
+}
+
+pub async fn kakao_oauth2_user_info(access_token: &str) -> anyhow::Result<serde_json::Value> {
+    let url = "https://kapi.kakao.com/v2/user/me";
+    let client = Client::new();
+    let response = client
+        .get(url)
         .bearer_auth(access_token)
         .send()
         .await?;

@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::error;
 use validator::Validate;
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, SocialLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}, oauth2::{GithubOauth2UserInfo, GoogleOauth2UserInfo, NaverOauth2UserInfo}, traits::oauth2::SocaliLoginValidateProcess}, repositories::{self, }, utils::{self}};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, SocialLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}, oauth2::{GithubOauth2UserInfo, GoogleOauth2UserInfo, KakaoOauth2UserInfo, NaverOauth2UserInfo}, traits::oauth2::SocaliLoginValidateProcess}, repositories::{self, }, utils::{self}};
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
@@ -96,6 +96,25 @@ pub async fn auth_github_request<'a>(
     Ok(auth_result)
 }
 
+/// 카카오 소셜 로그인 처리
+pub async fn auth_kakao_request<'a>(
+    mut conn: PoolConnection<Postgres>,
+    args: SocialLoginArgs<'a>
+) -> Result<AuthResult, ServiceLayerError> {
+    let mut tx = repositories::tx::begin(&mut conn).await?;
+
+    let user = social_login_user_validate_process::<KakaoOauth2UserInfo>(&mut tx, ProviderTyEnum::Kakao, args.clone()).await?;
+    let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
+
+    repositories::tx::commit(tx).await?;
+
+    Ok(auth_result)
+}
+
+/// 소셜로그인시 사용되는  
+/// 사용자 체크 처리  
+/// 사용자 있으면 etc 업데이트하고 반환  
+/// 사용자 없으면 가입시키고 반환  
 async fn social_login_user_validate_process<'a, T>(
     mut tx: &mut PgConnection,
     provider_ty: ProviderTyEnum,

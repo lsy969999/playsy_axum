@@ -59,6 +59,8 @@ pub struct Oauth2Settings {
     pub oauth2_naver_client_secret: String,
     pub oauth2_github_client_id: String,
     pub oauth2_github_client_secret: String,
+    pub oauth2_kakao_client_id: String,
+    pub oauth2_kakao_client_secret: String,
 }
 
 #[derive(Debug, Deserialize)]

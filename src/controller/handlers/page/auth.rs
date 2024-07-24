@@ -197,7 +197,7 @@ pub async fn naver_login_callback(
 
 /// 깃헙 소셜 로그인 
 pub async fn github_login() -> impl IntoResponse {
-    let client = utils::oauth2::github_oauth2_client().await;
+    let client = utils::oauth2::github_oauth2_client();
     let (authorize_url, _csrf_state) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new(format!("read:user")))
@@ -214,7 +214,7 @@ pub async fn github_login_callback(
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    let client = utils::oauth2::github_oauth2_client().await;
+    let client = utils::oauth2::github_oauth2_client();
     let token_result = client
         .exchange_code(AuthorizationCode::new(query.code.clone()))
         .request_async(async_http_client)
@@ -247,17 +247,62 @@ pub async fn github_login_callback(
 }
 
 /// 카카오 소셜 로그인
-pub async fn kakao_login() -> Result<(), PageHandlerLayerError> {
-    todo!()
+pub async fn kakao_login() -> impl IntoResponse {
+    let client = utils::oauth2::kakao_oauth2_client();
+    let (authorize_url, _csrf_state) = client
+        .authorize_url(CsrfToken::new_random)
+        .add_scope(Scope::new(format!("profile_nickname")))
+        .add_scope(Scope::new(format!("profile_image")))
+        // .add_extra_param("response_type", "code")
+        .url();
+    Redirect::temporary(authorize_url.to_string().as_str())
 }
 
 /// 카카오 소셜 로그인 Oauth2 콜백
-pub async fn kakao_login_callback() -> Result<(), PageHandlerLayerError> {
-    todo!()
+pub async fn kakao_login_callback(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    TypedHeader(user_agent): TypedHeader<UserAgent>,
+    DatabaseConnection(conn): DatabaseConnection,
+    query: Query<OAuthCallback>,
+    jar: CookieJar, 
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let client = utils::oauth2::kakao_oauth2_client();
+    let token_result = client
+        .exchange_code(AuthorizationCode::new(query.code.clone()))
+        .add_extra_param("state", query.state.clone())
+        .add_extra_param("client_id", format!("{}", utils::config::get_config_oauth2().oauth2_kakao_client_id))
+        .add_extra_param("client_secret", format!("{}", utils::config::get_config_oauth2().oauth2_kakao_client_secret))
+        .request_async(async_http_client)
+        .await
+        .map_err(|err| anyhow!(err))?;
+    let at = token_result.access_token().secret().as_str();
+    let rt = match token_result.refresh_token() {
+        Some(r) => Some(r.secret().as_str()),
+        None => None
+    };
+    
+    let info = utils::oauth2::kakao_oauth2_user_info(at).await?;
+    tracing::info!("kakao_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
+
+    let AuthResult {access_token, refresh_token} = services::auth::auth_kakao_request(
+        conn,
+        SocialLoginArgs {
+            info,
+            provider_access_token: Some(at),
+            provider_refresh_token: rt,
+            addr: addr.to_string(),
+            user_agent: user_agent.to_string(),
+        }
+    ).await?;
+
+    let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
+    let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
+
+    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
 }
 
 /// 디스코드 소셜 로그인
-pub async fn discord_login() -> Result<(), PageHandlerLayerError> {
+pub async fn discord_login() ->impl IntoResponse {
     todo!()
 }
 
@@ -267,7 +312,7 @@ pub async fn discord_login_callback() -> Result<(), PageHandlerLayerError> {
 }
 
 /// 애플 소셜 로그인
-pub async fn apple_login() -> Result<(), PageHandlerLayerError> {
+pub async fn apple_login() -> impl IntoResponse {
     todo!()
 }
 
