@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::CookieJar, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, GoogleLoginArgs, NaverLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, SocialLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
 
 /// 로그인 페이지
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
@@ -128,7 +128,7 @@ pub async fn google_login_callback(
 
     let AuthResult {access_token, refresh_token} = services::auth::auth_google_request(
         conn,
-        GoogleLoginArgs {
+        SocialLoginArgs {
             info,
             provider_access_token: Some(at),
             provider_refresh_token: rt,
@@ -140,9 +140,7 @@ pub async fn google_login_callback(
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
 
-    Ok(
-        (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response()
-    )
+    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
 }
 
 /// 네이버 소셜 로그인 
@@ -182,7 +180,7 @@ pub async fn naver_login_callback(
     
     let AuthResult {access_token, refresh_token} = services::auth::auth_naver_request(
         conn,
-        NaverLoginArgs {
+        SocialLoginArgs {
             info,
             provider_access_token: Some(at),
             provider_refresh_token: rt,
@@ -194,9 +192,7 @@ pub async fn naver_login_callback(
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
 
-    Ok(
-        (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response()
-    )
+    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
 }
 
 /// 깃헙 소셜 로그인 
@@ -204,7 +200,7 @@ pub async fn github_login() -> impl IntoResponse {
     let client = utils::oauth2::github_oauth2_client().await;
     let (authorize_url, _csrf_state) = client
         .authorize_url(CsrfToken::new_random)
-        // .add_scope(Scope::new(format!("read:user")))
+        .add_scope(Scope::new(format!("read:user")))
         .add_scope(Scope::new(format!("user:email")))
         .url();
     Redirect::temporary(authorize_url.to_string().as_str())
@@ -218,62 +214,36 @@ pub async fn github_login_callback(
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    tracing::debug!("github_callback!! query: {:?}, addr: {:?}, user_agent: {:?}", query, addr, user_agent);
     let client = utils::oauth2::github_oauth2_client().await;
     let token_result = client
         .exchange_code(AuthorizationCode::new(query.code.clone()))
-        // .add_extra_param("grant_type", "authorization_code")
-        // .add_extra_param("state", query.state.clone())
         .request_async(async_http_client)
-        .await;
-    tracing::debug!("github_callback!! token_result {:?}", token_result);
-    Ok(match token_result {
-        Ok(token) => {
-            tracing::debug!("okokok {:?}", token);
-            let at = token.access_token().secret();
-            let rt = match token.refresh_token() {
-                Some(r) => Some(r.secret().as_str()),
-                None => None
-            };
-            tracing::debug!("atatat {:?}", at);
-            // let rt = token.refresh_token().unwrap().secret();
-            // tracing::debug!("rtrtrt {:?}", rt);
-            // let info = utils::oauth2::github_oauth2_user_info(at).await?;
-            // tracing::debug!("info: {:?}", info);
-            // let tokens = services::auth::auth_naver_request(
-            //     conn,
-            //     info,
-            //     Some(at),
-            //     Some(rt),
-            //     addr.to_string(),
-            //     user_agent.to_string()
-            // ).await;
+        .await
+        .map_err(|err| anyhow!(err))?;
+    
+    let at = token_result.access_token().secret().as_str();
+    let rt = match token_result.refresh_token() {
+        Some(r) => Some(r.secret().as_str()),
+        None => None
+    };
+    let info = utils::oauth2::github_oauth2_user_info(at).await?;
+    tracing::info!("github_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
-            // match tokens {
-            //     Ok((access_token, refresh_token)) => {
-            //         let acc_time = utils::config::get_config_jwt_access_time();
-            //         let acc_token_cookie = Cookie::build((ACCESS_TOKEN, access_token))
-            //             .path("/")
-            //             .http_only(true)
-            //             .max_age(Duration::seconds(*acc_time));
-            //         let refr_time = utils::config::get_config_jwt_refresh_time();
-            //         let ref_token_cookie = Cookie::build((REFRESH_TOKEN, refresh_token))
-            //             .path("/")
-            //             .http_only(true)
-            //             .max_age(Duration::seconds(*refr_time));
-            //         (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response()
-            //     }
-            //     Err(err) => {
-            //         tracing::error!("google login service err {}", err);
-            //         Err(err)?
-            //     }
-            // }
+    let AuthResult {access_token, refresh_token} = services::auth::auth_github_request(
+        conn,
+        SocialLoginArgs {
+            info,
+            provider_access_token: Some(at),
+            provider_refresh_token: rt,
+            addr: addr.to_string(),
+            user_agent: user_agent.to_string(),
         }
-        Err(err) => {
-            tracing::error!("naver_callback error! {:?}", err);
-            Err(anyhow::anyhow!(err))?
-        }
-    })
+    ).await?;
+
+    let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
+    let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
+
+    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
 }
 
 /// 카카오 소셜 로그인

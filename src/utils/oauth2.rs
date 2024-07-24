@@ -1,6 +1,6 @@
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 use reqwest::Client;
-use crate::{configs::etc::oauth2_naver_client::NaverClient, models::oauth2::{GithubOauth2UserInfo, NaverResponse}};
+use crate::{configs::etc::oauth2_naver_client::NaverClient, models::oauth2::NaverOaut2Response};
 
 pub fn google_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();
@@ -21,7 +21,6 @@ pub async fn google_oauth2_user_info_api(access_token: &str) -> anyhow::Result<s
         .bearer_auth(access_token)
         .send()
         .await?;
-
     Ok(response.json::<serde_json::Value>().await?)
 }
 
@@ -36,7 +35,6 @@ pub fn naver_oauth2_client() -> NaverClient {
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/naver/callback")).unwrap())
 }
 
-
 pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<serde_json::Value> {
     let url = "https://openapi.naver.com/v1/nid/me";
     let client = Client::new();
@@ -45,11 +43,9 @@ pub async fn naver_oauth2_user_info_api(access_token: &str) -> anyhow::Result<se
         .bearer_auth(access_token)
         .send()
         .await?;
-    let json  = response.json::<NaverResponse>().await?;
+    let json  = response.json::<NaverOaut2Response>().await?;
     Ok(serde_json::to_value(json.response)?)
 }
-
-//
 
 pub async fn github_oauth2_client() -> BasicClient {
     let o = super::config::get_config_oauth2();
@@ -62,18 +58,17 @@ pub async fn github_oauth2_client() -> BasicClient {
     .set_redirect_uri(RedirectUrl::new(format!("http://localhost:4000/auth/github/callback")).unwrap())
 }
 
-
-
-pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<GithubOauth2UserInfo> {
+pub async fn github_oauth2_user_info(access_token: &str) -> anyhow::Result<serde_json::Value> {
     let url = "https://api.github.com/user";
     let client = Client::new();
     let response = client
         .get(url)
+        // issue
+        // user-agent 없으면 403 리턴됨 그래서 아무값 넣음
+        // https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api?apiVersion=2022-11-28#user-agent-required
+        .header("User-Agent", "playsy-reqwest")
         .bearer_auth(access_token)
         .send()
         .await?;
-    let json  = response.json::<serde_json::Value>().await?;
-    tracing::debug!("json::: {:?}", json);
-    // Ok(json.response)
-    todo!()
+    Ok(response.json::<serde_json::Value>().await?)
 }

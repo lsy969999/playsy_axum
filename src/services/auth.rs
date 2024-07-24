@@ -1,8 +1,9 @@
 use chrono::Utc;
+use serde::de::DeserializeOwned;
 use sqlx::{pool::PoolConnection, PgConnection, Postgres};
 use tracing::error;
 use validator::Validate;
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, GoogleLoginArgs, NaverLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}, oauth2::{GoogleOauth2UserInfo, NaverOauth2UserInfo}}, repositories::{self, }, utils::{self}};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{auth_result::AuthResult, entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::{auth::{EmailLoginArgs, SocialLoginArgs}, repo::{InsertRefreshTokenArgs, InsertUserArgs}, token::{GenAccessTokenArgs, GenRefreshTokenArgs}}, oauth2::{GithubOauth2UserInfo, GoogleOauth2UserInfo, NaverOauth2UserInfo}, traits::oauth2::SocaliLoginValidateProcess}, repositories::{self, }, utils::{self}};
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
@@ -53,75 +54,11 @@ pub async fn auth_email_request(
 /// 구글 소셜 로그인 처리
 pub async fn auth_google_request<'a>(
     mut conn: PoolConnection<Postgres>,
-    args: GoogleLoginArgs<'a>,
+    args: SocialLoginArgs<'a>,
 ) -> Result<AuthResult, ServiceLayerError> {
-    let google_info = serde_json::from_value::<GoogleOauth2UserInfo>(args.info.clone())?;
-    if google_info.email.is_none() {
-        Err(UserError::UserError)?
-    }
-
     let mut tx = repositories::tx::begin(&mut conn).await?;
 
-    let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
-        &mut tx,
-        ProviderTyEnum::Google,
-        google_info.sub.clone().as_str(),
-        
-    ).await?;
-
-    // 미가입 상태는 가입시켜준다.
-    let user = match user_select {
-        Some(user) => {
-            repositories::user::update_user_provider_by_sn(&mut tx, args.provider_access_token, None, args.info, user.sn).await?;
-            user
-        },
-        None => {
-            let mut nick_name = google_info.name.clone().unwrap();
-            let is_nick_error = google_info.validate().is_err();
-            if is_nick_error {
-                let rand_alpha = utils::rand::generate_alphanumeric_code(4);
-                nick_name = format!("User_{rand_alpha}");
-            }
-            
-            // 가입되어 있지 않은 상태, 가입처리
-            for i in 0..=4 {
-                let nick_is_some = super::user::nick_name_is_some(&mut tx, &nick_name).await?;
-                if nick_is_some {
-                    // 닉네임 변경 필요
-                    let rand_alpha = utils::rand::generate_alphanumeric_code(4);
-                    nick_name = format!("User_{rand_alpha}");
-                } else {
-                    break
-                }
-                if i == 4 {
-                    Err(UserError::NickNameExists)?;
-                }
-            }
-
-            let sequence = repositories::user::select_next_user_seq(&mut tx).await?;
-            let user_sn = sequence.nextval as i32;
-            
-            let user = repositories::user::insert_user(
-                &mut tx,
-                InsertUserArgs {
-                    avatar_url: google_info.picture.as_deref(),
-                    email: google_info.email.as_deref(),
-                    nick_name: &nick_name,
-                    password: None,
-                    user_sn,
-                    provider_access_token: args.provider_access_token,
-                    provider_refresh_token: args.provider_refresh_token,
-                    provider_etc: Some(args.info),
-                    provider_id: google_info.sub.as_str(),
-                    provider_ty_enum: ProviderTyEnum::Google,
-                    user_stt_enum: UserSttEnum::Ok,
-                }
-            ).await?;
-
-            user
-        }
-    };
-
+    let user = social_login_user_validate_process::<GoogleOauth2UserInfo>(&mut tx, ProviderTyEnum::Google, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
@@ -132,16 +69,46 @@ pub async fn auth_google_request<'a>(
 /// 네이버 소셜 로그인 처리
 pub async fn auth_naver_request<'a>(
     mut conn: PoolConnection<Postgres>,
-    args: NaverLoginArgs<'a>
+    args: SocialLoginArgs<'a>
 ) -> Result<AuthResult, ServiceLayerError> {
-    let naver_info = serde_json::from_value::<NaverOauth2UserInfo>(args.info.clone())?;
-
     let mut tx = repositories::tx::begin(&mut conn).await?;
+
+    let user = social_login_user_validate_process::<NaverOauth2UserInfo>(&mut tx, ProviderTyEnum::Naver, args.clone()).await?;
+    let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
+
+    repositories::tx::commit(tx).await?;
+    
+    Ok(auth_result)
+}
+
+/// 깃허브 소셜 로그인 처리
+pub async fn auth_github_request<'a>(
+    mut conn: PoolConnection<Postgres>,
+    args: SocialLoginArgs<'a>
+) -> Result<AuthResult, ServiceLayerError> {
+    let mut tx = repositories::tx::begin(&mut conn).await?;
+
+    let user = social_login_user_validate_process::<GithubOauth2UserInfo>(&mut tx, ProviderTyEnum::Github, args.clone()).await?;
+    let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
+
+    repositories::tx::commit(tx).await?;
+
+    Ok(auth_result)
+}
+
+async fn social_login_user_validate_process<'a, T>(
+    mut tx: &mut PgConnection,
+    provider_ty: ProviderTyEnum,
+    args: SocialLoginArgs<'a>
+) -> Result<User, ServiceLayerError>
+    where T: SocaliLoginValidateProcess + DeserializeOwned + Validate
+{
+    let info = serde_json::from_value::<T>(args.info.clone())?;
 
     let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
-        ProviderTyEnum::Naver,
-        naver_info.id.clone().as_str(),
+        provider_ty.clone(),
+        &info.get_id(),
     ).await?;
     
     // 미가입 상태는 가입시켜준다.
@@ -151,14 +118,14 @@ pub async fn auth_naver_request<'a>(
             user
         },
         None => {
-            let mut nick_name = match naver_info.nickname.clone() {
+            let mut nick_name = match info.get_nick_name() {
                 Some(n) => n,
                 None => {
                     let rand_alpha = utils::rand::generate_alphanumeric_code(4);
                     format!("User_{rand_alpha}")
                 }
             };
-            let is_nick_error = naver_info.validate().is_err();
+            let is_nick_error = info.validate().is_err();
             if is_nick_error {
                 let rand_alpha = utils::rand::generate_alphanumeric_code(4);
                 nick_name = format!("User_{rand_alpha}");
@@ -185,16 +152,16 @@ pub async fn auth_naver_request<'a>(
             let user = repositories::user::insert_user(
                 &mut tx,
                 InsertUserArgs {
-                    avatar_url: naver_info.profile_image.as_deref(),
-                    email: naver_info.email.as_deref(),
+                    avatar_url: info.get_avatar_url().as_deref(),
+                    email: info.get_email().as_deref(),
                     nick_name: &nick_name,
                     user_sn: user_sn,
                     password: None,
                     provider_access_token: args.provider_access_token,
                     provider_refresh_token: args.provider_refresh_token,
                     provider_etc: Some(args.info),
-                    provider_id: &naver_info.id,
-                    provider_ty_enum: ProviderTyEnum::Naver,
+                    provider_id: &info.get_id(),
+                    provider_ty_enum: provider_ty,
                     user_stt_enum: UserSttEnum::Ok
                 }
             ).await?;
@@ -202,16 +169,7 @@ pub async fn auth_naver_request<'a>(
         }
     };
 
-    let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
-
-    repositories::tx::commit(tx).await?;
-    
-    Ok(auth_result)
-}
-
-/// 깃허브 소셜 로그인 처리
-pub async fn auth_github_request() -> Result<(String, String), ServiceLayerError> {
-    todo!()
+    Ok(user)
 }
 
 
