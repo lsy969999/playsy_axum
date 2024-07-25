@@ -7,16 +7,38 @@
 {% endblock %}
 
 {% block content %}
+
+<style>
+    #fildpond_avatar {
+        width: 200px;
+        height: 200px;
+    }
+</style>
+
+
     <main class="flex-grow flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 class="text-2xl font-bold mb-6 text-center">나의 정보</h2>
             <div class="flex flex-col items-center mb-4">
                 {% if let Some(avatar_url) = user.avatar_url %}
-                    <img src="{{ avatar_url }}" alt="Avatar" class="rounded-full mb-4">
+                    <img id="myavatar" width="200px" height="200px" src="{{ avatar_url }}" alt="Avatar" class="rounded-full mb-4">
                 {% else %}
-                    <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Avatar" class="rounded-full mb-4">
+                    <img id="myavatar" width="200px" height="200px" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Avatar" class="rounded-full mb-4">
                 {% endif %}
-                <button class="bg-gray-500 text-white py-1 px-3 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">아바타 변경</button>
+
+                <!-- <form hx-post="/user/avatar_update" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" accept="image/*" />
+                    <input type="submit" value="Upload files">
+                </form> -->
+                <!-- We'll transform this input into a pond -->
+                <input id="fildpond_avatar"
+                        type="file" 
+                        style="width: 200px; height: 200px;"
+                        class="filepond hidden"
+                        name="filepond"
+                        accept="image/png, image/jpeg, image/gif"/>
+                <!-- <div style="width: 100px; height: 100px; background-color: gray;" class="my-dropzone"></div> -->
+                <button id="avatar_change_btn" class="bg-gray-500 text-white py-1 px-3 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">아바타 변경</button>
             </div>
             <div class="mb-4">
                 <div
@@ -133,7 +155,91 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+
+
+{% block additional_head %}
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+    <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet" />
+{% endblock %}
+
+
+
+
+{% block additional_script %}
+    <script src="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-encode/dist/filepond-plugin-file-encode.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-resize/dist/filepond-plugin-image-resize.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+
+
+    <script>
+        FilePond.registerPlugin(
+            FilePondPluginFileValidateType,
+            FilePondPluginImageExifOrientation,
+            FilePondPluginImagePreview,
+            FilePondPluginImageCrop,
+            FilePondPluginImageResize,
+            FilePondPluginImageTransform,
+            FilePondPluginImageEdit
+        );
+        const pond = FilePond.create(
+            document.querySelector('#fildpond_avatar'),
+            {
+                allowFileMetadata: false,
+                fileMetadataObject: null,
+                labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
+                imagePreviewHeight: 170,
+                imageCropAspectRatio: '1:1',
+                imageResizeTargetWidth: 200,
+                imageResizeTargetHeight: 200,
+                stylePanelLayout: 'compact circle',
+                styleLoadIndicatorPosition: 'center bottom',
+                styleProgressIndicatorPosition: 'right bottom',
+                styleButtonRemoveItemPosition: 'left bottom',
+                styleButtonProcessItemPosition: 'right bottom',
+                instantUpload: false,
+                server: {
+                    url: '/user/avatar_update',
+                    process: {
+                        data: null
+                    },
+                    metadataObject: {} // 빈 객체로 설정하여 불필요한 메타데이터 업로드 방지
+                },
+            }
+        );
+
+        pond.on('processfile', (error, file) => {
+            console.log(file)
+            if (!error) {
+                console.log('File uploaded successfully');
+            } else {
+                console.error(error)
+            }
+            location.reload();
+        });
+
+        const acbtn = document.querySelector('#avatar_change_btn');
+        acbtn.addEventListener('click', (e) => {
+            if (e.target.textContent.trim() === '아바타 변경') {
+                e.target.textContent = '취소'
+                document.querySelector('#myavatar').classList.add('hidden')
+                document.querySelector('#fildpond_avatar').classList.remove('hidden')
+            } else {
+                e.target.textContent = '아바타 변경'
+                document.querySelector('#myavatar').classList.remove('hidden')
+                document.querySelector('#fildpond_avatar').classList.add('hidden')
+            }
+            
+        })
+    </script>
     <script>
         function openModal() {
             document.getElementById('modal').classList.remove('hidden');
@@ -147,9 +253,6 @@
             const checkbox = document.getElementById('confirmCheckbox');
             if (checkbox.checked) {
                 htmx.ajax('POST', '/user/withdrawl')
-                // 탈퇴 로직 추가
-                //alert('탈퇴가 완료되었습니다.');
-                //closeModal();
             } else {
                 alert('탈퇴 확인 체크박스를 선택해주세요.');
             }

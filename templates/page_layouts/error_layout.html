@@ -4,6 +4,7 @@
         <link rel="icon" href="/static/img/faviconf/favicon.ico">
         <title>{% block title %}Error{% endblock %}</title>
         {% include "page_layouts/blocks/default_css.html" %}
+        {% block additional_head %} {% endblock %}
     </head>
     <body
         class="flex flex-col min-h-screen bg-gray-100">
@@ -70,5 +71,6 @@
         </footer>
         
         {% include "page_layouts/blocks/default_script.html" %}
+        {% block additional_script %} {% endblock %}
     </body>
 </html>

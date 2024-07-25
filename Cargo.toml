@@ -9,7 +9,7 @@ exclude = [
 ]
 
 [dependencies]
-axum = { version = "0.7.5", features = ["ws"] }
+axum = { version = "0.7.5", features = ["http2", "ws", "multipart"] }
 axum-extra = { version = "0.9.3", features = ["cookie", "typed-header"] } # 쿠키, 헤더추출
 time = "0.3.36" # extra Duration 시 사용
 tower = { version = "0.4.13", features = ["full"] }
@@ -75,6 +75,9 @@ redis = "0.25.4"
 
 # uuid
 uuid = "1.10.0"
+
+# base 64
+base64 = "0.22.1"
 
 # compile time check perf up
 [profile.dev.package.sqlx-macros]

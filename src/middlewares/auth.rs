@@ -5,6 +5,7 @@ use hyper::StatusCode;
 use jsonwebtoken::{decode, Validation};
 use sqlx::PgConnection;
 use time::{Duration, OffsetDateTime};
+use base64::prelude::*;
 use crate::{configs::consts::{ACCESS_TOKEN, REFRESH_TOKEN, USER_INFO}, extractors::database_connection::DatabaseConnection, models::claims::{AccessClaims, RefreshClaims}, repositories::{self}, utils};
 
 /// 이 미들웨어는 헤더에 유저값 세팅만 관여한다. 에러반환은 하지 않는다.
@@ -63,10 +64,12 @@ fn process_access_token(
                 let acc_keys = utils::config::get_config_jwt_access_keys();
                 let acc_decode = decode::<AccessClaims>(acc_tk.value(), &acc_keys.decoding, &Validation::default())?;
                 let str = serde_json::to_string(&acc_decode.claims)?;
-                // Some(str)
+                // to_string 하면 한글같은경우 ascill 가 아닌문자열로바뀌는데 그게 Headervalue에서 pare할때 에러가난다. 그래서 base64
+                let str = BASE64_STANDARD.encode(str.as_bytes());
+                
                 let hv: HeaderValue = str.parse()?;
                 req.headers_mut().insert(USER_INFO, hv);
-                // true
+                
                 true
             }
             None => false
@@ -96,6 +99,7 @@ async fn process_refresh_token(
                         let access_claims = AccessClaims::new(rtu.user_sn.to_string(), now + Duration::seconds(acc_exp), now, None, rtu.nick_name, rtu.avatar_url);
                         
                         let str = serde_json::to_string(&access_claims)?;
+                        let str = BASE64_STANDARD.encode(str.as_bytes());
                         req.headers_mut().insert(USER_INFO, str.parse()?);
     
                         let reissued_token = utils::jwt::generate_jwt(&access_claims, &acc_keys.encoding)?;

@@ -4,6 +4,7 @@
         <link rel="icon" href="/static/img/faviconf/favicon.ico">
         <title>{% block title %}My Application{% endblock %}</title>
         {% include "page_layouts/blocks/default_css.html" %}
+        {% block additional_head %} {% endblock %}
     </head>
     <body
         x-data="{
@@ -120,5 +121,6 @@
         </footer>
         
         {% include "page_layouts/blocks/default_script.html" %}
+        {% block additional_script %} {% endblock %}
     </body>
 </html>

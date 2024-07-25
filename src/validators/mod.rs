@@ -45,6 +45,16 @@ pub fn pass_vali_1_num(password: &str) -> Result<(), ValidationError>{
     Ok(())
 }
 
+pub fn only_ascii(input: &str) -> Result<(), ValidationError> {
+    if input.chars().any(|c| !c.is_ascii()) {
+        let code = "pv4";
+        let m = "아스키문자만 가능 합니다.";
+        Err(ValidationError::new(code).with_message(Cow::Borrowed(m)))?;
+    }
+
+    Ok(())
+}
+
 pub fn pass_vali_special_char(password: &str) -> Result<(), ValidationError>{
     // Password must contain at least one special character
     let code = "pv5";

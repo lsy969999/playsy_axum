@@ -1,5 +1,8 @@
-use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
+use std::{env, fs::File, io::Write, path::Path};
+
+use axum::{extract::{multipart::Field, Multipart, Query}, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::CookieJar;
+use uuid::Uuid;
 use validator::ValidateArgs;
 use crate::{configs::errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage}, models::request::user::{JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, NickNameUpdateDto}, responses::html_template::HtmlTemplate, services, templates::user::{JoinFormFragment, JoinSuccessFragment, JoinTemplate, MyPageTemplate}, utils, validators::JoinReqValiContext};
 
@@ -17,6 +20,7 @@ pub async fn nick_validate(
     DatabaseConnection(mut conn): DatabaseConnection,
     Query(query): Query<JoinNickNameReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    tracing::debug!("nick: {:?}", query.nick_name);
     let nick_name_is_some = services::user::nick_name_is_some(&mut conn, &query.nick_name).await?;
     let val_ctx = JoinReqValiContext::new(nick_name_is_some, false); // email_is_some 강제로 넣어준다. 이건 Nick_chk니까
     if let Err(error) = query.validate_with_args(&val_ctx) {
@@ -137,6 +141,54 @@ pub async fn user_nick_name_update(
     let _ = services::user::update_user_nick_name(conn, user_info.user_sn, &query.nick_name).await;
 
     // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 닉네임이 업데이트 될것임
+    let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+    Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
+}
+
+///todo:!
+/// 1. local fs 가 아닌 s3 같은 외부 저장소에 저장하기
+/// 2. 마임타임 체크
+/// 3. 멀티파트사이즈체크
+pub async fn user_avatar_update(
+    jar: CookieJar, 
+    DatabaseConnection(conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+    mut multipart: Multipart,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let uuid = user_info.user_sn;
+    let mut f_name = String::new();
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        let file_name = field.file_name().unwrap_or("file").to_string();
+        let extension = Path::new(&file_name)
+            .extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .unwrap_or("");
+        let new_file_name = if extension.is_empty() {
+            format!("{}", uuid.clone())
+        } else {
+            let a = format!("{}.{}", uuid, extension);
+            f_name.push_str(&a.clone());
+            a
+        };
+        let data = field.bytes().await.unwrap();
+
+
+        let current_dir = env::current_dir().unwrap();
+        let os_str = current_dir.as_os_str().to_str().unwrap();
+        let dir_path = format!("{os_str}/static/img/avatars");
+        if !Path::new(&dir_path).exists() {
+            std::fs::create_dir_all(&dir_path).unwrap();
+        }
+        let file_path = format!("{dir_path}/{}", new_file_name);
+        let mut file = File::create(&file_path).unwrap();
+        file.write_all(&data).unwrap();
+    }
+
+    if !f_name.is_empty() {
+        let _ = services::user::update_user_avatar_url(conn, user_info.user_sn, &format!("http://localhost:4000/static/img/avatars/{f_name}")).await;
+    }
+
+    // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 아바타 업데이트 될것임
     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
     Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
 }

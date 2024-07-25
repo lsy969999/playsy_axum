@@ -137,3 +137,8 @@ pub async fn update_user_nick_name(mut conn: PoolConnection<Postgres>, user_sn: 
     repositories::user::update_user_nick_name_by_sn(&mut conn, user_sn, nick_name).await?;
     Ok(())
 }
+
+pub async fn update_user_avatar_url(mut conn: PoolConnection<Postgres>, user_sn: i32, avatar_url: &str) -> Result<(), ServiceLayerError> {
+    repositories::user::update_user_avatar_url_by_sn(&mut conn, user_sn, avatar_url).await?;
+    Ok(())
+}
