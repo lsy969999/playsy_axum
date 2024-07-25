@@ -21,10 +21,15 @@ pub fn decode_jwt<T>(
     Ok(token_data.claims)
 }
 
-pub fn generate_access_token(args: GenAccessTokenArgs) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn generate_accesss_claim(args: GenAccessTokenArgs) -> AccessClaims {
     let now: OffsetDateTime = OffsetDateTime::now_utc();
     let acc_exp = *super::config::get_config_jwt_access_time();
     let access_claims = AccessClaims::new(args.user_sn, now + Duration::seconds(acc_exp), now, None, args.nick_name, args.avatar_url);
+    access_claims
+}
+
+pub fn generate_access_token(args: GenAccessTokenArgs) -> Result<String, jsonwebtoken::errors::Error> {
+    let access_claims = generate_accesss_claim(args);
     let acc = super::config::get_config_jwt_access_keys();
     let access_token = generate_jwt(&access_claims, &acc.encoding)?;
     Ok(access_token)
