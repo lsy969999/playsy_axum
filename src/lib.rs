@@ -3,7 +3,7 @@ use axum::{extract::OriginalUri, middleware::{self}, response::IntoResponse, rou
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
 use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}};
-use controller::routes::{auth::get_auth_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
+use controller::routes::{auth::get_auth_router, board::get_board_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use hyper::StatusCode;
 use listenfd::ListenFd;
 use middlewares::etc::{add_original_content_length, htmx_hx_header_pass};
@@ -66,6 +66,7 @@ pub async fn play_sy_main() {
         .nest("/", get_user_router(arc_app_state.clone()))
         .nest("/", get_game_router(arc_app_state.clone()))
         .nest("/", get_chat_router(arc_app_state.clone()))
+        .nest("/", get_board_router(arc_app_state.clone()))
         .with_state(arc_app_state.clone())
         .layer(
             ServiceBuilder::new()

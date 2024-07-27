@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    </style>
+</head>
+<body
+    x-data="{
+        drop_down: false,
+        side_open: false,
+    }"
+    class=" bg-gray-50"
+>
+    <header>
+        <nav
+            class=" fixed w-full bg-white border-b-2 border-slate-400"
+        >
+            <div class="mx-auto max-w-screen-xl flex flex-row  p-2">
+                <button  x-on:click="side_open = !side_open" class="sm:hidden p-2 mx-2 hover:bg-gray-200 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                </button>
+                    
+                <button class="flex-none p-2 bg-gray-100 rounded-lg hover:bg-gray-300"> Playsy</button>
+                <div class="flex-1 flex flex-row justify-end">
+                    <!-- When logout -->
+                    <!-- <button class="mr-4 border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Log in</button> -->
+                    <!-- <button
+                        class="border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Create account</button> -->
+        
+                    <!-- When login -->
+                        <!-- <button
+                            x-on:click.outside="drop_down = false"
+                            x-on:click="drop_down = !drop_down; side_open = false;"
+                            
+                            class="p-1 rounded-full hover:bg-gray-200 focus:outline-dashed"
+                        >
+                        <img class="rounded-full w-8 h-8 " src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
+                        </button> -->
+        
+                        <!-- drop down menu -->
+                        <div
+                            x-bind:class="drop_down ? '' : 'hidden'"
+                            class="absolute top-16 rounded-md sm:right-2 bg-gray-300 w-5/6 sm:w-64 "
+                        >
+                            <div class="flex flex-col divide-y m-2 ">
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    NickName
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    My Page
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    Sign out
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="mx-auto max-w-screen-sm flex flex-col pt-14">
+        <div class="mt-8 p-2 bg-white rounded-md border">
+            <div class="bg-red-200  m-2 p-2">
+                <div>Whoops, we found 2 problems</div>
+                <div>Passdfsadf</div>
+                <div>emadfsdfsdf</div>
+            </div>
+
+            <div class="m-2 py-4">
+                <span class="text-md font-bold">Create your account</span>
+            </div>
+    
+            <div class="m-2 py-4 flex flex-col ">
+                <label>Profile image</label>
+                <div class="border p-4 rounded-md">
+                    <input class="w-full file:bg-gray-300 file:px-4 file:py-2 file:rounded-md file:border-0 file:hover:bg-gray-400" type="file" />
+                </div>
+            </div>
+            <div class="m-2  flex flex-col">
+                <label for="">NickName <span class="text-red-500">*</span></label>
+                <input class="border rounded-md p-2" type="text"/>
+            </div>
+            
+            <div class="m-2  flex flex-col">
+                <label for="">Email <span class="text-red-500">*</span></label>
+                <input class="border rounded-md p-2" type="text"/>
+            </div>
+    
+            <div class="m-2 flex flex-col">
+                <label for="">Password <span class="text-red-500">*</span></label>
+                <input class="border rounded-md p-2" type="text"/>
+            </div>
+    
+            <div class="m-2 flex flex-col">
+                <label for="">Password Confirmation <span class="text-red-500">*</span></label>
+                <input class="border rounded-md p-2" type="text"/>
+            </div>
+    
+            <div class="mt-4 ">
+                <button class="m-2 bg-indigo-500 hover:bg-indigo-600 rounded-md px-4 py-2 text-white">Sign up</button>
+            </div>
+        </div>
+        <div class="h-10"></div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.1/cdn.min.js" integrity="sha512-ytM6hP1K9BkRTjUQZpxZKFjJ2TvE4QXaK7phVymsm7NimaI5H09TWWW6f2JMbonLp4ftYU6xfwQGoe3C8jta9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</body>
+</html>
