@@ -10,11 +10,6 @@ pub fn get_user_router(state: ArcAppState) -> Router<ArcAppState> {
 
 fn get_user_page_router(state:ArcAppState ) -> Router<ArcAppState> {
     Router::new()
-        .route(
-            "/join",
-            get(page::user::join_page)
-                .post(page::user::join_request),
-        )
         .route("/join_email", get(page::user::join_email_page)
                             .post(page::user::email_join_request))
         .route("/join_email_success", get(join_email_success_page))
