@@ -5,50 +5,65 @@
 {% endblock %}
 
 {% block content %}
-    <main class="flex-grow flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-            <h2 class="text-2xl font-bold mb-6 text-center">로그인</h2>
-            {{ auth_form|safe }}
-            <div class="mt-6">
-                <a href="/user/join">
-                    <button class="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">이메일 가입</button>
-                </a>
+    <section id="err-div" class="w-full">
+    </section>
+
+    <div class="mt-8">
+        <span class="font-bold text-lg">Join the Playsy</span>
+    </div>
+
+    <div class="flex flex-col w-full m-2">
+        <button
+            x-on:click="location.href='/auth/kakao/login'"
+            class="bg-yellow-400 hover:bg-yellow-500 border-2 rounded-md mt-2 p-2 ">
+            <img/>
+            <span>Continue with Kakao</span>
+        </button>
+        <button
+            x-on:click="location.href='/auth/naver/login'"
+            class="bg-green-400 hover:bg-green-500 border-2 rounded-md mt-2 p-2 ">
+            <img />
+            <span>Continue with Naver</span>
+        </button>
+        <button
+            x-on:click="location.href='/auth/google/login'"
+            class="bg-red-400 hover:bg-red-500 border-2 rounded-md mt-2 p-2">
+            Continue with Google
+        </button>
+        <button
+            x-on:click="location.href='/auth/github/login'"
+            class="bg-gray-600 hover:bg-gray-700 border-2 rounded-md mt-2 p-2">
+            Continue with Github
+        </button>
+    </div>
+    <div class="relative w-full h-16">
+        <hr class="absolute border w-full top-1/2 ">
+        <div class="absolute  left-1/2 w-10 -translate-x-1/2 inset-y-0 bg-white flex justify-center items-center">OR</div>
+    </div>
+    <div class="w-full">
+        <form 
+            hx-post="/auth/email/login"
+            hx-target="#err-div"
+        >
+            <input type="hidden" name="authenticity_token" value="{{ authenticity_token }}"/>
+            <div class="flex flex-col">
+                <label> Email </label>
+                <input name="email" class="border rounded-md p-2" type="email">
             </div>
-            <div class="flex items-center justify-center my-4">
-                <hr class="w-full border-gray-300">
-                <span class="px-2 text-gray-500">OR</span>
-                <hr class="w-full border-gray-300">
+            <div class="flex flex-col">
+                <label> Password </label>
+                <input name="password" class="border rounded-md p-2" type="password">
             </div>
-            <div class="mt-6">
-                <a href="/auth/google/login">
-                    <button class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">Google로 로그인</button>
-                </a>
+            <div class="flex justify-end m-2">
+                <span class="text-indigo-500">Forgot Password?</span>
             </div>
-            <div class="mt-6">
-                <a href="/auth/naver/login">
-                    <button class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Naver로 로그인</button>
-                </a>
+            <div class="flex ">
+                <button type="submit" class="w-full p-2 rounded-md text-white bg-indigo-500 hover:bg-indigo-600">Log in</button>
             </div>
-            <div class="mt-6">
-                <a href="/auth/kakao/login">
-                    <button class="w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">Kakao로 로그인</button>
-                </a>
-            </div>
-            <div class="mt-6">
-                <a href="/auth/github/login">
-                    <button class="w-full bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Github로 로그인</button>
-                </a>
-            </div>
-            <!-- <div class="mt-6">
-                <a href="/auth/apple/login">
-                    <button class="w-full bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Apple 로그인</button>
-                </a>
-            </div>
-            <div class="mt-6">
-                <a href="/auth/discord/login">
-                    <button class="w-full bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Discord 로그인</button>
-                </a>
-            </div> -->
+        </form>
+        <hr class="border w-full mt-4"/>
+        <div class="flex justify-center mt-4">
+            <span>New to Playsy?</span> <a href="/auth/signup" class="text-indigo-500">Create account</a>
         </div>
-    </main>
+    </div>
 {% endblock %}

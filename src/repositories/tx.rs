@@ -1,7 +1,7 @@
-use sqlx::{pool::PoolConnection, Acquire, Postgres, Transaction};
+use sqlx::{Acquire, PgConnection, Postgres, Transaction};
 use crate::configs::errors::app_error::RepositoryLayerError;
 
-pub async fn begin(conn: &mut PoolConnection<Postgres>)
+pub async fn begin(conn: &mut PgConnection)
     -> Result<Transaction<Postgres>, RepositoryLayerError > {
     Ok(conn.begin().await?)
 }

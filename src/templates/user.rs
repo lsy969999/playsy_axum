@@ -1,5 +1,5 @@
 use askama::Template;
-use crate::configs::askama_filters as filters;
+use super::filters;
 use crate::models::entities::user::User;
 use crate::models::user_info::UserInfo;
 use crate::models::entities::user::ProviderTyEnum;
@@ -39,6 +39,26 @@ impl Default for JoinFormFragment {
         Self { nick_name_value: None, email_value: None, pass_value: None, nick_name_err_msg: None, email_err_msg: None, pass_err_msg: None }
     }
 }
+
+#[derive(Template)]
+#[template(path="pages/join_email.html")]
+pub struct JoinEmailTemplate {
+    pub user_info: Option<UserInfo>,
+}
+
+#[derive(Template)]
+#[template(path="fragments/join_email_error.html")]
+pub struct JoinEmailErrorFragment {
+    pub msgs: Vec<String>
+}
+
+
+#[derive(Template)]
+#[template(path="pages/join_social.html")]
+pub struct JoinSocialTemplate {
+    pub user_info: Option<UserInfo>,
+}
+
 #[derive(Template)]
 #[template(path="pages/mypage.html")]
 pub struct MyPageTemplate {
@@ -49,3 +69,10 @@ pub struct MyPageTemplate {
 #[derive(Template)]
 #[template(path="fragments/join_success.html")]
 pub struct JoinSuccessFragment;
+
+
+#[derive(Template)]
+#[template(path="pages/join_email_success.html")]
+pub struct JoinEamilSuccessTemplate {
+    pub user_info: Option<UserInfo>,
+}

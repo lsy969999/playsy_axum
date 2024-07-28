@@ -50,11 +50,15 @@ impl IntoResponse for PageHandlerLayerError {
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
         };
-        HtmlTemplate(
-            ErrorTemplate {
-                error_code: statue.to_string(),
-                error_message: error_message.to_string(),
-            }
+        (
+            statue,
+            [("x-hr-err-msg", error_message)],
+            HtmlTemplate(
+                ErrorTemplate {
+                    error_code: statue.to_string(),
+                    error_message: error_message.to_string(),
+                }
+            )
         ).into_response()
     }
 }

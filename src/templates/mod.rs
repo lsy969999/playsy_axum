@@ -5,3 +5,4 @@ pub mod game;
 pub mod home;
 pub mod chat;
 pub mod board;
+pub mod filters;

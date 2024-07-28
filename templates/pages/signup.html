@@ -1,0 +1,44 @@
+{% extends "page_layouts/auth_layout.html" %}
+
+{% block title %}
+    Auth
+{% endblock %}
+
+{% block content %}
+    <section id="err-div" class="w-full">
+    </section>
+
+    <div class="mt-8">
+        <span class="font-bold text-lg">Join the Playsy</span>
+    </div>
+
+    <div class="flex flex-col w-full m-2">
+        <button
+            x-on:click="location.href='/auth/kakao/login'"
+            class="bg-yellow-400 hover:bg-yellow-500 border-2 rounded-md mt-2 p-2 ">
+            <img/>
+            <span>Sign up with Kakao</span>
+        </button>
+        <button
+            x-on:click="location.href='/auth/naver/login'"
+            class="bg-green-400 hover:bg-green-500 border-2 rounded-md mt-2 p-2 ">
+            <img />
+            <span>Sign up with Naver</span>
+        </button>
+        <button
+            x-on:click="location.href='/auth/google/login'"
+            class="bg-red-400 hover:bg-red-500 border-2 rounded-md mt-2 p-2">
+            Sign up with Google
+        </button>
+        <button
+            x-on:click="location.href='/auth/github/login'"
+            class="bg-gray-600 hover:bg-gray-700 border-2 rounded-md mt-2 p-2">
+            <span>Sign up with Github</span>
+        </button>
+        <button
+            x-on:click="location.href='/user/join_email'"
+            class="bg-white hover:bg-gray-100 border-2 rounded-md mt-2 p-2">
+            <span>Sign up with Email</span>
+        </button>
+    </div>
+{% endblock %}

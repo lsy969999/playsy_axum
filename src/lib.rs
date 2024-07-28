@@ -1,8 +1,8 @@
 use std::{net::SocketAddr, time::Duration};
-use axum::{extract::OriginalUri, middleware::{self}, response::IntoResponse, routing::get};
+use axum::{extract::{OriginalUri, Request}, middleware::{self}, response::{IntoResponse, Response}, routing::get};
 use axum_csrf::{CsrfConfig, Key};
 use bb8_redis::RedisConnectionManager;
-use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}};
+use configs::{app_config::APP_CONFIG, app_state::{AppState, ArcAppState}, aws::init_s3_client};
 use controller::routes::{auth::get_auth_router, board::get_board_router, chat::get_chat_router, game::get_game_router, home::get_home_router, openapi::get_openapi_route, user::get_user_router };
 use hyper::StatusCode;
 use listenfd::ListenFd;
@@ -11,9 +11,9 @@ use responses::html_template::HtmlTemplate;
 use templates::error::ErrorTemplate;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
-use tracing::{debug, info};
+use tracing::{debug, info, Span};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tower_http::{compression::CompressionLayer, limit::RequestBodyLimitLayer, services::ServeDir, timeout::TimeoutLayer, trace::TraceLayer};
+use tower_http::{classify::ServerErrorsFailureClass, compression::CompressionLayer, limit::RequestBodyLimitLayer, services::ServeDir, timeout::TimeoutLayer, trace::TraceLayer};
 
 pub mod utils;
 pub mod configs;
@@ -53,8 +53,9 @@ pub async fn play_sy_main() {
     let redis_pool = bb8::Pool::builder().build(redis_manager).await.unwrap();
     let csrf_key = Key::from(&app_config.settings.app.csrf_key.as_bytes());
     let csrf_config = CsrfConfig::default().with_key(Some(csrf_key));
-    let app_state = AppState::new(db_pool, redis_pool, csrf_config);
-    debug!("app_state: {:?}", app_state);
+    let aws_s3_client = init_s3_client().await;
+    let app_state = AppState::new(db_pool, redis_pool, csrf_config, aws_s3_client);
+    // debug!("app_state: {:?}", app_state);
     let arc_app_state = ArcAppState::new(app_state);
 
     let app = axum::Router::new()
@@ -70,12 +71,30 @@ pub async fn play_sy_main() {
         .with_state(arc_app_state.clone())
         .layer(
             ServiceBuilder::new()
+                // 요청 로깅
+                .layer(
+                    TraceLayer::new_for_http()
+                    .on_request(|_request: &Request<_>, _span: &Span| {
+                        //TODO: 설정하지 않아도 될듯함
+                    })
+                    .on_response(|response: &Response, latency: Duration, _span: &Span| {
+                        if response.status().is_success() {
+                            tracing::debug!("response success latency: {:?}", latency);
+                        } else {
+                            tracing::warn!("response not sucess latency: {:?}, response: {:?}",  latency, response);
+                        }
+                    })
+                    .on_failure(
+                        |error: ServerErrorsFailureClass, latency: Duration, _span: &Span| {
+                            tracing::error!("on_failure!!!! latency:{:?}, error: {:?}", latency, error);
+                        },
+                    ),
+                )
                 .layer(middleware::from_fn(add_original_content_length))
                 .layer(middleware::from_fn(htmx_hx_header_pass))
-                // 요청 로깅
-                .layer(TraceLayer::new_for_http())
                 // 요청 바디 크기 제한 (1MB)
                 .layer(RequestBodyLimitLayer::new(1024 * 1024))
+                // 타임아웃
                 .layer(TimeoutLayer::new(Duration::from_secs(5)))
                 // 압축스
                 // ios safari에서 gzip 사용하면 webkit error가 발생함;; 일단 nogzip으로 가자고

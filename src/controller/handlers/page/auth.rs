@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::CookieJar, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, SocialLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthFormFragment, AuthTemplate}, utils};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, SocialLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthErrorFragment, AuthFormFragment, AuthTemplate, SignupPage}, utils};
 
 /// 로그인 페이지
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
@@ -13,17 +13,16 @@ pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
         token, 
         HtmlTemplate(
             AuthTemplate {
-                auth_form: AuthFormFragment {
-                    authenticity_token,
-                    email_value: None,
-                    pass_value: None,
-                    email_err_msg: None,
-                    pass_err_msg: None,
-                },
-                user_info: None,
+                authenticity_token
             }
         )
     ).into_response()
+}
+
+pub async fn signup_page() ->impl IntoResponse {
+    HtmlTemplate(
+        SignupPage
+    )
 }
 
 /// 로그아웃
@@ -74,16 +73,12 @@ pub async fn email_login(
                     }
                     _ => Err(err)?
                 };
-                let authenticity_token = csrf.authenticity_token().unwrap();
+                // let authenticity_token = csrf.authenticity_token().unwrap();
                 (
                     csrf,
                     HtmlTemplate(
-                        AuthFormFragment {
-                            authenticity_token,
-                            email_err_msg: None,
-                            email_value: None,
-                            pass_value: None,
-                            pass_err_msg: Some(msg.to_string())
+                        AuthErrorFragment {
+                            msg: msg.to_string()
                         }
                     )
                 ).into_response()

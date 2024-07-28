@@ -34,7 +34,7 @@ pub async fn htmx_hx_header_pass(
     let hx_headers = req.headers()
         .iter()
         .filter_map(|(k, v)| {
-            if k.as_str().starts_with("hx-") {
+            if k.as_str().starts_with("x-hx-") {
                 Some((k.clone(), v.clone()))
             } else {
                 None

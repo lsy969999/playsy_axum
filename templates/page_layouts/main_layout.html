@@ -1,53 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="kr">
     <head>
+        <meta charset="UTF-8">
         <link rel="icon" href="/static/img/faviconf/favicon.ico">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}My Application{% endblock %}</title>
         {% include "page_layouts/blocks/default_css.html" %}
         {% block additional_head %} {% endblock %}
     </head>
     <body
         x-data="{
-            menu_toggle: false,
-            err_modal_open: false,
-            err_modal_head: '',
-            err_modal_body: '',
+            drop_down: false,
+            side_open: false,
+            side_usage: {% block side_usage %} true {% endblock %},
         }"
         x-on:htmx:response-error="
             // 첫진입 깜빡임 제거
-            document.getElementById('error_modal').classList.remove('hidden');
-            console.error('htmx error!!', $event);
-            const responseJSON = JSON.parse($event.detail.xhr.responseText);
-            err_modal_head = '서버처리중 에러가 발생하였습니다.';
-            err_modal_body = responseJSON.error_message;
-            err_modal_open = true;
+            // document.getElementById('error_modal').classList.remove('hidden');
+            // console.error('htmx error!!', $event);
+            // const responseJSON = JSON.parse($event.detail.xhr.responseText);
+            // err_modal_head = '서버처리중 에러가 발생하였습니다.';
+            // err_modal_body = responseJSON.error_message;
+            // err_modal_open = true;
+            console.log($event);
+            const xhr = $event.detail.xhr;
+            let errorMsg = xhr.getResponseHeader('x-hr-err-msg');
+            console.error('errorMsg', errorMsg);
+            alert('서버처리중 에러가 발생하였습니다.')
         "
-        class="flex flex-col min-h-screen bg-gray-100">
-        <!-- Navbar -->
-        <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
-            <a href="/" >
-                <div class="text-xl font-bold">Playsy</div>
-            </a>
-            
-            <button
-                x-on:click="menu_toggle = !menu_toggle" 
-                id="menu-button" class="block sm:hidden text-white focus:outline-none">
-                ☰
-            </button>
-            <nav class="hidden sm:flex space-x-4">
-                <a href="/board" class="hover:bg-gray-700 px-3 py-2 rounded">Board</a>
-                <a href="/chat" class="hover:bg-gray-700 px-3 py-2 rounded">Chat</a>
-                <!-- 
-                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a> -->
-                <div id="auth-buttons" class="flex space-x-4">
-                    
-                    <!-- <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
-                    <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a> -->
-                    {% match user_info %}
-                        {% when Some with (user) %}
-                            <input id="user_nick_name" type="hidden" value="{{user.nick_name}}">
-                            <a href="/user/mypage" class="flex hover:bg-gray-700 px-3 py-2 rounded">
-                                <div class="flex items-center space-x-2">
+        class=" bg-gray-50"
+    >
+        <header>
+            <nav
+                class=" fixed w-screen bg-white border-b-2 border-slate-400"
+            >
+                <div class="mx-auto max-w-screen-xl flex flex-row  p-2">
+                    <button
+                        x-on:click="side_open = !side_open"
+                        class="sm:hidden p-2 mx-2 hover:bg-gray-200 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                    </button>
+                    <button x-on:click="location.href='/'" class="flex-none p-2 bg-gray-100 rounded-lg hover:bg-gray-300"> Playsy</button>
+                    <div class="flex-1 flex flex-row justify-end">
+                        {% match user_info %}
+                            {% when Some with (user) %}
+                                <input id="user_nick_name" type="hidden" value="{{user.nick_name}}">
+                                <!-- When login -->
+                                <button
+                                    x-on:click.outside="drop_down = false"
+                                    x-on:click="drop_down = !drop_down; side_open = false;"
+                                    
+                                    class="p-1 rounded-full hover:bg-gray-200 focus:outline-dashed"
+                                >
                                     {% if let Some(avatar_url) = user.avatar_url %}
                                         <img
                                         onerror="this.src='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'"
@@ -58,69 +64,96 @@
                                         class="w-8 h-8 rounded-full"
                                         src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
                                     {% endif %}
-                                    <p> {{ user.nick_name }} </p>
+                                </button>
+                
+                                <!-- drop down menu -->
+                                <div
+                                    x-bind:class="drop_down ? '' : 'hidden'"
+                                    class="absolute top-16 rounded-md  bg-gray-300 w-5/6 sm:w-64 "
+                                >
+                                    <div class="flex flex-col divide-y m-2 ">
+                                        <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                            NickName {{ user.nick_name }}
+                                        </div>
+                                        <div x-on:click="location.href='/user/mypage'" class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                            My Page
+                                        </div>
+                                        <div x-on:click="location.href='/auth/logout'" class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                            Sign out
+                                        </div>
+                                    </div>
                                 </div>
-                            </a>
-                            <a href="/auth/logout">
-                                <button class="border hover:bg-slate-500 px-3 py-2 rounded">로그아웃</button>
-                            </a>
-                        {% when None %}
-                            <a href="/auth" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
-                            <!-- <a href="/user/join" class="hover:bg-gray-700 px-3 py-2 rounded">가입</a> -->
-                    {% endmatch %}
+                            {% when None %}
+                                 <!-- When logout -->
+                                <button
+                                    x-on:click="location.href='/auth'"
+                                    class="mr-4 border-gray-300-400 border-2 rounded-sm p-1 text-black
+                                        hover:text-indigo-500 hover:underline text-nowrap">Log in</button>
+                                <button
+                                    x-on:click="location.href='/auth/signup'"
+                                    class="hidden sm:block border-gray-300-400 border-2 rounded-sm p-1 text-black
+                                        hover:text-indigo-500 hover:underline text-nowrap">Create account</button>
+                        {% endmatch %}
+                    </div>
                 </div>
             </nav>
         </header>
-        <!-- Sidebar -->
-        <div
-            x-bind:class="menu_toggle ? '' : '-translate-x-full'"
-            id="sidebar" class="fixed inset-y-0 left-0 bg-gray-800 text-white p-4 w-64 transform transition-transform duration-300 ease-in-out sm:hidden">
-            <nav class="flex flex-col space-y-4">
-                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Home</a>
-                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Products</a>
-                <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">Contact</a>
-                <div id="sidebar-auth-buttons" class="flex flex-col space-y-4">
-                    <!-- 로그인 상태에 따라 이 부분이 동적으로 변경됩니다. -->
-                    <a href="#" class="hover:bg-gray-700 px-3 py-2 rounded">로그인</a>
-                    <!-- 예: <p>닉네임: asdf</p><button class="border hover:bg-slate-200 px-3 py-2 rounded">로그아웃</button> -->
+        <!-- h-[calc(100vh-3.5rem)] -->
+        <section
+            x-bind:class="side_open ? 'bg-slate-500': ''"
+            class="mx-auto max-w-screen-xl flex pt-14"
+        >
+            <aside
+                id="side_bar"
+                x-bind:class="{
+                    'fixed w-2/3 h-screen block': side_open === true,
+                    'hidden': side_open === false,
+                    'sm:block': side_usage === true,
+                    'sm:hidden': side_usage === false,
+                }"
+                class=" w-1/3 bg-gray-200 top-14 overflow-auto">
+                <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="ml-2">공지사항</span>
                 </div>
-            </nav>
-        </div>
+                <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                    </svg>
+                    <span class="ml-2">게시판</span>
+                </div>
+                <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                    </svg>
+                    <span class="ml-2">문의</span>
+                </div>
+                <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+                    </svg>
+                    <span class="ml-2">About</span>
+                </div>
+            </aside>
 
-        <!-- Content -->
-        {% block content %}
-            <main class="flex-grow flex items-center justify-center">
+            <!-- 3.5rem = p-14, header + footer = 7rem -->
+            <main
+                x-on:click="side_open = false"
+                class="w-full min-h-[calc(100vh-7rem)]"
+            >
+            {% block content %}
                 hi
+            {% endblock %}
             </main>
-        {% endblock %}
-        
-        <!-- Modal -->
-        <div
-            x-bind:class="err_modal_open ? '' : 'hidden'"
-            id="error_modal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
-                <h2 x-text="err_modal_head" class="text-2xl font-bold mb-4">모달 제목</h2>
-                <p  x-text="err_modal_body" class="text-gray-700 mb-4">여기에는 모달의 내용이 들어갑니다. 추가적인 정보와 세부 사항을 포함할 수 있습니다.</p>
-                <div class="flex justify-end">
-                    <button
-                        x-on:click="err_modal_open = false"
-                        id="closeModal" class="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">닫기</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer class="bg-gray-800 text-white text-sm py-2 text-center mt-6">
-            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
-                <p class="mb-2 sm:mb-0">&copy; 2024 Playsy. All rights reserved.</p>
-                <nav class="flex space-x-2">
-                    <a href="/privacy" class="hover:underline">개인정보 처리방침</a>
-                    <!-- <span>|</span>
-                    <a href="/terms-of-service.html" class="hover:underline">이용 약관</a> -->
-                </nav>
+        </section>
+        <footer class=" mx-auto max-w-screen-xl">
+            <div class="flex flex-row justify-between bg-gray-100 p-4">
+                <span class="text-sm text-nowrap">개인정보 처리방침</span>
+                <span class="text-sm text-nowrap">2024 Playsy. All rights reserved.</span>
             </div>
         </footer>
-        
         {% include "page_layouts/blocks/default_script.html" %}
         {% block additional_script %} {% endblock %}
     </body>

@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use axum_typed_multipart::FieldData;
 use regex::Regex;
 use validator::ValidationError;
 
@@ -66,6 +67,15 @@ pub fn pass_vali_special_char(password: &str) -> Result<(), ValidationError>{
     Ok(())
 }
 
+pub fn pass_vali_password_confirmation(password: &str, ctx: &JoinReqValiContext) -> Result<(), ValidationError> {
+    let code = "pv6";
+    let m = "비밀번호와 비밀번호 확인이 일치하지 않습니다.";
+    if password != ctx.password {
+        Err(ValidationError::new(code).with_message(Cow::Borrowed(m)))?;
+    }
+    Ok(())
+}
+
 pub fn nick_name_vali_dup_chk(_nick_name: &str, ctx: &JoinReqValiContext) -> Result<(), ValidationError> {
     if ctx.nick_name_is_some {
         let code = "nnv1";
@@ -95,15 +105,23 @@ pub fn email_vali_dup_chk(_nick_name: &str, ctx: &JoinReqValiContext) -> Result<
     Ok(())
 }
 
+// pub fn profile_image_chk(profile_image: &FieldData<axum::body::Bytes>) -> Result<(), ValidationError> {
+//     Ok(())
+// }
+
 pub struct JoinReqValiContext {
     pub nick_name_is_some: bool,
     pub email_is_some: bool,
+    pub profile_is_image: bool,
+    pub password: String,
 }
 impl JoinReqValiContext {
-    pub fn new(nick_name_is_some: bool, email_is_some: bool) -> Self {
+    pub fn new(nick_name_is_some: bool, email_is_some: bool, password: String, profile_is_image: bool) -> Self {
         Self {
             nick_name_is_some,
-            email_is_some
+            email_is_some,
+            password,
+            profile_is_image,
         }
     }
 }

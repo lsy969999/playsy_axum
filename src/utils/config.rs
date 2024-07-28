@@ -1,4 +1,4 @@
-use crate::{configs::app_config::{Oauth2Settings, SmtpSettings, APP_CONFIG}, models::jwt_keys::{Access, JwtKeys, Refresh}};
+use crate::{configs::app_config::{AwsSettings, Oauth2Settings, SmtpSettings, APP_CONFIG}, models::jwt_keys::{Access, JwtKeys, Refresh}};
 
 pub fn get_config_jwt_access_keys() -> &'static JwtKeys<Access> {
     &APP_CONFIG.get().unwrap().jwt_access_keys
@@ -22,4 +22,12 @@ pub fn get_config_jwt_refresh_time() -> &'static i64 {
 
 pub fn get_config_oauth2() -> &'static Oauth2Settings {
     &APP_CONFIG.get().unwrap().settings.oauth2
+}
+
+pub fn is_prd() -> &'static bool {
+    &APP_CONFIG.get().unwrap().settings.app.is_prd
+}
+
+pub fn get_config_aws() -> &'static AwsSettings {
+    &APP_CONFIG.get().unwrap().settings.aws
 }

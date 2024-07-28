@@ -1,12 +1,21 @@
 use askama::Template;
-use crate::{configs::askama_filters as filters, models::user_info::UserInfo};
+use super::filters;
 
 #[derive(Template)]
 #[template(path="pages/auth.html")]
 pub struct AuthTemplate {
-    pub user_info: Option<UserInfo>,
-    pub auth_form: AuthFormFragment
+    pub authenticity_token: String,
 }
+
+#[derive(Template)]
+#[template(path="fragments/auth_error.html")]
+pub struct AuthErrorFragment {
+    pub msg: String
+}
+
+#[derive(Template)]
+#[template(path="pages/signup.html")]
+pub struct SignupPage;
 
 #[derive(Template)]
 #[template(path="fragments/auth_form.html")]

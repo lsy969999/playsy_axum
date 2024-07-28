@@ -1,5 +1,5 @@
 use axum::{routing::{get, post}, Router};
-use crate::{configs::app_state::ArcAppState, controller::handlers::page::auth::{apple_login, apple_login_callback, auth_page, discord_login, discord_login_callback, email_login, github_login, github_login_callback, google_login, google_login_callback, kakao_login, kakao_login_callback, logout, naver_login, naver_login_callback}};
+use crate::{configs::app_state::ArcAppState, controller::handlers::page::auth::{apple_login, apple_login_callback, auth_page, discord_login, discord_login_callback, email_login, github_login, github_login_callback, google_login, google_login_callback, kakao_login, kakao_login_callback, logout, naver_login, naver_login_callback, signup_page}};
 
 pub fn get_auth_router() -> Router<ArcAppState> {
     Router::new()
@@ -10,6 +10,7 @@ pub fn get_auth_router() -> Router<ArcAppState> {
 fn get_auth_page_router() -> Router<ArcAppState> {
     Router::new()
         .route("/", get(auth_page))
+        .route("/signup", get(signup_page))
         .route("/logout", get(logout))
         .route("/email/login", post(email_login))
         .route("/google/login", get(google_login))

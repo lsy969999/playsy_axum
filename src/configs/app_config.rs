@@ -18,6 +18,15 @@ pub async fn load_settings() -> Arc<AppConfig> {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct AwsSettings {
+    pub aws_access_key_id: String,
+    pub aws_secret_access_key: String,
+    pub aws_region: String,
+    pub aws_s3_bucket: String,
+    pub aws_s3_bucket_url: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct AppSettings {
     pub is_prd: bool,
     pub server_protocol: String,
@@ -71,6 +80,7 @@ pub struct Settings {
     pub jwt: JwtSettings,
     pub smtp: SmtpSettings,
     pub oauth2: Oauth2Settings,
+    pub aws: AwsSettings,
 }
 
 impl Settings {

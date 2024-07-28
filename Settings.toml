@@ -31,3 +31,10 @@ oauth2_github_client_id = "???"
 oauth2_github_client_secret = "???"
 oauth2_kakao_client_id = "???"
 oauth2_kakao_client_secret = "???"
+
+[aws]
+aws_access_key_id = "???"
+aws_secret_access_key = "???"
+aws_region = "???"
+aws_s3_bucket = "???"
+aws_s3_bucket_url = "???"

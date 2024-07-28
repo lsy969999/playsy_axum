@@ -1,0 +1,53 @@
+{% extends "page_layouts/main_layout.html" %}
+{% block side_usage %} false {% endblock %}
+
+{% block title %}Join Email{% endblock %}
+
+{% block content %}
+    <div class="mx-auto max-w-screen-sm mt-8 p-2 bg-white rounded-md border">
+        <section id="err-div" class="w-full">
+        </section>
+        
+        <div class="m-2 py-4">
+            <span class="text-md font-bold">Create your account</span>
+        </div>
+
+        <form
+            hx-encoding='multipart/form-data'
+            hx-post="/user/join_email"
+            hx-target="#err-div"
+        >
+            <div class="m-2 py-4 flex flex-col ">
+                <label>Profile image</label>
+                <div class="border p-4 rounded-md">
+                    <input name="profile_image" class="w-full file:bg-gray-300 file:px-4 file:py-2 file:rounded-md file:border-0 file:hover:bg-gray-400" type="file" accept="image/*" />
+                </div>
+            </div>
+            <div class="m-2  flex flex-col">
+                <label for="">NickName <span class="text-red-500">*</span></label>
+                <input name="nick_name" class="border rounded-md p-2" type="text"/>
+            </div>
+            
+            <div class="m-2  flex flex-col">
+                <label for="">Email <span class="text-red-500">*</span></label>
+                <input name="email" class="border rounded-md p-2" type="email"/>
+            </div>
+    
+            <div class="m-2 flex flex-col">
+                <label for="">Password <span class="text-red-500">*</span></label>
+                <input name="password" class="border rounded-md p-2" type="password"/>
+            </div>
+    
+            <div class="m-2 flex flex-col">
+                <label for="">Password Confirmation <span class="text-red-500">*</span></label>
+                <input name="password_confirmation" class="border rounded-md p-2" type="password"/>
+            </div>
+    
+            <div class="mt-4 ">
+                <button class="m-2 bg-indigo-500 hover:bg-indigo-600 rounded-md px-4 py-2 text-white">Sign up</button>
+            </div>
+        </form>
+       
+    </div>
+    <div class="h-30"></div>
+{% endblock %}

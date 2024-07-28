@@ -5,12 +5,12 @@ use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserErr
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     nick_name: &str,
     email: &str,
     password: &str,
-) -> Result<(), ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+) -> Result<User, ServiceLayerError> {
+    let mut tx = repositories::tx::begin(conn).await?;
 
     // nickname exists check
     let nick_is_some = nick_name_is_some(&mut tx, nick_name).await?;
@@ -35,9 +35,9 @@ pub async fn user_join_service(
     let user_sn = sequence.nextval as i32;
 
     let email_provider_id = utils::hash::hash_sha_256(&format!("{}:{}", user_sn, email));
-
+    
     // add user
-    let _insert = repositories::user::insert_user(
+    let user = repositories::user::insert_user(
             &mut tx,
             InsertUserArgs {
                 avatar_url: None,
@@ -76,7 +76,7 @@ pub async fn user_join_service(
     }
 
     repositories::tx::commit(tx).await?;
-    Ok(())
+    Ok(user)
 }
 
 pub async fn nick_name_is_some(conn: &mut PgConnection, nick_name: &str) -> Result<bool, ServiceLayerError> {
@@ -138,7 +138,7 @@ pub async fn update_user_nick_name(mut conn: PoolConnection<Postgres>, user_sn: 
     Ok(())
 }
 
-pub async fn update_user_avatar_url(mut conn: PoolConnection<Postgres>, user_sn: i32, avatar_url: &str) -> Result<(), ServiceLayerError> {
-    repositories::user::update_user_avatar_url_by_sn(&mut conn, user_sn, avatar_url).await?;
+pub async fn update_user_avatar_url(conn: &mut PgConnection, user_sn: i32, avatar_url: &str) -> Result<(), ServiceLayerError> {
+    repositories::user::update_user_avatar_url_by_sn(conn, user_sn, avatar_url).await?;
     Ok(())
 }
