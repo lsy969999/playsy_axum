@@ -129,12 +129,12 @@ pub async fn select_user(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<
     )
 }
 
-pub async fn user_withdrawl(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<u64, ServiceLayerError> {
-    Ok(repositories::user::delete_user_by_sn(&mut conn, sn).await?.rows_affected())
+pub async fn user_withdrawl(conn: &mut PgConnection, sn: i32) -> Result<u64, ServiceLayerError> {
+    Ok(repositories::user::delete_user_by_sn(conn, sn).await?.rows_affected())
 }
 
-pub async fn update_user_nick_name(mut conn: PoolConnection<Postgres>, user_sn: i32, nick_name: &str) -> Result<(), ServiceLayerError> {
-    repositories::user::update_user_nick_name_by_sn(&mut conn, user_sn, nick_name).await?;
+pub async fn update_user_nick_name(conn: &mut PgConnection, user_sn: i32, nick_name: &str) -> Result<(), ServiceLayerError> {
+    repositories::user::update_user_nick_name_by_sn(conn, user_sn, nick_name).await?;
     Ok(())
 }
 

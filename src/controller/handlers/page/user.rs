@@ -207,11 +207,11 @@ pub async fn my_page(
 }
 
 pub async fn user_withdrawl(
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     UserInfoForPage(user_info): UserInfoForPage,
     jar: CookieJar
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    let _ = services::user::user_withdrawl(conn, user_info.user_sn).await?;
+    let _ = services::user::user_withdrawl(&mut conn, user_info.user_sn).await?;
     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
     let ref_token_cookie = utils::cookie::generate_refresh_token_remove_cookie();
     Ok(
@@ -232,7 +232,7 @@ pub async fn user_nick_name_update(
             .unwrap_or("".to_string());
         return Ok(Html(nick_name_err_msg).into_response())
     }
-    let _ = services::user::update_user_nick_name(conn, user_info.user_sn, &query.nick_name).await;
+    let _ = services::user::update_user_nick_name(&mut conn, user_info.user_sn, &query.nick_name).await;
 
     // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 닉네임이 업데이트 될것임
     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();

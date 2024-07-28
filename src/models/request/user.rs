@@ -5,7 +5,7 @@ use serde::Deserialize;
 use sqlx::PgConnection;
 use validator::{Validate, ValidationError};
 
-use crate::{configs::errors::app_error::PageHandlerLayerError, services, validators::{email_vali_dup_chk, nick_name_vali_char, nick_name_vali_dup_chk, pass_vali_1_lower, pass_vali_1_num, pass_vali_1_upper, pass_vali_password_confirmation, pass_vali_special_char, JoinReqValiContext }};
+use crate::{configs::errors::app_error::PageHandlerLayerError, services, validators::{email_vali_dup_chk, nick_name_vali_char, nick_name_vali_dup_chk, pass_vali_1_lower, pass_vali_1_num, pass_vali_1_upper, pass_vali_special_char, JoinReqValiContext }};
 
 #[derive(Deserialize, Debug, Validate)]
 #[validate(context = "JoinReqValiContext")]
@@ -112,7 +112,7 @@ impl JoinEmailReqDto {
         // 원래 validate 체크
         let validate = self.validate();
         if let Err(aa) = validate {
-            let original_val_errs = aa.field_errors().iter().map(|(k, v)|{
+            let original_val_errs = aa.field_errors().iter().map(|(_k, v)|{
                 v.iter().map(|ve|{
                     ve.to_owned()
                 })

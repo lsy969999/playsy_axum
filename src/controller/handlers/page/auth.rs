@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::{ extract::{ConnectInfo, Query}, response::{IntoResponse, Redirect}, Form};
 use axum_extra::{extract::CookieJar, headers::UserAgent, TypedHeader};
 use oauth2::{reqwest::async_http_client, AuthorizationCode, CsrfToken, Scope, TokenResponse};
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, SocialLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthErrorFragment, AuthFormFragment, AuthTemplate, SignupPage}, utils};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError}}, extractors::database_connection::DatabaseConnection, models::{auth_result::AuthResult, fn_args::auth::{EmailLoginArgs, SocialLoginArgs}, request::{auth::LoginAuthReqDto, oauth2::OAuthCallback}}, responses::html_template::HtmlTemplate, services, templates::auth::{AuthErrorFragment, AuthTemplate, SignupPage}, utils};
 
 /// 로그인 페이지
 pub async fn auth_page(token: axum_csrf::CsrfToken) -> impl IntoResponse {
@@ -38,7 +38,7 @@ pub async fn email_login(
     csrf: axum_csrf::CsrfToken,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agnet): TypedHeader<UserAgent>,
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     Form(form): Form<LoginAuthReqDto>,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
     //csrf
@@ -46,7 +46,7 @@ pub async fn email_login(
     // 이메일 로그인 서비스 호출
     Ok(
         match services::auth::auth_email_request(
-            conn,
+            &mut conn,
             EmailLoginArgs{
                 email: form.email,
                 password: form.password,
@@ -102,7 +102,7 @@ pub async fn google_login() -> impl IntoResponse {
 pub async fn google_login_callback(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
@@ -122,7 +122,7 @@ pub async fn google_login_callback(
     tracing::info!("google_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
     let AuthResult {access_token, refresh_token} = services::auth::auth_google_request(
-        conn,
+        &mut conn,
         SocialLoginArgs {
             info,
             provider_access_token: Some(at),
@@ -152,7 +152,7 @@ pub async fn naver_login(
 pub async fn naver_login_callback(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
@@ -174,7 +174,7 @@ pub async fn naver_login_callback(
     tracing::info!("naver_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
     
     let AuthResult {access_token, refresh_token} = services::auth::auth_naver_request(
-        conn,
+        &mut conn,
         SocialLoginArgs {
             info,
             provider_access_token: Some(at),
@@ -205,7 +205,7 @@ pub async fn github_login() -> impl IntoResponse {
 pub async fn github_login_callback(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
@@ -225,7 +225,7 @@ pub async fn github_login_callback(
     tracing::info!("github_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
     let AuthResult {access_token, refresh_token} = services::auth::auth_github_request(
-        conn,
+        &mut conn,
         SocialLoginArgs {
             info,
             provider_access_token: Some(at),
@@ -257,7 +257,7 @@ pub async fn kakao_login() -> impl IntoResponse {
 pub async fn kakao_login_callback(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    DatabaseConnection(conn): DatabaseConnection,
+    DatabaseConnection(mut conn): DatabaseConnection,
     query: Query<OAuthCallback>,
     jar: CookieJar, 
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
@@ -280,7 +280,7 @@ pub async fn kakao_login_callback(
     tracing::info!("kakao_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
     let AuthResult {access_token, refresh_token} = services::auth::auth_kakao_request(
-        conn,
+        &mut conn,
         SocialLoginArgs {
             info,
             provider_access_token: Some(at),

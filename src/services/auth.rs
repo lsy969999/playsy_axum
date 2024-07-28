@@ -7,10 +7,10 @@ use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserErr
 
 /// 이메일 로그인 요청 처리
 pub async fn auth_email_request(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     args: EmailLoginArgs,
 ) -> Result<AuthResult, ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+    let mut tx = repositories::tx::begin(conn).await?;
 
     // 이메일과, 로그인타입코드로 유저 조회
     let user_select = repositories::user::select_user_by_email_and_login_ty_cd(
@@ -53,10 +53,10 @@ pub async fn auth_email_request(
 
 /// 구글 소셜 로그인 처리
 pub async fn auth_google_request<'a>(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     args: SocialLoginArgs<'a>,
 ) -> Result<AuthResult, ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+    let mut tx = repositories::tx::begin(conn).await?;
 
     let user = social_login_user_validate_process::<GoogleOauth2UserInfo>(&mut tx, ProviderTyEnum::Google, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
@@ -68,10 +68,10 @@ pub async fn auth_google_request<'a>(
 
 /// 네이버 소셜 로그인 처리
 pub async fn auth_naver_request<'a>(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
 ) -> Result<AuthResult, ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+    let mut tx = repositories::tx::begin(conn).await?;
 
     let user = social_login_user_validate_process::<NaverOauth2UserInfo>(&mut tx, ProviderTyEnum::Naver, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
@@ -83,10 +83,10 @@ pub async fn auth_naver_request<'a>(
 
 /// 깃허브 소셜 로그인 처리
 pub async fn auth_github_request<'a>(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
 ) -> Result<AuthResult, ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+    let mut tx = repositories::tx::begin(conn).await?;
 
     let user = social_login_user_validate_process::<GithubOauth2UserInfo>(&mut tx, ProviderTyEnum::Github, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
@@ -98,10 +98,10 @@ pub async fn auth_github_request<'a>(
 
 /// 카카오 소셜 로그인 처리
 pub async fn auth_kakao_request<'a>(
-    mut conn: PoolConnection<Postgres>,
+    conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
 ) -> Result<AuthResult, ServiceLayerError> {
-    let mut tx = repositories::tx::begin(&mut conn).await?;
+    let mut tx = repositories::tx::begin(conn).await?;
 
     let user = social_login_user_validate_process::<KakaoOauth2UserInfo>(&mut tx, ProviderTyEnum::Kakao, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
