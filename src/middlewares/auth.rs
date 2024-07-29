@@ -183,6 +183,8 @@ async fn process_refresh_token(
                             avatar_url: rtu.avatar_url,
                             nick_name: rtu.nick_name,
                             user_sn: rtu.user_sn.to_string(),
+                            user_stt: rtu.user_stt_enum,
+                            user_ty: rtu.user_ty_enum,
                         });
 
                         // claim strcut -> json

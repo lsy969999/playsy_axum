@@ -1,5 +1,6 @@
 use sqlx::{postgres::PgQueryResult, types::chrono::Utc, PgConnection};
-
+use crate::models::entities::user::UserSttEnum;
+use crate::models::entities::user::UserTyEnum;
 use crate::{configs::errors::app_error::RepositoryLayerError, models::{entities::{refresh_token::{RefreshToken, RefreshTokenUser}, sequence::Sequence}, fn_args::repo::InsertRefreshTokenArgs}};
 
 
@@ -59,7 +60,9 @@ pub async fn select_refresh_token_user_by_sn(
                     trt.sn AS refresh_token_sn,
                     tu.sn AS user_sn,
                     tu.avatar_url,
-                    tu.nick_name 
+                    tu.nick_name,
+                    tu.user_stt_enum AS "user_stt_enum: UserSttEnum",
+                    tu.user_ty_enum AS "user_ty_enum: UserTyEnum"
                 FROM tb_refresh_token trt 
                     INNER JOIN tb_user tu ON tu.sn = trt.user_sn
                 WHERE 1=1

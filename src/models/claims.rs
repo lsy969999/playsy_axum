@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
+use super::entities::user::{UserSttEnum, UserTyEnum};
+
 /**
  * sub (Subject): 토큰의 주체, 일반적으로 사용자 ID
  * iss (Issuer): 토큰을 발행한 주체
@@ -49,10 +51,12 @@ pub struct AccessClaims {
     pub scope: Option<String>,
     pub nick_name: String,
     pub avatar_url: Option<String>,
+    pub user_stt: UserSttEnum,
+    pub user_ty: UserTyEnum
 }
 
 impl AccessClaims {
-    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>,  nick_name: String, avatar_url: Option<String>) -> Self {
+    pub fn new(sub: String, exp: OffsetDateTime, iat: OffsetDateTime, scope: Option<String>,  nick_name: String, avatar_url: Option<String>, user_stt: UserSttEnum, user_ty: UserTyEnum) -> Self {
         Self {
             sub,
             exp: exp.unix_timestamp() as usize,
@@ -60,6 +64,8 @@ impl AccessClaims {
             scope,
             nick_name,
             avatar_url,
+            user_stt,
+            user_ty,
         }
     }
 }

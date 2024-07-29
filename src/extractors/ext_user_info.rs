@@ -37,6 +37,8 @@ where
                                 user_sn: claim.sub.parse().unwrap(),
                                 nick_name: claim.nick_name,
                                 avatar_url: claim.avatar_url,
+                                user_stt: claim.user_stt,
+                                user_ty: claim.user_ty,
                             }
                         )
                     }

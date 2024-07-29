@@ -24,7 +24,7 @@ pub fn decode_jwt<T>(
 pub fn generate_accesss_claim(args: GenAccessTokenArgs) -> AccessClaims {
     let now: OffsetDateTime = OffsetDateTime::now_utc();
     let acc_exp = *super::config::get_config_jwt_access_time();
-    let access_claims = AccessClaims::new(args.user_sn, now + Duration::seconds(acc_exp), now, None, args.nick_name, args.avatar_url);
+    let access_claims = AccessClaims::new(args.user_sn, now + Duration::seconds(acc_exp), now, None, args.nick_name, args.avatar_url, args.user_stt, args.user_ty);
     access_claims
 }
 

@@ -1,5 +1,7 @@
 use sqlx::types::chrono::{DateTime, Utc};
 
+use super::user::{UserSttEnum, UserTyEnum};
+
 #[derive(Debug)]
 pub struct RefreshToken {
     pub sn: i32,
@@ -23,4 +25,6 @@ pub struct RefreshTokenUser {
     pub user_sn: i32,
     pub nick_name: String,
     pub avatar_url: Option<String>,
+    pub user_stt_enum: UserSttEnum,
+    pub user_ty_enum: UserTyEnum,
 }

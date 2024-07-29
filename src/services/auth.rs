@@ -205,6 +205,8 @@ async fn login_process(tx: &mut PgConnection, user: User, addr: &str, user_agent
         avatar_url: user.avatar_url,
         nick_name: user.nick_name,
         user_sn: user.sn.to_string(),
+        user_stt: user.user_stt_enum,
+        user_ty: user.user_ty_enum,
     })?;
 
     let refresh_token = utils::jwt::generate_refresh_token(GenRefreshTokenArgs {
