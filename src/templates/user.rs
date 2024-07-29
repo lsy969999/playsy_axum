@@ -43,3 +43,9 @@ pub struct MyPageTemplate {
 pub struct MyPageUpdateErrorFragment {
     pub msgs: Vec<String>
 }
+
+#[derive(Template)]
+#[template(path="fragments/join_social_error.html")]
+pub struct JoinSocailUpdateErrorFragment {
+    pub msgs: Vec<String>
+}

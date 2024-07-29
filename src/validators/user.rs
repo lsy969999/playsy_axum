@@ -1,6 +1,6 @@
 use sqlx::PgConnection;
 use validator::{Validate, ValidationError};
-use crate::{models::{request::user::{JoinEmailReqDto, MyPageUpdateReqDto}, traits::validator::AdditionalValidate}, services};
+use crate::{models::{request::user::{JoinEmailReqDto, JoinSocialUpdateReqDto, MyPageUpdateReqDto}, traits::validator::AdditionalValidate}, services};
 use super::generate_validation_error;
 
 impl AdditionalValidate for JoinEmailReqDto {
@@ -58,6 +58,46 @@ impl AdditionalValidate for MyPageUpdateReqDto {
 
         // 프로필 이미지 체크
         if let Some(pi) = &self.profile_image {
+            if let Some(ct) = &pi.metadata.content_type {
+                if !ct.contains("image") {
+                    val_errs.push(generate_validation_error("cvf_0", "프로필은 이미지 형식만 올수 있습니다."))
+                }
+            }
+        }
+
+        // 닉네임 체크
+        if let Some(nick) = &self.nick_name {
+            let is_nick_name_some = services::user::nick_name_is_some(conn, nick).await?;
+            if is_nick_name_some {
+                val_errs.push(generate_validation_error("cvf_2", "이미 존재하는 닉네임 입니다."))
+            }
+        }
+
+        // 원래 validate 체크
+        let validate = self.validate();
+        if let Err(aa) = validate {
+            let original_val_errs = aa.field_errors().iter().map(|(_k, v)|{
+                v.iter().map(|ve|{
+                    ve.to_owned()
+                })
+                .collect::<Vec<_>>()
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+            val_errs.extend(original_val_errs)
+        }
+
+        Ok(val_errs)
+    }
+}
+
+
+impl AdditionalValidate for JoinSocialUpdateReqDto {
+    async fn additional_db_validate(&self, conn: &mut PgConnection) -> anyhow::Result<Vec<ValidationError>> {
+        let mut val_errs: Vec<ValidationError> = Vec::new();
+        
+         // 프로필 이미지 체크
+         if let Some(pi) = &self.profile_image {
             if let Some(ct) = &pi.metadata.content_type {
                 if !ct.contains("image") {
                     val_errs.push(generate_validation_error("cvf_0", "프로필은 이미지 형식만 올수 있습니다."))

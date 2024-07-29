@@ -16,6 +16,7 @@ fn get_user_page_router(state:ArcAppState ) -> Router<ArcAppState> {
                             .post(page::user::email_join_request))
         .route("/join_email_success", get(join_email_success_page))
         .route("/join_social", get(page::user::join_social_page))
+        .route("/join_social/update", post(page::user::join_social_update))
         .route("/withdrawl", post(page::user::user_withdrawl))
         .route("/mypage", get(page::user::my_page))
         .route("/mypage/update", post(mypage_update))

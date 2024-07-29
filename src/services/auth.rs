@@ -55,60 +55,60 @@ pub async fn auth_email_request(
 pub async fn auth_google_request<'a>(
     conn: &mut PgConnection,
     args: SocialLoginArgs<'a>,
-) -> Result<AuthResult, ServiceLayerError> {
+) -> Result<(AuthResult, bool), ServiceLayerError> {
     let mut tx = repositories::tx::begin(conn).await?;
 
-    let user = social_login_user_validate_process::<GoogleOauth2UserInfo>(&mut tx, ProviderTyEnum::Google, args.clone()).await?;
+    let (user, is_first) = social_login_user_validate_process::<GoogleOauth2UserInfo>(&mut tx, ProviderTyEnum::Google, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
 
-    Ok(auth_result)
+    Ok((auth_result, is_first))
 }
 
 /// 네이버 소셜 로그인 처리
 pub async fn auth_naver_request<'a>(
     conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
-) -> Result<AuthResult, ServiceLayerError> {
+) -> Result<(AuthResult, bool), ServiceLayerError> {
     let mut tx = repositories::tx::begin(conn).await?;
 
-    let user = social_login_user_validate_process::<NaverOauth2UserInfo>(&mut tx, ProviderTyEnum::Naver, args.clone()).await?;
+    let (user, is_first) = social_login_user_validate_process::<NaverOauth2UserInfo>(&mut tx, ProviderTyEnum::Naver, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
     
-    Ok(auth_result)
+    Ok((auth_result, is_first))
 }
 
 /// 깃허브 소셜 로그인 처리
 pub async fn auth_github_request<'a>(
     conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
-) -> Result<AuthResult, ServiceLayerError> {
+) -> Result<(AuthResult, bool), ServiceLayerError> {
     let mut tx = repositories::tx::begin(conn).await?;
 
-    let user = social_login_user_validate_process::<GithubOauth2UserInfo>(&mut tx, ProviderTyEnum::Github, args.clone()).await?;
+    let (user, is_first) = social_login_user_validate_process::<GithubOauth2UserInfo>(&mut tx, ProviderTyEnum::Github, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
 
-    Ok(auth_result)
+    Ok((auth_result, is_first))
 }
 
 /// 카카오 소셜 로그인 처리
 pub async fn auth_kakao_request<'a>(
     conn: &mut PgConnection,
     args: SocialLoginArgs<'a>
-) -> Result<AuthResult, ServiceLayerError> {
+) -> Result<(AuthResult, bool), ServiceLayerError> {
     let mut tx = repositories::tx::begin(conn).await?;
 
-    let user = social_login_user_validate_process::<KakaoOauth2UserInfo>(&mut tx, ProviderTyEnum::Kakao, args.clone()).await?;
+    let (user, is_first) = social_login_user_validate_process::<KakaoOauth2UserInfo>(&mut tx, ProviderTyEnum::Kakao, args.clone()).await?;
     let auth_result = login_process(&mut tx, user, &args.addr, &args.user_agent).await?;
 
     repositories::tx::commit(tx).await?;
 
-    Ok(auth_result)
+    Ok((auth_result, is_first))
 }
 
 /// 소셜로그인시 사용되는  
@@ -119,10 +119,11 @@ async fn social_login_user_validate_process<'a, T>(
     mut tx: &mut PgConnection,
     provider_ty: ProviderTyEnum,
     args: SocialLoginArgs<'a>
-) -> Result<User, ServiceLayerError>
+) -> Result<(User, bool), ServiceLayerError>
     where T: SocaliLoginValidateProcess + DeserializeOwned + Validate
 {
     let info = serde_json::from_value::<T>(args.info.clone())?;
+    let mut is_first = false;
 
     let user_select = repositories::user::select_user_by_provider_type_enum_and_provider_id(
         &mut tx,
@@ -137,6 +138,7 @@ async fn social_login_user_validate_process<'a, T>(
             user
         },
         None => {
+            is_first = true;
             let mut nick_name = match info.get_nick_name() {
                 Some(n) => n,
                 None => {
@@ -188,7 +190,7 @@ async fn social_login_user_validate_process<'a, T>(
         }
     };
 
-    Ok(user)
+    Ok((user, is_first))
 }
 
 

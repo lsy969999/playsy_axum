@@ -121,7 +121,7 @@ pub async fn google_login_callback(
     let info = utils::oauth2::google_oauth2_user_info_api(at).await?;
     tracing::info!("google_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
-    let AuthResult {access_token, refresh_token} = services::auth::auth_google_request(
+    let (AuthResult {access_token, refresh_token}, is_first) = services::auth::auth_google_request(
         &mut conn,
         SocialLoginArgs {
             info,
@@ -134,8 +134,13 @@ pub async fn google_login_callback(
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
-
-    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
+    let jar = jar.add(ref_token_cookie).add(acc_token_cookie);
+    
+    if is_first {
+        Ok( (jar, Redirect::to("/user/join_social")).into_response() )
+    } else {
+        Ok( (jar, Redirect::to("/")).into_response() )
+    }
 }
 
 /// 네이버 소셜 로그인 
@@ -173,7 +178,7 @@ pub async fn naver_login_callback(
     let info = utils::oauth2::naver_oauth2_user_info_api(at).await?;
     tracing::info!("naver_login_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
     
-    let AuthResult {access_token, refresh_token} = services::auth::auth_naver_request(
+    let (AuthResult {access_token, refresh_token}, is_first) = services::auth::auth_naver_request(
         &mut conn,
         SocialLoginArgs {
             info,
@@ -186,8 +191,13 @@ pub async fn naver_login_callback(
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
-
-    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
+    let jar = jar.add(ref_token_cookie).add(acc_token_cookie);
+    
+    if is_first {
+        Ok( (jar, Redirect::to("/user/join_social")).into_response() )
+    } else {
+        Ok( (jar, Redirect::to("/")).into_response() )
+    }
 }
 
 /// 깃헙 소셜 로그인 
@@ -224,7 +234,7 @@ pub async fn github_login_callback(
     let info = utils::oauth2::github_oauth2_user_info(at).await?;
     tracing::info!("github_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
-    let AuthResult {access_token, refresh_token} = services::auth::auth_github_request(
+    let (AuthResult {access_token, refresh_token}, is_first) = services::auth::auth_github_request(
         &mut conn,
         SocialLoginArgs {
             info,
@@ -237,8 +247,13 @@ pub async fn github_login_callback(
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
-
-    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
+    let jar = jar.add(ref_token_cookie).add(acc_token_cookie);
+    
+    if is_first {
+        Ok( (jar, Redirect::to("/user/join_social")).into_response() )
+    } else {
+        Ok( (jar, Redirect::to("/")).into_response() )
+    }
 }
 
 /// 카카오 소셜 로그인
@@ -279,7 +294,7 @@ pub async fn kakao_login_callback(
     let info = utils::oauth2::kakao_oauth2_user_info(at).await?;
     tracing::info!("kakao_callback!! query: {:?}, addr: {:?}, user_agent: {:?}, info: {:?}", query, addr, user_agent, info);
 
-    let AuthResult {access_token, refresh_token} = services::auth::auth_kakao_request(
+    let (AuthResult {access_token, refresh_token}, is_first) = services::auth::auth_kakao_request(
         &mut conn,
         SocialLoginArgs {
             info,
@@ -292,8 +307,13 @@ pub async fn kakao_login_callback(
 
     let acc_token_cookie = utils::cookie::generate_access_token_cookie(access_token);
     let ref_token_cookie = utils::cookie::generate_refresh_token_cookie(refresh_token);
+    let jar = jar.add(ref_token_cookie).add(acc_token_cookie);
 
-    Ok( (jar.add(ref_token_cookie).add(acc_token_cookie), Redirect::to("/")).into_response() )
+    if is_first {
+        Ok( (jar, Redirect::to("/user/join_social")).into_response() )
+    } else {
+        Ok( (jar, Redirect::to("/")).into_response() )
+    }
 }
 
 /// 디스코드 소셜 로그인

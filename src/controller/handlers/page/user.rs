@@ -3,7 +3,7 @@ use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::TypedMultipart;
 use validator::ValidateArgs;
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}}, extractors::{database_connection::DatabaseConnection, ext_user_info::{ExtUserInfo, UserInfoForPage}, s3_client::AwsS3Client}, models::{request::user::{EmailValidateReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, MyPageUpdateReqDto, NickNameUpdateDto}, traits::validator::AdditionalValidate}, responses::html_template::HtmlTemplate, services, templates::user::{JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocialTemplate,  MyPageTemplate, MyPageUpdateErrorFragment}, utils, validators::JoinReqValiContext};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}}, extractors::{database_connection::DatabaseConnection, ext_user_info::{ExtUserInfo, UserInfoForPage}, s3_client::AwsS3Client}, models::{request::user::{EmailValidateReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, MyPageUpdateReqDto, NickNameUpdateDto}, traits::validator::AdditionalValidate}, responses::html_template::HtmlTemplate, services, templates::user::{JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocailUpdateErrorFragment, JoinSocialTemplate, MyPageTemplate, MyPageUpdateErrorFragment}, utils, validators::JoinReqValiContext};
 
 pub async fn test() -> impl IntoResponse {
     (Redirect::to("/")).into_response()
@@ -100,12 +100,54 @@ pub async fn email_join_request(
 }
 
 // 소셜가입시 프로필, 닉네임 입력 페이지
-pub async fn join_social_page() -> impl IntoResponse {
+pub async fn join_social_page(
+    ExtUserInfo(user_info): ExtUserInfo
+) -> impl IntoResponse {
     HtmlTemplate(
         JoinSocialTemplate {
-            user_info: None,
+            user_info
         }
     )
+}
+
+pub async fn join_social_update(
+    jar: CookieJar,
+    DatabaseConnection(mut conn): DatabaseConnection,
+    AwsS3Client(s3_client): AwsS3Client,
+    UserInfoForPage(user_info): UserInfoForPage,
+    TypedMultipart(form): TypedMultipart<MyPageUpdateReqDto>,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let vali_errs = form.additional_db_validate(&mut conn).await?;
+    if !vali_errs.is_empty() {
+        let msgs = utils::validator::get_err_msg_vec(vali_errs);
+        return Ok(
+            HtmlTemplate(
+                JoinSocailUpdateErrorFragment {
+                    msgs
+                }
+            ).into_response()
+        )
+    }
+
+    if let Some(nick) = form.nick_name {
+        services::user::update_user_nick_name(&mut conn, user_info.user_sn, &nick).await?;
+    }
+
+    if let Some(pi) = form.profile_image {
+        let file_name = &pi.metadata.file_name.clone().unwrap();
+        let file_extension = Path::new(&file_name)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        let key = match utils::config::is_prd() {
+            true => format!("images/avatars/{}.{}", user_info.user_sn, file_extension),
+            false => format!("debug/images/avatars/{}.{}", user_info.user_sn, file_extension),
+        };
+        utils::aws::s3_put_profile_image(s3_client, pi, key.clone()).await?;
+        services::user::update_user_avatar_url(&mut conn, user_info.user_sn, format!("https://playsy.s3.ap-northeast-2.amazonaws.com/{}", key).as_str()).await?;
+    }
+    let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+    Ok((jar.remove(acc_token_cookie), [(HX_REDIRECT, "/")]).into_response())
 }
 
 pub async fn nick_validate(

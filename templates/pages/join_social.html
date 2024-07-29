@@ -4,5 +4,61 @@
 {% block title %}Join Social{% endblock %}
 
 {% block content %}
-    join social
+    <div class="mx-auto max-w-screen-sm p-2 bg-white rounded-md border">
+        <section id="err-div" class="w-full">
+        </section>
+        
+        <div class="m-2 py-4">
+            <span class="text-md font-bold">
+                추가적인 정보를 입력해주세요
+            </span>
+        </div>
+
+        <form
+        
+            hx-encoding='multipart/form-data'
+            hx-post="/user/join_social/update"
+            hx-target="#err-div"
+        >
+            <div class="m-2 py-4 flex flex-col ">
+                <label>Profile image</label>
+                <div class="flex justify-center items-center">
+                    {% if let Some(user_info) = user_info %}
+                        {% if let Some(avatar_url) = user_info.avatar_url %}
+                            <img id="myavatar" src="{{ avatar_url }}" alt="Avatar" class="w-12 h-12 mr-2">
+                        {% else %}
+                            <img id="myavatar" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Avatar" class="w-12 h-12 mr-2">
+                        {% endif %}
+                    {% else %}
+                        <img id="myavatar" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Avatar" class="w-12 h-12 mr-2">
+                    {% endif %}
+                    <div class="border p-4 rounded-md">
+                        <input name="profile_image" class="w-full file:bg-gray-300 file:px-4 file:py-2 file:rounded-md file:border-0 file:hover:bg-gray-400" type="file" accept="image/*" />
+                    </div>
+                </div>
+            </div>
+            <div class="m-2  flex flex-col">
+                <label for="">NickName </label>
+                {% if let Some(user_info) = user_info %}
+                    <input 
+                        x-data="{
+                            init_nick: '{{ user_info.nick_name }}',
+                            nick_input: '{{ user_info.nick_name }}',
+                            nick_check() {
+                                return this.nick_input !== this.init_nick;
+                            }
+                        }"
+                        x-model="nick_input"
+                        x-bind:name="nick_check() ? 'nick_name': ''"
+                        class="border rounded-md p-2" type="text" value="{{ user_info.nick_name }}"/>
+                {% else %}
+                    <input name="nick_name" class="border rounded-md p-2" type="text"/>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 ">
+                <button class="m-2 bg-indigo-500 hover:bg-indigo-600 rounded-md px-4 py-2 text-white">Sign up</button>
+            </div>
+        </form>
+    </div>
 {% endblock %}

@@ -82,3 +82,13 @@ pub struct MyPageUpdateReqDto {
     #[validate(custom(function="nick_name_vali_char"))]
     pub nick_name: Option<String>,
 }
+
+/// NOTE: additional validate 확인
+#[derive(TryFromMultipart, Debug, Validate)]
+pub struct JoinSocialUpdateReqDto {
+    pub profile_image: Option<FieldData<axum::body::Bytes>>,
+
+    #[validate(length(min = 3, max=10, message = "닉네임은 3글자 이상 10글자 미만 이어야 합니다."))]
+    #[validate(custom(function="nick_name_vali_char"))]
+    pub nick_name: Option<String>,
+}
