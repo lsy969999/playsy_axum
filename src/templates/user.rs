@@ -37,3 +37,9 @@ pub struct MyPageTemplate {
     pub user_info: Option<UserInfo>,
     pub user: User
 }
+
+#[derive(Template)]
+#[template(path="fragments/mypage_update_error.html")]
+pub struct MyPageUpdateErrorFragment {
+    pub msgs: Vec<String>
+}

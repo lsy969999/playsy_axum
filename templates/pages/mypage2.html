@@ -1,0 +1,259 @@
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/buttons.html" as scope -%}
+{%- import "macros/inputs.html" as inputs -%}
+
+{% block title %}
+    마이페이지
+{% endblock %}
+
+{% block content %}
+
+<style>
+    #fildpond_avatar {
+        width: 200px;
+        height: 200px;
+    }
+</style>
+    <main class="flex-grow flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center">나의 정보</h2>
+            <div class="flex flex-col items-center mb-4">
+                {% if let Some(avatar_url) = user.avatar_url %}
+                    <img id="myavatar" width="200px" height="200px" src="{{ avatar_url }}" alt="Avatar" class="rounded-full mb-4">
+                {% else %}
+                    <img id="myavatar" width="200px" height="200px" src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="Avatar" class="rounded-full mb-4">
+                {% endif %}
+
+                <!-- <form hx-post="/user/avatar_update" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" accept="image/*" />
+                    <input type="submit" value="Upload files">
+                </form> -->
+                <!-- We'll transform this input into a pond -->
+                <input id="fildpond_avatar"
+                        type="file" 
+                        style="width: 200px; height: 200px;"
+                        class="filepond hidden"
+                        name="filepond"
+                        accept="image/png, image/jpeg, image/gif"/>
+                <!-- <div style="width: 100px; height: 100px; background-color: gray;" class="my-dropzone"></div> -->
+                <button id="avatar_change_btn" class="bg-gray-500 text-white py-1 px-3 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">아바타 변경</button>
+            </div>
+            <div class="mb-4">
+                <div
+                    hx-get="/user/nick_validate"
+                    hx-include="find input"
+                    hx-trigger="input from:(find input) delay:0.3s"
+                    hx-target="find p"
+                    hx-swap="innerHTML"
+
+                    hx-headers='{"x-hx-request-id": "mySpecificRequest"}'
+                    x-data="{initNickName: '{{ user.nick_name }}'}"
+
+                    x-on:keydown="document.getElementById('nick_edit_btn').disabled = true;"
+
+                    x-on:htmx:config-request="
+                        if ($event.detail.headers['x-hx-request-id']) {
+                            if (initNickName == document.getElementById('nick_name').value) {
+                                document.getElementById('nick_name_err').textContent = ''
+                                document.getElementById('nick_edit_btn').disabled = true;
+                                $event.preventDefault();
+                            }
+                        }
+                    "
+                    x-on:htmx:after-swap="
+                        if ($event.detail.requestConfig.headers['x-hx-request-id']) {
+                            if($event.detail.xhr.responseText == '') {
+                                document.getElementById('nick_edit_btn').disabled = false;
+                            } else {
+                                document.getElementById('nick_edit_btn').disabled = true;
+                            }
+                        }
+                    "
+                >
+                <form
+                    hx-post="/user/nick_update"
+                >
+                    {% call inputs::text(
+                        input_name="닉네임", id="nick_name", name="nick_name", required=true,
+                        value=(user.nick_name|as_ref),
+                        err_msg=(""|as_ref))
+                    %}
+
+                    <div class="flex items-center justify-between mb-4">
+                        <button
+                            type="submit"
+                            id="nick_edit_btn" disabled class="w-full disabled:bg-gray-300 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">닉네임 수정</button>
+                    </div>
+                </form>
+                    
+                </div>
+                <!-- <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm" value="{{ user.nick_name }}"> -->
+
+                <!-- <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm"> {{ user.nick_name }} </p> -->
+                <!-- <p id="_err" class="mt-1 text-sm text-red-500"> ㅁㄴㅇㄹ </p> -->
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">가입수단</label>
+                <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">
+                    {% match user.provider_ty_enum %}
+                        {% when ProviderTyEnum::Email %}
+                            이메일
+                        {% when ProviderTyEnum::Google %}
+                            구글
+                        {% when ProviderTyEnum::Kakao %}
+                            카카오
+                        {% when ProviderTyEnum::Naver %}
+                            네이버
+                        {% when ProviderTyEnum::Github %}
+                            깃허브
+                        {% when ProviderTyEnum::Apple %}
+                            애플
+                        {% when ProviderTyEnum::Facebook %}
+                            페이스북
+                    {% endmatch %}
+                </p>
+            </div>
+            {% if user.provider_ty_enum == ProviderTyEnum::Email %}
+                {% if let Some(email) = user.email %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">이메일</label>
+                        <p class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm">
+                            {{ email }}
+                        </p>
+                    </div>
+                {% endif %}
+            {% endif %}
+            <div
+                x-data="{ joindate: {{ user.created_at|to_timestamp }} }"
+                x-init="joindate = dateFns.format(new Date(joindate), 'yyyy-MM-dd HH:mm:ss')"
+                class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">가입일</label>
+                <p x-text="joindate" id="test" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm"></p>
+            </div>
+            <div class="flex justify-end ">
+                <button class=" bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2" onclick="openModal()">회원 탈퇴</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-4">회원 탈퇴</h2>
+            <p class="mb-4">탈퇴 시 회원님의 정보가 모두 삭제되며, 복구할 수 없습니다. 정말 탈퇴하시겠습니까?</p>
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" class="form-checkbox" id="confirmCheckbox">
+                    <span class="ml-2">네, 정말 탈퇴하겠습니다.</span>
+                </label>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button class="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" onclick="closeModal()">취소</button>
+                <button class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2" onclick="confirmDeletion()">탈퇴</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block additional_head %}
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+    <link href="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.css" rel="stylesheet" />
+{% endblock %}
+
+
+
+
+{% block additional_script %}
+    <script src="https://unpkg.com/filepond-plugin-image-edit/dist/filepond-plugin-image-edit.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-encode/dist/filepond-plugin-file-encode.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-exif-orientation/dist/filepond-plugin-image-exif-orientation.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-crop/dist/filepond-plugin-image-crop.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-resize/dist/filepond-plugin-image-resize.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-transform/dist/filepond-plugin-image-transform.js"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+
+
+    <script>
+        FilePond.registerPlugin(
+            FilePondPluginFileValidateType,
+            FilePondPluginImageExifOrientation,
+            FilePondPluginImagePreview,
+            FilePondPluginImageCrop,
+            FilePondPluginImageResize,
+            FilePondPluginImageTransform,
+            FilePondPluginImageEdit
+        );
+        const pond = FilePond.create(
+            document.querySelector('#fildpond_avatar'),
+            {
+                allowFileMetadata: false,
+                fileMetadataObject: null,
+                labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
+                imagePreviewHeight: 170,
+                imageCropAspectRatio: '1:1',
+                imageResizeTargetWidth: 200,
+                imageResizeTargetHeight: 200,
+                stylePanelLayout: 'compact circle',
+                styleLoadIndicatorPosition: 'center bottom',
+                styleProgressIndicatorPosition: 'right bottom',
+                styleButtonRemoveItemPosition: 'left bottom',
+                styleButtonProcessItemPosition: 'right bottom',
+                instantUpload: false,
+                server: {
+                    url: '/user/avatar_update',
+                    process: {
+                        data: null
+                    },
+                    metadataObject: {} // 빈 객체로 설정하여 불필요한 메타데이터 업로드 방지
+                },
+            }
+        );
+
+        pond.on('processfile', (error, file) => {
+            console.log(file)
+            if (!error) {
+                console.log('File uploaded successfully');
+            } else {
+                console.error(error)
+            }
+            location.reload();
+        });
+
+        const acbtn = document.querySelector('#avatar_change_btn');
+        acbtn.addEventListener('click', (e) => {
+            if (e.target.textContent.trim() === '아바타 변경') {
+                e.target.textContent = '취소'
+                document.querySelector('#myavatar').classList.add('hidden')
+                document.querySelector('#fildpond_avatar').classList.remove('hidden')
+            } else {
+                e.target.textContent = '아바타 변경'
+                document.querySelector('#myavatar').classList.remove('hidden')
+                document.querySelector('#fildpond_avatar').classList.add('hidden')
+            }
+            
+        })
+    </script>
+    <script>
+        function openModal() {
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function confirmDeletion() {
+            const checkbox = document.getElementById('confirmCheckbox');
+            if (checkbox.checked) {
+                htmx.ajax('POST', '/user/withdrawl')
+            } else {
+                alert('탈퇴 확인 체크박스를 선택해주세요.');
+            }
+        }
+    </script>
+{% endblock %}

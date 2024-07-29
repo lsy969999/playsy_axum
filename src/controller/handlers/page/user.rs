@@ -3,7 +3,11 @@ use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::TypedMultipart;
 use validator::ValidateArgs;
-use crate::{configs::errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}, extractors::{database_connection::DatabaseConnection, ext_user_info::UserInfoForPage, s3_client::AwsS3Client}, models::request::user::{EmailValidateReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, NickNameUpdateDto}, responses::html_template::HtmlTemplate, services, templates::user::{JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocialTemplate,  MyPageTemplate}, utils, validators::JoinReqValiContext};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}}, extractors::{database_connection::DatabaseConnection, ext_user_info::{ExtUserInfo, UserInfoForPage}, s3_client::AwsS3Client}, models::{request::user::{EmailValidateReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, MyPageUpdateReqDto, NickNameUpdateDto}, traits::validator::AdditionalValidate}, responses::html_template::HtmlTemplate, services, templates::user::{JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocialTemplate,  MyPageTemplate, MyPageUpdateErrorFragment}, utils, validators::JoinReqValiContext};
+
+pub async fn test() -> impl IntoResponse {
+    (Redirect::to("/")).into_response()
+}
 
 /// 이메일 가입 페이지
 pub async fn join_email_page() -> impl IntoResponse {
@@ -30,7 +34,7 @@ pub async fn email_join_request(
     AwsS3Client(s3_client): AwsS3Client,
     TypedMultipart(form): TypedMultipart<JoinEmailReqDto>
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    let vali_errs = form.additional_validate(&mut conn).await?;
+    let vali_errs = form.additional_db_validate(&mut conn).await?;
     if !vali_errs.is_empty() {
         let msgs = utils::validator::get_err_msg_vec(vali_errs);
         return Ok(
@@ -61,11 +65,11 @@ pub async fn email_join_request(
                     };
                     utils::aws::s3_put_profile_image(s3_client, pi, key.clone()).await?;
                     services::user::update_user_avatar_url(&mut conn, user.sn, format!("https://playsy.s3.ap-northeast-2.amazonaws.com/{}", key).as_str()).await?;
-                    return Ok((Redirect::to("/user/join_email_success")).into_response());
+                    return Ok( ( [(HX_REDIRECT, "/user/join_email_success")] ).into_response() );
                 }
                 // 프로필 없는경우
                 None => {
-                    return Ok((Redirect::to("/user/join_email_success")).into_response());
+                    return Ok( ( [(HX_REDIRECT, "/user/join_email_success")] ).into_response() );
                 }
             }
         }
@@ -188,17 +192,25 @@ pub async fn email_validate(
 
 /// 마이 페이지
 pub async fn my_page(
-    DatabaseConnection(conn): DatabaseConnection,
-    UserInfoForPage(user_info): UserInfoForPage,
+    DatabaseConnection(mut conn): DatabaseConnection,
+    ExtUserInfo(user_info): ExtUserInfo,
 ) -> Result<impl IntoResponse, PageHandlerLayerError> {
-    let user = services::user::select_user(conn, user_info.user_sn).await?;
+    let user_info = match user_info {
+        Some(u) => u,
+        None => {
+            return Ok((Redirect::to("/")).into_response())
+        }
+    };
+    let user = services::user::select_user(&mut conn, user_info.user_sn).await?;
     Ok(
-        HtmlTemplate(
-            MyPageTemplate {
-                user_info: Some(user_info),
-                user,
-            }
-        )
+        (
+            HtmlTemplate(
+                MyPageTemplate {
+                    user_info: Some(user_info),
+                    user,
+                }
+            )
+        ).into_response()
     )
 }
 
@@ -212,7 +224,7 @@ pub async fn user_withdrawl(
     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
     let ref_token_cookie = utils::cookie::generate_refresh_token_remove_cookie();
     Ok(
-        (jar.remove(acc_token_cookie).remove(ref_token_cookie), Redirect::to("/"))
+        (jar.remove(acc_token_cookie).remove(ref_token_cookie), [(HX_REDIRECT, "/")])
     )
 }
 
@@ -283,3 +295,45 @@ pub async fn user_nick_name_update(
 //     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
 //     Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
 // }
+
+pub async fn mypage_update(
+    jar: CookieJar, 
+    UserInfoForPage(user_info): UserInfoForPage,
+    DatabaseConnection(mut conn): DatabaseConnection,
+    AwsS3Client(s3_client): AwsS3Client,
+    TypedMultipart(form): TypedMultipart<MyPageUpdateReqDto>
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let vali_errs = form.additional_db_validate(&mut conn).await?;
+    if !vali_errs.is_empty() {
+        let msgs = utils::validator::get_err_msg_vec(vali_errs);
+        return Ok(
+            HtmlTemplate(
+                MyPageUpdateErrorFragment{
+                    msgs
+                }
+            ).into_response()
+        )
+    }
+
+    if let Some(nick) = form.nick_name {
+        services::user::update_user_nick_name(&mut conn, user_info.user_sn, &nick).await?;
+    }
+
+    if let Some(pi) = form.profile_image {
+        let file_name = &pi.metadata.file_name.clone().unwrap();
+        let file_extension = Path::new(&file_name)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        let key = match utils::config::is_prd() {
+            true => format!("images/avatars/{}.{}", user_info.user_sn, file_extension),
+            false => format!("debug/images/avatars/{}.{}", user_info.user_sn, file_extension),
+        };
+        utils::aws::s3_put_profile_image(s3_client, pi, key.clone()).await?;
+        services::user::update_user_avatar_url(&mut conn, user_info.user_sn, format!("https://playsy.s3.ap-northeast-2.amazonaws.com/{}", key).as_str()).await?;
+    }
+    
+    // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 아바타 업데이트 될것임
+    let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+    Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
+}

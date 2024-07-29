@@ -119,8 +119,8 @@ fn email_join_verification_code_send(to: &str, code: &str) -> anyhow::Result<()>
 }
 
 
-pub async fn select_user(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<User, ServiceLayerError> {
-    let useroption = repositories::user::select_user_by_sn(&mut conn, sn).await?;
+pub async fn select_user(conn: &mut PgConnection, sn: i32) -> Result<User, ServiceLayerError> {
+    let useroption = repositories::user::select_user_by_sn(conn, sn).await?;
     Ok(
         match useroption {
             Some(user) => user,
@@ -128,6 +128,26 @@ pub async fn select_user(mut conn: PoolConnection<Postgres>, sn: i32) -> Result<
         }
     )
 }
+
+// pub async fn mypage_update(
+//     conn: &mut PgConnection,
+//     user_sn: i32,
+//     nick_name: Option<&str>,
+//     avatar_url: Option<&str>,
+// ) -> Result<(), ServiceLayerError> {
+//     let mut tx = repositories::tx::begin(conn).await?;
+
+//     if let Some(nick) = nick_name {
+//         repositories::user::update_user_nick_name_by_sn(&mut tx, user_sn, nick).await?;
+//     }
+
+//     if let Some(avatar) = avatar_url {
+//         repositories::user::update_user_avatar_url_by_sn(&mut tx, user_sn, avatar).await?;
+//     }
+
+//     repositories::tx::commit(tx).await?;
+//     Ok(())
+// }
 
 pub async fn user_withdrawl(conn: &mut PgConnection, sn: i32) -> Result<u64, ServiceLayerError> {
     Ok(repositories::user::delete_user_by_sn(conn, sn).await?.rows_affected())

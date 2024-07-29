@@ -2,6 +2,8 @@ use std::borrow::Cow;
 use regex::Regex;
 use validator::ValidationError;
 
+pub mod user;
+
 pub fn pass_vali_len_8(password: &str) -> Result<(), ValidationError>{
     // Password must be at least 8 characters long
     let code = "pv1";
@@ -124,3 +126,10 @@ impl JoinReqValiContext {
         }
     }
 }
+
+
+
+
+pub fn generate_validation_error(code: &'static str, message: &'static str) -> ValidationError {
+    ValidationError::new(code).with_message(Cow::Borrowed(message))
+} 
