@@ -62,10 +62,16 @@ pub async fn user_join_service(
             let now = Utc::now();
             let seven_days_later = now + Duration::days(7);
             let _insert = repositories::email_join_verifications::insert_email_join_veri(&mut tx, user_sn, &email_code, seven_days_later).await?;
-            let result = email_join_verification_code_send(email, &email_code);
-            if let Err(error) = result {
-                tracing::error!("email send error! error: {error}, user_sn: {user_sn}, to: {email}, code: {email_code}");
-            }
+            let email = email.to_string();
+            tokio::spawn(async move {
+                let user_sn = user_sn.clone();
+                let email = email.clone();
+                let email_code = email_code.clone();
+                let result = email_join_verification_code_send(&email, &email_code).await;
+                if let Err(error) = result {
+                    tracing::error!("email send error! error: {error}, user_sn: {user_sn}, to: {email}, code: {email_code}");
+                }
+            });
             break;
         }
         tracing::warn!("oh... email veri code is dup! user_sn: {user_sn} code: {email_code}, retry {i}");
@@ -105,7 +111,7 @@ pub async fn user_and_ldtye_email_is_some(conn: &mut PgConnection, email: &str) 
     Ok(user.is_some())
 }
 
-fn email_join_verification_code_send(to: &str, code: &str) -> anyhow::Result<()> {
+async fn email_join_verification_code_send(to: &str, code: &str) -> anyhow::Result<()> {
     #[derive(Template)]
     #[template(path="etc/email_veri_code.html")]
     struct EmailVeriHtml<'a> {
@@ -113,8 +119,8 @@ fn email_join_verification_code_send(to: &str, code: &str) -> anyhow::Result<()>
     }
 
     let subject = "playsy 이메일 인증코드";
-    let body = EmailVeriHtml{ code }.render()?;
-    utils::mail::send_mail(to, subject, &body)?;
+    let body = EmailVeriHtml{ code: code }.render()?;
+    utils::mail::send_mail(to, subject, &body).await?;
     Ok(())
 }
 

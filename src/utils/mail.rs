@@ -1,9 +1,9 @@
 use anyhow::Result;
-use lettre::{message::header::ContentType, transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
+use lettre::{message::header::ContentType, transport::smtp::authentication::Credentials, AsyncSmtpTransport, AsyncTransport, Message, SmtpTransport, Tokio1Executor, Transport};
 use tracing::info;
 use crate::utils;
 
-pub fn send_mail(to: &str, subject: &str, body: &str) -> Result<()> {
+pub async fn send_mail(to: &str, subject: &str, body: &str) -> Result<()> {
     let info = utils::config::get_config_smtp();
     let smtp_from  = &info.smtp_from;
     let from: lettre::message::Mailbox = smtp_from.parse()?;
@@ -18,11 +18,12 @@ pub fn send_mail(to: &str, subject: &str, body: &str) -> Result<()> {
     let smtp_password = (&info.smtp_password).clone();
     let creds = Credentials::new(smtp_username, smtp_password);
 
-    let mailer: SmtpTransport = SmtpTransport::relay("smtp.gmail.com")?
+    let mailer = AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.gmail.com")?
         .credentials(creds)
         .build();
+    
 
-    let response = mailer.send(&email)?;
+    let response = mailer.send(email).await?;
     info!("to: {:?}, response: {:?}", to, response);
     Ok(())
 }

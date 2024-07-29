@@ -65,7 +65,7 @@ thiserror = "1.0.61"
 anyhow = "1.0.86"
 
 # mail
-lettre = "0.11.7"
+lettre = {version = "0.11.7", features = ["tokio1", "tokio1-native-tls"]}
 
 # auto reload
 listenfd = "1.0.1"
