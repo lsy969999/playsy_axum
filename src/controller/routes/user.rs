@@ -24,6 +24,11 @@ fn get_user_page_router(state:ArcAppState ) -> Router<ArcAppState> {
         .route("/nick_validate", get(page::user::nick_validate))
         .route("/email_validate", get(page::user::email_validate))
         .route("/nick_update", post(page::user::user_nick_name_update))
+
+        .route("/email_verification", get(page::user::email_verification_page))
+        .route("/email_verification", post(page::user::email_verification))
+        .route("/email_verification/code_resend", post(page::user::email_verification_resend))
+        .route("/email_verification/success", get(page::user::email_verification_success_page))
         .layer(
             ServiceBuilder::new()
                 .layer(from_fn_with_state(state, set_user_info_from_cookie_to_header))

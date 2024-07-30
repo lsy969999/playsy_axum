@@ -35,41 +35,41 @@ pub async fn select_email_join_veri_for_code_dup_chk(
     )
 }
 
-/// 
-/// AND tejv.user_sn = $1  
-/// AND tejv.expires_at < now()  
-/// AND tejv.is_deleted = FALSE  
-pub async fn select_email_join_veri_by_user_sn(
-    conn: &mut PgConnection,
-    user_sn: i32
-) -> Result<Option<EmailJoinVerifications>, RepositoryLayerError> {
-    Ok(
-        sqlx::query_as!(
-            EmailJoinVerifications,
-            r#"
-                SELECT 
-                    tejv.sn ,
-                    tejv.user_sn ,
-                    tejv.code ,
-                    tejv.is_verified ,
-                    tejv.expires_at ,
-                    tejv.created_at ,
-                    tejv.created_by ,
-                    tejv.updated_at ,
-                    tejv.updated_by ,
-                    tejv.is_deleted 
-                FROM tb_email_join_verifications tejv
-                WHERE 1 = 1
-                    AND tejv.user_sn = $1
-                    AND tejv.expires_at < now()
-                    AND tejv.is_deleted = FALSE
-            "#,
-            user_sn
-        )
-        .fetch_optional(conn)
-        .await?
-    )
-}
+// 
+// AND tejv.user_sn = $1  
+// AND tejv.expires_at < now()  
+// AND tejv.is_deleted = FALSE  
+// pub async fn select_email_join_veri_by_user_sn(
+//     conn: &mut PgConnection,
+//     user_sn: i32
+// ) -> Result<Option<EmailJoinVerifications>, RepositoryLayerError> {
+//     Ok(
+//         sqlx::query_as!(
+//             EmailJoinVerifications,
+//             r#"
+//                 SELECT 
+//                     tejv.sn ,
+//                     tejv.user_sn ,
+//                     tejv.code ,
+//                     tejv.is_verified ,
+//                     tejv.expires_at ,
+//                     tejv.created_at ,
+//                     tejv.created_by ,
+//                     tejv.updated_at ,
+//                     tejv.updated_by ,
+//                     tejv.is_deleted 
+//                 FROM tb_email_join_verifications tejv
+//                 WHERE 1 = 1
+//                     AND tejv.user_sn = $1
+//                     AND tejv.expires_at < now()
+//                     AND tejv.is_deleted = FALSE
+//             "#,
+//             user_sn
+//         )
+//         .fetch_optional(conn)
+//         .await?
+//     )
+// }
 
 pub async fn insert_email_join_veri(
     conn: &mut PgConnection,
@@ -100,21 +100,79 @@ pub async fn insert_email_join_veri(
     )
 }
 
-pub async fn update_email_join_veri_is_verified_to_true_by_sn(
+pub async fn update_email_join_veri_is_verified_to_true_by_sn_and_code(
     conn: &mut PgConnection,
-    sn: i32
+    sn: i32,
+    code: &str
 ) -> Result<PgQueryResult, RepositoryLayerError> {
     Ok(
         sqlx::query!(
             r#"
                 UPDATE tb_email_join_verifications
                 SET
-                    is_verified = FALSE,
+                    is_verified = TRUE,
                     updated_at = now(),
                     updated_by = $1
-                WHERE sn = $1
+                WHERE sn = $1 AND code = $2
             "#,
-            sn
+            sn,
+            code,
+        )
+        .execute(conn)
+        .await?
+    )
+}
+
+pub async fn select_email_join_veri_by_user_sn_and_code(
+    conn: &mut PgConnection,
+    user_sn: i32,
+    code: &str,
+) -> Result<Option<EmailJoinVerifications>, RepositoryLayerError> {
+    Ok(
+        sqlx::query_as!(
+            EmailJoinVerifications,
+            r#"
+                SELECT 
+                    tejv.sn ,
+                    tejv.user_sn ,
+                    tejv.code ,
+                    tejv.is_verified ,
+                    tejv.expires_at ,
+                    tejv.created_at ,
+                    tejv.created_by ,
+                    tejv.updated_at ,
+                    tejv.updated_by ,
+                    tejv.is_deleted 
+                FROM tb_email_join_verifications tejv
+                WHERE 1 = 1
+                    AND tejv.user_sn = $1
+                    AND tejv.code = $2
+                    AND tejv.expires_at > now()
+                    AND tejv.is_deleted = FALSE
+            "#,
+            user_sn,
+            code,
+        )
+        .fetch_optional(conn)
+        .await?
+    )
+}
+
+pub async fn delete_email_join_veri_by_user_sn(
+    conn: &mut PgConnection,
+    user_sn: i32,
+) -> Result<PgQueryResult, RepositoryLayerError> {
+    Ok(
+        sqlx::query!(
+            r#"
+                UPDATE tb_email_join_verifications
+                SET
+                    is_deleted = TRUE,
+                    updated_at = now(),
+                    updated_by = $1
+                WHERE sn = $1 
+            "#,
+            user_sn,
         )
         .execute(conn)
         .await?

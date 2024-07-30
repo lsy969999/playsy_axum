@@ -49,6 +49,12 @@ impl IntoResponse for PageHandlerLayerError {
                 });
                 (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
             }
+            Self::Service(ServiceLayerError::Any(err)) => {
+                err.chain().enumerate().for_each(|(i, cause)| {
+                    tracing::error!("{TAG} service anyhow {i} {:?} cause: {:?}", err, cause);
+                });
+                (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR")
+            }
         };
         (
             statue,

@@ -72,6 +72,12 @@
                         <p class="p-2 rounded-sm border disabled:bg-gray-100" disabled > {{ email }} </p>
                     </div>
                 {% endif %}
+                {% if user.user_stt_enum == UserSttEnum::WaitEmailVeri  %}
+                    <button
+                        x-on:click="location.href='/user/email_verification'"
+                        type="button"
+                        class="text-white bg-indigo-500 hover:bg-indigo-600 w-full p-2 rounded-sm">이메일 인증하러 가기</button>
+                {% endif %}
             {% endif %}
             <div class="flex flex-col w-full ">
                 <label>가입일</label>

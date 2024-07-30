@@ -1,7 +1,7 @@
 use askama::Template;
 use chrono::Duration;
-use sqlx::{pool::PoolConnection, types::chrono::Utc, PgConnection, Postgres};
-use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::repo::InsertUserArgs}, repositories::{self}, utils};
+use sqlx::{types::chrono::Utc, PgConnection};
+use crate::{configs::errors::app_error::{CryptoError, ServiceLayerError, UserError}, models::{entities::user::{ProviderTyEnum, User, UserSttEnum}, fn_args::repo::{self, InsertUserArgs}}, repositories::{self}, utils};
 
 /// 회원 가입 서비스
 pub async fn user_join_service(
@@ -54,32 +54,7 @@ pub async fn user_join_service(
             }
         ).await?;
         
-    // email_code_dup_chk
-    for i in 1..=4 {
-        let email_code = utils::rand::generate_alphanumeric_code(10);
-        let dup_chk = repositories::email_join_verifications::select_email_join_veri_for_code_dup_chk(&mut tx, &email_code).await?;
-        if dup_chk.is_none() {
-            let now = Utc::now();
-            let seven_days_later = now + Duration::days(7);
-            let _insert = repositories::email_join_verifications::insert_email_join_veri(&mut tx, user_sn, &email_code, seven_days_later).await?;
-            let email = email.to_string();
-            tokio::spawn(async move {
-                let user_sn = user_sn.clone();
-                let email = email.clone();
-                let email_code = email_code.clone();
-                let result = email_join_verification_code_send(&email, &email_code).await;
-                if let Err(error) = result {
-                    tracing::error!("email send error! error: {error}, user_sn: {user_sn}, to: {email}, code: {email_code}");
-                }
-            });
-            break;
-        }
-        tracing::warn!("oh... email veri code is dup! user_sn: {user_sn} code: {email_code}, retry {i}");
-        if i == 4 {
-            // TODO replace other type
-            Err(ServiceLayerError::CustomUser(UserError::UserExists))?
-        }
-    }
+        email_verification_code_generate_and_mail_send(&mut tx, email, user_sn).await?;
 
     repositories::tx::commit(tx).await?;
     Ok(user)
@@ -166,5 +141,62 @@ pub async fn update_user_nick_name(conn: &mut PgConnection, user_sn: i32, nick_n
 
 pub async fn update_user_avatar_url(conn: &mut PgConnection, user_sn: i32, avatar_url: &str) -> Result<(), ServiceLayerError> {
     repositories::user::update_user_avatar_url_by_sn(conn, user_sn, avatar_url).await?;
+    Ok(())
+}
+
+pub async fn email_verification(conn: &mut PgConnection, user_sn: i32, code: &str) ->Result<bool, ServiceLayerError> {
+    let mut tx = repositories::tx::begin(conn).await?;
+    let email: Option<crate::models::entities::email_join_verifications::EmailJoinVerifications> = repositories::email_join_verifications::select_email_join_veri_by_user_sn_and_code(&mut tx, user_sn, code).await?;
+    if email.is_none() {
+        return Ok(false);
+    }
+    repositories::email_join_verifications::update_email_join_veri_is_verified_to_true_by_sn_and_code(&mut tx, user_sn, code).await?;
+    repositories::user::update_user_stt_enum(&mut tx, user_sn, UserSttEnum::Ok).await?;
+    repositories::tx::commit(tx).await?;
+    Ok(true)
+}
+
+pub async fn email_verification_resend(conn: &mut PgConnection, user_sn: i32) -> Result<(), ServiceLayerError> {
+    let mut tx = repositories::tx::begin(conn).await?;
+    let user = repositories::user::select_user_by_sn(&mut tx, user_sn).await?;
+    match user {
+        Some(user) => {
+            let email = match user.email {
+                Some(email) => email,
+                None => Err(UserError::UserNotExists)?
+            };
+            repositories::email_join_verifications::delete_email_join_veri_by_user_sn(&mut tx, user_sn).await?;
+            email_verification_code_generate_and_mail_send(&mut tx, &email, user_sn).await?
+        }
+        None => Err(UserError::UserNotExists)?
+    }
+    repositories::tx::commit(tx).await?;
+    Ok(())
+}
+
+
+async fn email_verification_code_generate_and_mail_send(tx: &mut PgConnection, email: &str, user_sn: i32,) -> Result<(), ServiceLayerError> {
+    // email_code_dup_chk
+    for i in 1..=4 {
+        let email_code = utils::rand::generate_alphanumeric_code(10);
+        let dup_chk = repositories::email_join_verifications::select_email_join_veri_for_code_dup_chk(tx, &email_code).await?;
+        if dup_chk.is_none() {
+            let now = Utc::now();
+            let seven_days_later = now + Duration::days(7);
+            let _insert = repositories::email_join_verifications::insert_email_join_veri(tx, user_sn, &email_code, seven_days_later).await?;
+            let email = email.to_string();
+            tokio::spawn(async move {
+                let user_sn = user_sn.clone();
+                let email = email.clone();
+                let email_code = email_code.clone();
+                let result = email_join_verification_code_send(&email, &email_code).await;
+                if let Err(error) = result {
+                    tracing::error!("email send error! error: {error}, user_sn: {user_sn}, to: {email}, code: {email_code}");
+                }
+            });
+            break;
+        }
+        tracing::warn!("oh... email veri code is dup! user_sn: {user_sn} code: {email_code}, retry {i}");
+    }
     Ok(())
 }

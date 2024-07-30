@@ -2,7 +2,7 @@ use askama::Template;
 use super::filters;
 use crate::models::entities::user::User;
 use crate::models::user_info::UserInfo;
-use crate::models::entities::user::ProviderTyEnum;
+use crate::models::entities::user::{ProviderTyEnum, UserSttEnum};
 
 
 #[derive(Template)]
@@ -48,4 +48,24 @@ pub struct MyPageUpdateErrorFragment {
 #[template(path="fragments/join_social_error.html")]
 pub struct JoinSocailUpdateErrorFragment {
     pub msgs: Vec<String>
+}
+
+//
+
+#[derive(Template)]
+#[template(path="pages/email_verification.html")]
+pub struct EmailVerificationTemplate {
+    pub user_info: Option<UserInfo>,
+}
+
+#[derive(Template)]
+#[template(path="fragments/email_verification_error.html")]
+pub struct EmailVerificationErrorFragment {
+    pub msgs: Vec<String>
+}
+
+#[derive(Template)]
+#[template(path="pages/email_verification_success.html")]
+pub struct EmailVerificationSuccessTemplate {
+    pub user_info: Option<UserInfo>,
 }

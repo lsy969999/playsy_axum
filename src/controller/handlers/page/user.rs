@@ -3,7 +3,7 @@ use axum::{extract::Query, response::{Html, IntoResponse, Redirect}, Form};
 use axum_extra::extract::CookieJar;
 use axum_typed_multipart::TypedMultipart;
 use validator::ValidateArgs;
-use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}}, extractors::{database_connection::DatabaseConnection, ext_user_info::{ExtUserInfo, UserInfoForPage}, s3_client::AwsS3Client}, models::{request::user::{EmailValidateReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, MyPageUpdateReqDto, NickNameUpdateDto}, traits::validator::AdditionalValidate}, responses::html_template::HtmlTemplate, services, templates::user::{JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocailUpdateErrorFragment, JoinSocialTemplate, MyPageTemplate, MyPageUpdateErrorFragment}, utils, validators::JoinReqValiContext};
+use crate::{configs::{consts::HX_REDIRECT, errors::app_error::{PageHandlerLayerError, ServiceLayerError, UserError}}, extractors::{database_connection::DatabaseConnection, ext_user_info::{ExtUserInfo, UserInfoForPage}, s3_client::AwsS3Client}, models::{entities::user::UserSttEnum, request::user::{EmailValidateReqDto, EmailVerificationReqDto, JoinEmailReqDto, JoinNickNameReqDto, JoinReqDto, MyPageUpdateReqDto, NickNameUpdateDto}, traits::validator::AdditionalValidate}, responses::html_template::HtmlTemplate, services, templates::user::{EmailVerificationErrorFragment, EmailVerificationSuccessTemplate, EmailVerificationTemplate, JoinEamilSuccessTemplate, JoinEmailErrorFragment, JoinEmailTemplate, JoinSocailUpdateErrorFragment, JoinSocialTemplate, MyPageTemplate, MyPageUpdateErrorFragment}, utils, validators::JoinReqValiContext};
 
 pub async fn test() -> impl IntoResponse {
     (Redirect::to("/")).into_response()
@@ -378,4 +378,76 @@ pub async fn mypage_update(
     // 액세스토큰 지우면 리프레시하면서 재발급되고, 재발급되면서 토큰에 아바타 업데이트 될것임
     let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
     Ok((jar.remove(acc_token_cookie), [("HX-Refresh", "true")]).into_response())
+}
+
+pub async fn email_verification_page(
+    ExtUserInfo(user_info): ExtUserInfo
+) -> impl IntoResponse {
+    if let Some(user_info) = user_info.clone() {
+        if user_info.user_stt != UserSttEnum::WaitEmailVeri {
+            return Redirect::to("/").into_response()
+        }
+    }
+
+    HtmlTemplate(
+        EmailVerificationTemplate {
+            user_info
+        }
+    ).into_response()
+}
+
+pub async fn email_verification(
+    jar: CookieJar, 
+    DatabaseConnection(mut conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+    Form(form): Form<EmailVerificationReqDto>,
+) -> Result<impl IntoResponse, PageHandlerLayerError> {
+    let res = services::user::email_verification(&mut conn, user_info.user_sn, &form.code).await?;
+    if res {
+        let acc_token_cookie = utils::cookie::generate_access_token_remove_cookie();
+        Ok((jar.remove(acc_token_cookie),[(HX_REDIRECT, "/user/email_verification/success")]).into_response())
+    } else {
+        Ok(
+            HtmlTemplate(
+                EmailVerificationErrorFragment {
+                    msgs: vec![String::from("이메일 인증코드가 존재하지 않습니다. 이메일 인증코드 재발급을 진행해주세요")]
+                }
+            )
+            .into_response()
+        )
+    }
+}
+
+pub async fn email_verification_resend(
+    DatabaseConnection(mut conn): DatabaseConnection,
+    UserInfoForPage(user_info): UserInfoForPage,
+)-> Result<impl IntoResponse, PageHandlerLayerError> {
+    let res = services::user::email_verification_resend(&mut conn, user_info.user_sn).await;
+    Ok(
+        match res {
+            Ok(_)=> {().into_response()}
+            Err(err) => {
+                match err {
+                    ServiceLayerError::CustomUser(UserError::UserNotExists) => {
+                        HtmlTemplate(
+                            EmailVerificationErrorFragment {
+                                msgs: vec![String::from("재발급에 문제가 발생했습니다. 다시 시도해주세요")]
+                            }
+                        ).into_response()
+                    }
+                    err => Err(err)?
+                }
+            }
+        }
+    )
+}
+
+pub async fn email_verification_success_page(
+    ExtUserInfo(user_info): ExtUserInfo
+) -> impl IntoResponse {
+    HtmlTemplate(
+        EmailVerificationSuccessTemplate{
+            user_info
+        }
+    )
 }

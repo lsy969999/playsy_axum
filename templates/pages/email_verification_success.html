@@ -1,0 +1,17 @@
+{% extends "page_layouts/main_layout.html" %}
+{% block side_usage %} false {% endblock %}
+
+{% block title %}Join Email{% endblock %}
+
+{% block content %}
+    <div class="m-2 sm:mx-auto sm:max-w-screen-sm mt-8 p-2 bg-white rounded-md border ">
+        <div class="">
+            <span class="font-semibold p-2">
+                이메일 인증에 성공하였습니다.
+            </span>
+            <div class="p-2">
+                <button x-on:click="location.href='/'" class="p-2 m-2 bg-indigo-500 hover:bg-indigo-600 rounded-sm">홈으로</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

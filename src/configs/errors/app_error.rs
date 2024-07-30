@@ -34,7 +34,9 @@ pub enum ServiceLayerError {
     #[error("Auth Error")]
     CustomAuth(#[from] AuthError),
     #[error("ParseJson Error")]
-    ParseJson(#[from] serde_json::Error)
+    ParseJson(#[from] serde_json::Error),
+    #[error("Any")]
+    Any(#[from] anyhow::Error),
 }
 
 #[derive(Error, Debug)]

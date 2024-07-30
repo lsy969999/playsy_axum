@@ -92,3 +92,8 @@ pub struct JoinSocialUpdateReqDto {
     #[validate(custom(function="nick_name_vali_char"))]
     pub nick_name: Option<String>,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct EmailVerificationReqDto {
+    pub code: String
+}
