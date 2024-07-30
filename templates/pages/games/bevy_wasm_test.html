@@ -5,9 +5,9 @@
 
 {% block content %}
     <div
-        class="m-2 p-2 h-5/6 ">
-        <div id="con" class=" border bg-gray-400 rounded-lg">
-            <div id="progress" class=" absolute top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2 ldBar label-center" data-preset="bubble"></div>
+        class="m-2 p-2 h-5/6 sm:h-auto sm:aspect-[16/9]">
+        <div id="con" class=" border bg-gray-400 rounded-lg h-full">
+            <div id="progress" class="label-center left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2  " data-preset="bubble"></div>
             <canvas id="bevy_canvas"></canvas>
         </div>
     </div>
@@ -15,7 +15,7 @@
         import init from '/static/game/bevy_wasm_test/bevy_wasm_test.js'
         const con = document.querySelector('#con')
         const h = Math.round(con.clientWidth * 9 /16)
-        con.style.height = `${h}px`;
+        //con.style.height = `${h}px`;
         var prg = new ldBar("#progress");
         window.bevyProgressiveFetch = async (resource) => {
             return progressive_fetch(resource, {
