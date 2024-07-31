@@ -1,0 +1,37 @@
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/buttons.html" as scope -%}
+{%- import "macros/inputs.html" as inputs -%}
+
+{% block title %}
+    공지사항
+{% endblock %}
+
+{% block content %}
+<div class="m-2 p-2 ">
+    <div class="border-b flex items-center">
+        <button x-on:click="history.back()" class="bg-gray-400 hover:bg-gray-500 m-2 p-2 rounded-md">Back</button>
+        <div class="w-full text-center">
+            <span class=""> {{ announcement.title }}</span>
+        </div>
+    </div>
+    <div id="content" class="prose mx-auto">
+        {{ announcement.content }}
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block additional_head %}
+{% endblock %}
+
+
+
+
+{% block additional_script %}
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const md = document.getElementById('content').innerHTML;
+        document.getElementById('content').innerHTML = marked.parse(md);
+    </script>
+{% endblock %}

@@ -8,3 +8,5 @@
 static/game/*/
 
 Settings.local.toml
+
+node_modules

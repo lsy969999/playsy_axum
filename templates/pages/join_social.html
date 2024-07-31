@@ -22,7 +22,7 @@
         >
             <div class="m-2 py-4 flex flex-col ">
                 <label>Profile image</label>
-                <div class="flex justify-center items-center">
+                <div class="flex items-center">
                     {% if let Some(user_info) = user_info %}
                         {% if let Some(avatar_url) = user_info.avatar_url %}
                             <img id="myavatar" src="{{ avatar_url }}" alt="Avatar" class="w-12 h-12 mr-2">

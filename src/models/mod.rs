@@ -2,6 +2,7 @@ pub mod claims;
 pub mod user_info;
 pub mod entities;
 pub mod request;
+pub mod response;
 pub mod fn_args;
 pub mod auth_result;
 pub mod oauth2;

@@ -6,3 +6,4 @@ pub mod home;
 pub mod chat;
 pub mod board;
 pub mod filters;
+pub mod announcement;

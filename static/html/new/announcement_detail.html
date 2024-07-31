@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    </style>
+</head>
+<body
+    x-data="{
+        drop_down: false,
+        side_open: false,
+    }"
+    class=" bg-gray-50"
+>
+    <header>
+        <nav
+            class=" fixed w-full bg-white border-b-2 border-slate-400"
+        >
+            <div class="mx-auto max-w-screen-xl flex flex-row  p-2">
+                <button  x-on:click="side_open = !side_open" class="sm:hidden p-2 mx-2 hover:bg-gray-200 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                </button>
+                    
+                <button class="flex-none p-2 bg-gray-100 rounded-lg hover:bg-gray-300"> Playsy</button>
+                <div class="flex-1 flex flex-row justify-end">
+                    <!-- When logout -->
+                    <!-- <button class="mr-4 border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Log in</button> -->
+                    <!-- <button
+                        class="border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Create account</button> -->
+        
+                    <!-- When login -->
+                        <button
+                            x-on:click.outside="drop_down = false"
+                            x-on:click="drop_down = !drop_down; side_open = false;"
+                            
+                            class="p-1 rounded-full hover:bg-gray-200 focus:outline-dashed"
+                        >
+                        <img class="rounded-full w-8 h-8 " src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
+                        </button>
+        
+                        <!-- drop down menu -->
+                        <div
+                            x-bind:class="drop_down ? '' : 'hidden'"
+                            class="absolute top-16 rounded-md sm:right-2 bg-gray-300 w-5/6 sm:w-64 "
+                        >
+                            <div class="flex flex-col divide-y m-2 ">
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    NickName
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    My Page
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    Sign out
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <section
+        x-bind:class="side_open ? 'bg-slate-500': ''"
+        class="mx-auto max-w-screen-xl h-screen flex pt-14"
+    >
+        <aside
+            x-bind:class="side_open ? 'fixed w-2/3 h-screen ' : 'hidden'"
+            class="sm:block w-1/3 bg-gray-200 top-14 overflow-auto">
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+                <span class="ml-2">공지사항</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                </svg>
+                <span class="ml-2">게시판</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                </svg>
+                <span class="ml-2">문의</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+                </svg>
+                <span class="ml-2">About</span>
+            </div>
+        </aside>
+
+        <main
+            x-on:click="side_open = false"
+            class="w-full"
+        >
+            <div class="m-2 p-2 ">
+                <button class="bg-gray-400 hover:bg-gray-500 m-2 p-2 rounded-md">Back</button>
+                <div id="content" class="break-words"></div>
+            </div>
+        </main>
+    </section>
+    <footer class="mx-auto max-w-screen-xl">
+        <div class="flex flex-row justify-between bg-gray-100 p-4">
+            <span class="text-sm text-nowrap">개인정보 처리방침</span>
+            <span class="text-sm text-nowrap">2024 Playsy. All rights reserved.</span>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.1/cdn.min.js" integrity="sha512-ytM6hP1K9BkRTjUQZpxZKFjJ2TvE4QXaK7phVymsm7NimaI5H09TWWW6f2JMbonLp4ftYU6xfwQGoe3C8jta9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.getElementById('content').innerHTML =
+        marked.parse(`
+        # Heading 1
+
+## Heading 2
+
+### Heading 3
+
+This is a paragraph with **bold text**, _italic text_, and \`inline code\`.
+
+Here is a link to [OpenAI](https://www.openai.com).
+
+![Sample Image](https://via.placeholder.com/150)
+
+&gt; This is a blockquote. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.
+
+### Unordered List
+
+- Item 1
+- Item 2
+  - Subitem 2.1
+  - Subitem 2.2
+- Item 3
+
+### Ordered List
+
+1. First item
+2. Second item
+3. Third item
+
+### Code Block
+
+\`\`\`javascript
+function greet() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+### Table
+
+| Syntax      | Description |
+| ----------- | ----------- |
+| Header      | Title       |
+| Paragraph   | Text        |
+
+### More Content
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.
+
+Aenean venenatis ante in metus suscipit fermentum. Vestibulum purus quam, scelerisque ut, mollis sed, nonummy id, metus. Vestibulum convallis, lorem a tempus semper, dui dui euismod elit, vitae placerat urna tortor vitae lacus. Nullam libero mauris, consequat quis, varius et, dictum id, arcu. Mauris mollis tincidunt felis. Aliquam feugiat tellus ut neque. Nulla facilisis, risus a rhoncus fermentum, tellus velit molestie orci, vitae pulvinar eros risus in odio. Praesent scelerisque tortor sed accumsan convallis. Aliquam venenatis. Nam suscipit dapibus nunc. Nunc vel risus. Etiam pellentesque est nec orci. Morbi vehicula nibh ac sapien.
+
+Pellentesque auctor fringilla sem. Praesent tempus mi quis quam. Maecenas nec ante. Donec sagittis euismod purus. Nullam sapien. Nunc aliquet, augue nec adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio. Pellentesque condimentum, magna ut suscipit hendrerit, ipsum augue ornare nulla, non luctus diam neque sit amet urna. Curabitur vulputate vestibulum lorem. Fusce sagittis, libero non molestie mollis, magna orci ultrices dolor, at vulputate neque nulla lacinia eros. Sed id ligula quis est convallis tempor. Curabitur lacinia pulvinar nibh. Nam a sapien.
+
+Vestibulum euismod, purus quis fringilla auctor, nisi elit gravida risus, vitae aliquet turpis neque sit amet eros. Nullam auctor posuere neque. Morbi quis elit nisl. Fusce sollicitudin, sapien interdum dignissim rhoncus, urna nisl dignissim dolor, ut posuere quam justo quis nisi. Sed volutpat. Nulla orci massa, convallis id, volutpat et, interdum non, elit. Integer tempus, elit in laoreet posuere, lectus neque blandit dui, et placerat urna diam mattis orci. Donec at libero. Suspendisse non justo. Morbi nisl eros, dignissim nec, malesuada et, convallis at, orci. Pellentesque dapibus suscipit ligula. Donec posuere augue in quam. Etiam vel tortor sodales tellus ultricies commodo. Ut venenatis velit.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec ligula in tellus feugiat feugiat. Nam lacinia dui ac velit blandit feugiat. Nullam vestibulum mi eu massa aliquam tincidunt. In pretium lectus id eros eleifend, ut lacinia arcu hendrerit. Vestibulum sit amet tincidunt ante. Curabitur scelerisque tortor et nisi malesuada, non elementum dui pellentesque. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Ut porta sem sit amet sem interdum, id sagittis purus hendrerit. Proin in tortor in felis fermentum dictum ac ac erat. Nulla lacinia pharetra quam, sit amet bibendum dolor vehicula nec. Donec varius justo in felis dignissim, eu pretium justo gravida.
+
+Morbi efficitur felis nec eros aliquam, sed interdum ex fermentum. Curabitur hendrerit ante sit amet magna scelerisque, a tincidunt nisi auctor. Curabitur sollicitudin felis nisi, sit amet interdum eros laoreet eget. Sed auctor orci at orci fermentum, in fringilla felis pretium. Nulla facilisi. Pellentesque consectetur, augue ut sollicitudin dapibus, odio ipsum malesuada lacus, nec congue libero tortor at quam. Cras et lacus dui. Aenean tincidunt felis vitae turpis vehicula venenatis. Sed at arcu at turpis tincidunt varius in ac arcu. Aenean viverra eros at est luctus, vel bibendum augue placerat. Proin maximus metus sed augue consectetur, sed lobortis urna ullamcorper. Vestibulum convallis feugiat tortor, nec dignissim orci suscipit eget. Phasellus accumsan id arcu id porttitor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis rutrum nisi euismod eros dictum, quis sagittis risus varius.
+
+Quisque consequat hendrerit nulla, non volutpat justo accumsan nec. Etiam et justo sapien. Cras mattis convallis magna non fermentum. Donec viverra a erat ac bibendum. In eget ante id turpis rutrum rhoncus a eget ipsum. Ut sit amet felis lacus. Integer id faucibus ligula. Maecenas tincidunt enim a magna scelerisque fermentum. In finibus justo et augue sodales tincidunt. Nulla facilisi. Donec id ligula a felis malesuada volutpat. Donec condimentum neque non magna vehicula, non dictum mi dignissim. Integer eleifend est eget enim venenatis consectetur. Nulla convallis rutrum risus, non efficitur est vulputate at.
+
+In vitae efficitur quam. Nullam sed libero et arcu posuere luctus in ut ligula. Vestibulum dignissim lorem et ultricies bibendum. Duis consectetur malesuada libero, at lacinia felis pretium quis. Etiam mollis magna libero, ac vulputate felis aliquet at. Donec in fermentum magna. Sed malesuada metus vel felis pellentesque laoreet. Fusce porttitor ligula ut neque venenatis elementum. Curabitur elementum, urna sed tincidunt accumsan, purus leo scelerisque lorem, at tincidunt arcu felis vel orci. Donec vel nibh eros. Vestibulum eget dictum odio. Ut sit amet ultricies felis, nec laoreet dui. Curabitur vel nisl ac urna fermentum ullamcorper et sed nisi. Cras nec mi ac lectus tristique tincidunt sed nec felis.
+
+Aenean porttitor orci leo, at pretium elit venenatis at. Pellentesque convallis purus sit amet feugiat elementum. Vivamus ac enim sit amet felis tempor sodales at ut arcu. Nullam vehicula lectus at dolor volutpat, nec suscipit ligula ullamcorper. Aenean id leo tempor, pellentesque nulla sed, aliquet nulla. Suspendisse potenti. Cras suscipit nisi et risus tempor condimentum. Nullam et quam neque. Integer consectetur lorem ipsum, nec eleifend dolor feugiat quis. In aliquet nisi id dolor convallis, sed faucibus leo vestibulum. Aenean eleifend turpis eget facilisis pretium. Pellentesque gravida odio non congue feugiat. Nulla aliquet egestas mauris, sit amet dictum lacus fermentum eu. Mauris sit amet sagittis sem, vel lacinia magna. Praesent vestibulum, nisi sit amet rutrum tincidunt, nisl lacus viverra augue, at sodales dolor justo nec est. Vestibulum maximus magna neque, a ultricies mi varius ac.
+
+In eget fermentum ligula, vitae dictum nulla. Etiam gravida vel quam quis ultricies. Ut ut nisi felis. Quisque non turpis id arcu fringilla tempor nec ac nulla. Integer congue consectetur sapien in rhoncus. Cras sed congue augue. Maecenas pharetra est non lorem volutpat, nec malesuada ligula vulputate. Suspendisse potenti. Nullam dapibus nec elit sed egestas. Phasellus faucibus augue sit amet libero fermentum, vel luctus magna elementum. Ut a eros ipsum. Aenean tempor ligula vel ex dapibus, a facilisis dolor dignissim. Vivamus malesuada sapien sed lorem viverra, sed fringilla arcu volutpat. Integer ac erat mi. Nullam pretium fringilla nisl non rhoncus. Quisque quis varius odio, non tincidunt ipsum.
+
+Vivamus dapibus
+        `);
+    </script>
+</body>
+</html>

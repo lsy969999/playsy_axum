@@ -1,0 +1,90 @@
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/buttons.html" as scope -%}
+{%- import "macros/inputs.html" as inputs -%}
+
+{% block title %}
+    공지사항
+{% endblock %}
+
+{% block content %}
+    <div class="m-2 p-2 ">
+        <p class="text-xl font-bold border-b">공지사항</p>
+        
+        <div class="my-2">
+            <table class="min-w-full bg-white">
+                <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b-2 border-gray-300 text-left leading-tight">No</th>
+                    <th class="py-2 px-4 border-b-2 border-gray-300 text-left leading-tight">Title</th>
+                    <th class="py-2 px-4 border-b-2 border-gray-300 text-left leading-tight">Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for announcement in announcements  %}
+                        <tr x-on:click="location.href='/announcement/{{ announcement.sn }}'" class="hover:bg-gray-100">
+                            <td class="py-2 px-4 border-b border-gray-200">{{ announcement.sn }}</td>
+                            <td class="py-2 px-4 border-b border-gray-200">{{ announcement.title }}</td>
+                            <td
+                                x-data="{ date: {{ announcement.created_at|to_timestamp }} }"
+                                x-init="date = dateFns.format(new Date(date), 'yyyy-MM-dd HH:mm:ss')"
+                                x-text="date"
+                            class="py-2 px-4 border-b border-gray-200 text-xs"></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-center my-2">
+            <nav>
+                <ul class="inline-flex items-center -space-x-px">
+                    <li x-on:click="location.href=location.pathname + '?page=1'" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700">
+                        <<
+                    </li>
+                    {% if pagination.page - 1 > 0 %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page - 1}}'" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300  hover:bg-gray-100 hover:text-gray-700">
+                            <
+                        </li>
+                    {% endif %}
+                    {% if pagination.page - 2 > 0 %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page - 2}}'" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">
+                            {{ pagination.page - 2 }}
+                        </li>
+                    {% endif %}
+                    {% if pagination.page - 1 > 0 %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page - 1}}'" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">
+                            {{ pagination.page - 1 }}
+                        </li>
+                    {% endif %}
+                    <li x-on:click="location.href=location.pathname + '?page={{pagination.page}}'" class="py-2 px-3 leading-tight text-gray-500 bg-indigo-300 border border-gray-300 hover:bg-indigo-400 hover:text-gray-700">
+                        {{ pagination.page }}
+                    </li>
+                    {% let end_page = (pagination.total_cnt + pagination.limit - 1) / pagination.limit %}
+                    {% if pagination.page + 1 <= end_page %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page + 1}}'" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">
+                            {{ pagination.page + 1 }}
+                        </li>
+                    {% endif %}
+                    {% if pagination.page + 2 <= end_page %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page + 2}}'" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">
+                            {{ pagination.page + 2 }}
+                        </li>
+                    {% endif %}
+                    {% if pagination.page + 1 <= end_page %}
+                        <li x-on:click="location.href=location.pathname + '?page={{pagination.page + 1}}'" class="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100  hover:text-gray-700">
+                            >
+                        </li>
+                    {% endif %}
+                    <li x-on:click="location.href=location.pathname + '?page={{ end_page }}'" class="py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700">
+                        >>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional_head %}
+{% endblock %}
+
+{% block additional_script %}
+{% endblock %}
