@@ -8,3 +8,4 @@ pub mod board;
 pub mod filters;
 pub mod announcement;
 pub mod inquery;
+pub mod about;

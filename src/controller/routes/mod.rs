@@ -7,3 +7,4 @@ pub mod game;
 pub mod board;
 pub mod announcement;
 pub mod inquery;
+pub mod about;
