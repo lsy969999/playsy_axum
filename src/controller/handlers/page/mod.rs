@@ -5,3 +5,4 @@ pub mod game;
 pub mod chat;
 pub mod board;
 pub mod announcement;
+pub mod inquery;

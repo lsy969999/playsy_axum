@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    </style>
+</head>
+<body
+    x-data="{
+        drop_down: false,
+        side_open: false,
+    }"
+    class=" bg-gray-50"
+>
+    <header>
+        <nav
+            class=" fixed w-full bg-white border-b-2 border-slate-400"
+        >
+            <div class="mx-auto max-w-screen-xl flex flex-row  p-2">
+                <button  x-on:click="side_open = !side_open" class="sm:hidden p-2 mx-2 hover:bg-gray-200 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                </button>
+                    
+                <button class="flex-none p-2 bg-gray-100 rounded-lg hover:bg-gray-300"> Playsy</button>
+                <div class="flex-1 flex flex-row justify-end">
+                    <!-- When logout -->
+                    <!-- <button class="mr-4 border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Log in</button> -->
+                    <!-- <button
+                        class="border-gray-300-400 border-2 rounded-sm p-1  text-black
+                            hover:text-indigo-500 hover:underline text-nowrap">Create account</button> -->
+        
+                    <!-- When login -->
+                        <button
+                            x-on:click.outside="drop_down = false"
+                            x-on:click="drop_down = !drop_down; side_open = false;"
+                            
+                            class="p-1 rounded-full hover:bg-gray-200 focus:outline-dashed"
+                        >
+                        <img class="rounded-full w-8 h-8 " src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y">
+                        </button>
+        
+                        <!-- drop down menu -->
+                        <!-- <div
+                            x-bind:class="drop_down ? '' : 'hidden'"
+                            class="absolute top-16 rounded-md sm:right-2 bg-gray-300 w-5/6 sm:w-64 "
+                        >
+                            <div class="flex flex-col divide-y m-2 ">
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    NickName
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    My Page
+                                </div>
+                                <div class="hover:bg-gray-400  hover:underline rounded-sm py-2 pl-2 cursor-pointer">
+                                    Sign out
+                                </div>
+                            </div>
+                        </div> -->
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <section
+        x-bind:class="side_open ? 'bg-slate-500': ''"
+        class="mx-auto max-w-screen-xl h-screen flex pt-14"
+    >
+        <aside
+            x-bind:class="side_open ? 'fixed w-2/3 h-screen ' : 'hidden'"
+            class="sm:block w-1/3 bg-gray-200 top-14 overflow-auto">
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+                <span class="ml-2">공지사항</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                </svg>
+                <span class="ml-2">게시판</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                </svg>
+                <span class="ml-2">문의</span>
+            </div>
+            <div class="m-2 p-2 rounded-md hover:bg-gray-400 cursor-pointer flex">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+                </svg>
+                <span class="ml-2">About</span>
+            </div>
+        </aside>
+
+        <main
+            x-on:click="side_open = false"
+            class="w-full"
+        >
+            <div class="m-2">
+                <div class="max-w-lg mx-auto">
+                    <form action="">
+                        <div class="flex flex-col">
+                            <label>subject</label>
+                            <input name="subject" class="border rounded-md" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label>email</label>
+                            <input name="email" class="border rounded-md" />
+                        </div>
+                        <div class="flex flex-col">
+                            <label>message</label>
+                            <textarea name="message" class="border rounded-md" ></textarea>
+                        </div>
+                        <div class="flex flex-col">
+                            <button type="submit" class="bg-indigo-400 hover:bg-indigo-500 my-2 p-2 rounded-md">send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </section>
+    <footer class="mx-auto max-w-screen-xl">
+        <div class="flex flex-row justify-between bg-gray-100 p-4">
+            <span class="text-sm text-nowrap">개인정보 처리방침</span>
+            <span class="text-sm text-nowrap">2024 Playsy. All rights reserved.</span>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.1/cdn.min.js" integrity="sha512-ytM6hP1K9BkRTjUQZpxZKFjJ2TvE4QXaK7phVymsm7NimaI5H09TWWW6f2JMbonLp4ftYU6xfwQGoe3C8jta9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{% extends "page_layouts/main_layout.html" %}
+{%- import "macros/macros.html" as scope -%}
+
+{% block title %}Inquery{% endblock %}
+
+{% block content %}
+    <div class="m-2">
+        <div class="max-w-lg mx-auto">
+            <form
+                hx-post="/inquery"
+                hx-swap="outerHTML"
+            >
+                <div class="flex flex-col">
+                    <label>subject</label>
+                    <input maxlength="250" name="subject" class="border rounded-md" />
+                </div>
+                <div class="flex flex-col">
+                    <label>email</label>
+                    <input maxlength="80" name="email" class="border rounded-md" />
+                </div>
+                <div class="flex flex-col">
+                    <label>message</label>
+                    <textarea name="message" class="border rounded-md" ></textarea>
+                </div>
+                <div class="flex flex-col">
+                    <button type="submit" class="bg-indigo-400 hover:bg-indigo-500 my-2 p-2 rounded-md">send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+

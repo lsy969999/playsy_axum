@@ -22,7 +22,7 @@ CREATE TABLE tb_announcement(
     updated_by INT NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
-COMMENT ON TABLE tb_announcement IS '새로고침토큰 테이블';
+COMMENT ON TABLE tb_announcement IS '공지사항 테이블';
 COMMENT ON COLUMN tb_announcement.sn IS '식별자';
 COMMENT ON COLUMN tb_announcement.user_sn IS '사용자 식별자';
 COMMENT ON COLUMN tb_announcement.title IS '제목';
